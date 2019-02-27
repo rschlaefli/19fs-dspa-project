@@ -13,7 +13,7 @@ public class ProducerDemo {
         Properties props = new Properties();
 
         // where is kafka located?
-        props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
 
         // what types of values are we sending? how to convert to bytes?
         props.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
