@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ScalaCompilerConfiguration">
+    <profile name="sbt 1" modules="Flink Kafka Scala Test,flink-kafka-scala-test_8786,mainRunner" />
+  </component>
+</project>
