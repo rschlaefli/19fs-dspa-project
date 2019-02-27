@@ -3,6 +3,7 @@ services:
   kafka:
     # https://github.com/Landoop/fast-data-dev
     image: landoop/fast-data-dev
+    network_mode: "host"
     ports:
       - "2181:2181"
       - "3030:3030"
