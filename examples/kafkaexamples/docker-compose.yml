@@ -12,3 +12,4 @@ services:
       - "9092:9092"
     environment:
       ADV_HOST: localhost
+      EULA: https://dl.lenses.stream/d/?id=087b84d0-723d-49b8-afd0-1d8d23f03e67
