@@ -1,0 +1,25 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "CodeLens (Launch) - ProducerDemoWithCallback",
+      "request": "launch",
+      "mainClass": "ch.uzh.ifi.kafkacourse.ProducerDemoWithCallback",
+      "projectName": "kafka-examples"
+    },
+    {
+      "type": "java",
+      "name": "CodeLens (Launch) - ProducerDemo",
+      "request": "launch",
+      "mainClass": "ch.uzh.ifi.kafkacourse.ProducerDemo",
+      "projectName": "kafka-examples"
+    },
+    {
+      "type": "java",
+      "name": "CodeLens (Launch) - ConsumerDemo",
+      "request": "launch",
+      "mainClass": "ch.uzh.ifi.kafkacourse.ConsumerDemo",
+      "projectName": "kafka-examples"
+    }
+  ]
+}
