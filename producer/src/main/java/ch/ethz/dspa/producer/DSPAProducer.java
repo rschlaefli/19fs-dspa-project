@@ -55,8 +55,7 @@ public class DSPAProducer {
 				LocalDateTime creationDate = getCreationDate(line);
 
 				// build runnable
-				ProducerTask task = new ProducerTask().withProducer(producer).withId(id).withTopic(topic)
-						.withValue(line);
+				ProducerTask task = new ProducerTask().withProducer(producer).withId(id).withTopic(topic).withValue(line);
 
 				// calculate delay
 				Duration randomDelay = Duration.ofMillis(rand.nextInt((int) maxRandomDelay.toMillis()));
