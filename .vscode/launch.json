@@ -2,6 +2,20 @@
   "configurations": [
     {
       "type": "java",
+      "name": "CodeLens (Launch) - App",
+      "request": "launch",
+      "mainClass": "ch.ethz.dspa.producer.App",
+      "projectName": "producer"
+    },
+    {
+      "type": "java",
+      "name": "CodeLens (Launch) - App",
+      "request": "launch",
+      "mainClass": "ch.ethz.dspa.consumer.App",
+      "projectName": "consumer"
+    },
+    {
+      "type": "java",
       "name": "CodeLens (Launch) - ProducerDemoWithCallback",
       "request": "launch",
       "mainClass": "ch.uzh.ifi.kafkacourse.ProducerDemoWithCallback",

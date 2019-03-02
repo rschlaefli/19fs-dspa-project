@@ -1,16 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
 	<groupId>ch.ethz.dspa</groupId>
 	<artifactId>producer</artifactId>
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
-
 	<name>producer</name>
 	<url>http://maven.apache.org</url>
-
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jdk.version>1.8</jdk.version>
@@ -19,8 +14,6 @@
 		<slf4j.version>1.7.25</slf4j.version>
 		<kafka-client.version>2.1.0</kafka-client.version>
 	</properties>
-
-
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -53,13 +46,9 @@
 			<artifactId>slf4j-simple</artifactId>
 			<version>${slf4j.version}</version>
 		</dependency>
-
 	</dependencies>
-
 	<build>
-
 		<plugins>
-
 			<!-- download source code in Eclipse, best practice -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -70,7 +59,6 @@
 					<downloadJavadocs>false</downloadJavadocs>
 				</configuration>
 			</plugin>
-
 			<!-- Set a JDK compiler level -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -81,7 +69,6 @@
 					<target>${jdk.version}</target>
 				</configuration>
 			</plugin>
-
 			<!-- Make this jar executable -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -94,22 +81,19 @@
 					<archive>
 						<manifest>
 							<!-- Jar file entry point -->
-							<mainClass>ch.ethz.infk.producer.App</mainClass>
+							<mainClass>ch.ethz.dspa.producer.App</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
 			</plugin>
-
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
 				<version>1.2.1</version>
 				<configuration>
-					<mainClass>ch.ethz.infk.producer.App</mainClass>
+					<mainClass>ch.ethz.dspa.producer.App</mainClass>
 				</configuration>
 			</plugin>
-
 		</plugins>
 	</build>
-
 </project>

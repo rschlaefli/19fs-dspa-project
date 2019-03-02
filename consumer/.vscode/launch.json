@@ -1,0 +1,11 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "CodeLens (Launch) - App",
+      "request": "launch",
+      "mainClass": "ch.ethz.dspa.consumer.App",
+      "projectName": "consumer"
+    }
+  ]
+}
