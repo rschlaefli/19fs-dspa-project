@@ -1,0 +1,14 @@
+{"type": "record", "name": "ch.ethz.dspa.avro.Comment",
+ "doc": "A comment.",
+ "fields": [
+     {"name": "id", "type": "long"},
+     {"name": "personId", "type": "long"},
+     {"name": "creationDate", "type": "string"},
+     {"name": "locationIP", "type": "string"},
+     {"name": "browserUsed", "type": "string"},
+     {"name": "content", "type": "string"},
+     {"name": "reply_to_postId", "type": "long"},
+     {"name": "reply_to_commentId", "type": "long"},
+     {"name": "placeId", "type": "long"}
+ ]
+}
