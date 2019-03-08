@@ -1,0 +1,16 @@
+{"type": "record", "name": "ch.ethz.dspa.avro.Post",
+ "doc": "A post.",
+ "fields": [
+     {"name": "id", "type": "long", "order": "ignore"},
+     {"name": "personId", "type": "long"},
+     {"name": "creationDate", "type": "string"},
+     {"name": "imageFile", "type": "string"},
+     {"name": "locationIP", "type": "string"},
+     {"name": "browserUsed", "type": "string"},
+     {"name": "language", "type": "string"},
+     {"name": "content", "type": "string"},
+     {"name": "tags", "type": "string"},
+     {"name": "forumId", "type": "string"},
+     {"name": "placeId", "type": "string"}
+ ]
+}
