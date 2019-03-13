@@ -1,7 +1,7 @@
 # DSPA 2019 - Design Document
 
 Roland Schlaefli, 12-932-398
-Nicolas Kuechler, ...
+Nicolas Kuechler, 14-712-129
 
 TODO: Briefly describe what you are planning to build and how you are planning to build it.
 
@@ -12,7 +12,9 @@ TODO: Briefly argue why your design solves the given problems and describe its a
 TODO: Where does your application read input from? How does this choice affect latency and semantics (order)?
 
 - kafka topics with producers for data generatiion
+- producer reading stream file and scheduling events that write event to kafka proportional to created timestamp of event
 - avro schemas
+- read table data via RichMapFunction to enrich stream where necessary
 - latency?
   - ...
 - semantics?
@@ -32,6 +34,7 @@ TODO: What is your stream processor of choice? What features guided your choice?
 - flink!
   - java
   - maturity
+  - popularity in industry
   - ...
 
 TODO: Will you use other auxiliary systems / tools, e.g. for intermediate data?
