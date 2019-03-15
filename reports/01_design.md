@@ -11,24 +11,30 @@ TODO: Briefly argue why your design solves the given problems and describe its a
 
 TODO: Where does your application read input from? How does this choice affect latency and semantics (order)?
 
-- kafka topics with producers for data generation
-  - producer reading stream file and scheduling events that write event to kafka proportional to created timestamp of event
-  - avro schemas
+All streaming input processed in our application is consumed from separate Kafka topics. The data generation and preprocessing for these topics is handled by several Kafka producer classes that ensure data is generated in a reasonable fashion. Events are scheduled such that they are written to Kafka proportionally to the actual creation timestamp of the event (after application of a speedup factor). All data transmitted through Kafka is encoded and decoded using Avro schemas, allowing us to more easily extract data on the consumer side.
+
+The latency of our application is increased by our choice of a Kafka pipeline, as Kafka implements measures for failure handling, redundancy, and persistence on disk. Furthermore, using Kafka means that there is an additional transmission over the network in-between Kafka and Flink, as these services normally would run on separate clusters. The latency will necessarily be increased by the random bounded delay that needs to be considered when watermarking, as time-sensitive operators only run once a watermark has become available. Correct semantics of the event streams are ensured by our approach of computing watermarks based on the bounded delay, as well as our usage of event time for computations. The usage of Kafka does not influence the semantics in a direct way, as it does not perform any preprocessing or reordering of the events based on their timestamp (in our implementation).
+
+- x kafka topics with producers for data generation
+  - x producer reading stream file and scheduling events that write event to kafka proportional to created timestamp of event
+  - x avro schemas
 - read static table data via RichMapFunction to enrich stream where necessary
-- latency?
-  - watermarking by max. delay will increase latency for time-sensitive operators
-  - latency is increased by kafka due to failsafe measures, redundancy, disk operations
-  - data is transferred via network
-- semantics?
-  - event time of events taken for computations
-  - correct ordering ensured by application of watermarks after bounded delay
+- x latency?
+  - x watermarking by max. delay will increase latency for time-sensitive operators
+  - x latency is increased by kafka due to failsafe measures, redundancy, disk operations
+  - x data is transferred via network
+- x semantics?
+  - x event time of events taken for computations
+  - x correct ordering ensured by application of watermarks after bounded delay
 
 TODO: What is the format of the input streams for each of the analytics tasks?
 
-- analytics (1): separate streams from separate kafka topics, no static data, based on avro schemas
-- recommendation (2): separate streams, enrich streams with necessary static data
-  - enrichment in operators or in preprocessing?
-- anomalies (3): same as (2)?
+All analytics tasks are fed with at least the three available input streams (using three separate Kafka topics). The pure analytics task (#1) does not make use of any additional data, as all results can be directly computed from the stream contents. The recommendations (#2) will be performed based on streaming data that has been enriched with static data using enrichment functions like `RichMap` and other processing functions. This basic structure also applies to anomaly detection (#3), where we make use of the same enriched streams, although the specific data enriched might differ.
+
+- # analytics (1): separate streams from separate kafka topics, no static data, based on avro schemas
+- # recommendation (2): separate streams, enrich streams with necessary static data
+  - # enrichment in operators or in preprocessing?
+- # anomalies (3): same as (2)?
 
 ## Processing
 
