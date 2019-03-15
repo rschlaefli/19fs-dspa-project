@@ -29,30 +29,34 @@ The latency of our application is increased by our choice of a Kafka pipeline, a
 
 TODO: What is the format of the input streams for each of the analytics tasks?
 
-All analytics tasks are fed with at least the three available input streams (using three separate Kafka topics). The pure analytics task (#1) does not make use of any additional data, as all results can be directly computed from the stream contents. The recommendations (#2) will be performed based on streaming data that has been enriched with static data using enrichment functions like `RichMap` and other processing functions. This basic structure also applies to anomaly detection (#3), where we make use of the same enriched streams, although the specific data enriched might differ.
+All analytics tasks are fed with at least the three available input streams (using three separate Kafka topics). The pure analytics task (#1) does not make use of any additional data, as all results can be directly computed from the stream contents. The recommendations (#2) will be performed based on streaming data that has been enriched with static data using enrichment functions like `RichMap` and other processing functions. This basic structure also applies to anomaly detection (#3), where we make use of the same enriched streams, although the specific data enriched might differ. The streams ingested from Kafka are decoded from Avro schemas.
 
-- # analytics (1): separate streams from separate kafka topics, no static data, based on avro schemas
-- # recommendation (2): separate streams, enrich streams with necessary static data
-  - # enrichment in operators or in preprocessing?
-- # anomalies (3): same as (2)?
+- x analytics (1): separate streams from separate kafka topics, no static data, based on avro schemas
+- x recommendation (2): separate streams, enrich streams with necessary static data
+  - x enrichment in operators or in preprocessing?
+- x anomalies (3): same as (2)?
 
 ## Processing
 
 TODO: What is your stream processor of choice? What features guided your choice?
 
-- flink!
-  - java (familiarity with language)
-  - maturity & popularity in industry
+The main processing engine for our streaming application is Apache Flink. Our main drivers were our familiarity with Java, as well as the maturity and popularity of the Java ecosystem and Apache Flink itself (especially in the industry). However, we think that Flink also brings other advantages ... TODO:
+
+- x flink!
+  - x java (familiarity with language)
+  - x maturity & popularity in industry
   - TODO: google advantages of flink
 
 TODO: Will you use other auxiliary systems / tools, e.g. for intermediate data?
 
-- input data from kafka, output to kafka
-  - including zookeeper, etc.
-- web ui as kafka consumer for output visualization
-  - existing oss project
-- any external key-value store? state backend?
-  - probably not, maybe rocksdb for state storage
+One of the main auxiliary systems we use is Apache Kafka, which we use for consuming input streams, as well as producing output streams. Indirectly, this also means that we have dependencies on Zookeeper and all other systems that Kafka itself depends on. In addition to Kafka, we visualize outputs that have been stored in a Kafka stream by means of a web ui based on existing open-source solutions. Our current design implementation does not include any state backend or external key-value storage system. However, this might change in future iteratios, where we might come to the conclusion that e.g. RocksDB would be a useful addition.
+
+- x input data from kafka, output to kafka
+  - x including zookeeper, etc.
+- x web ui as kafka consumer for output visualization
+  - x existing oss project
+- x any external key-value store? state backend?
+  - x probably not, maybe rocksdb for state storage
 
 ## Output & Postprocessing
 
