@@ -62,8 +62,10 @@ One of the main auxiliary systems we use is Apache Kafka, which we use for consu
 
 TODO: Where does your application output results? How are these results shown to the user?
 
-- output to kafka topics for each "task"
-- show results in simple web ui with kafka consumer
+- x output to kafka topics for each "task"
+- x show results in simple web ui with kafka consumer
+
+The computation results of our stream analytics tasks are all output to separate Kafka topics. As our streaming application already consumes all of its input from Kafka topics, we decided that producing and storing all of our output in a Kafka topic would be a good approach. This allows us to decouple the computation and processing layer from the vsualization layer, as visualizations will be based purely on Kafka topic contents.
 
 ## Statistics
 
