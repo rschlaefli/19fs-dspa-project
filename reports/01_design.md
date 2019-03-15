@@ -5,7 +5,13 @@ Nicolas Kuechler, 14-712-129
 
 TODO: Briefly describe what you are planning to build and how you are planning to build it.
 
+- ...
+
 TODO: Briefly argue why your design solves the given problems and describe its advantages over alternative approaches.
+
+- improvements compared to reading from files
+  - more applicable to real-life problems / scalability in real streaming context
+  - ...
 
 ## Input & Preprocessing
 
@@ -58,20 +64,17 @@ One of the main auxiliary systems we use is Apache Kafka, which we use for consu
 - x any external key-value store? state backend?
   - x probably not, maybe rocksdb for state storage
 
-## Output & Postprocessing
+### Task 1 - Statistical Analysis
 
-TODO: Where does your application output results? How are these results shown to the user?
+TODO:
 
-- x output to kafka topics for each "task"
-- x show results in simple web ui with kafka consumer
+### Task 2 - Recommendations
 
-The computation results of our stream analytics tasks are all output to separate Kafka topics. As our streaming application already consumes all of its input from Kafka topics, we decided that producing and storing all of our output in a Kafka topic would be a good approach. This allows us to decouple the computation and processing layer from the vsualization layer, as visualizations will be based purely on Kafka topic contents.
+Our approach to tackling the recommendations problem is based on modeling categories, counting user interactions with these categories, and finally computing intra-user similarities, which finally allows us to recommend users that are deemed "similar" to the user in question. More specifically, in a first step of our pipeline, we apply category modeling procedures to metadata and content of posts and comments. Tags of posts and forums, language, forum of the post, place, as well as other static data can all serve as a basis for categorization of a post or comment. Additionally, we want to try including also the contents of a post or comment by applying topic modeling strategies to further improve categorization.
 
-## Statistics
+The second step in our processing will be an analysis of user interactions with the various categories. Counting interactions of users with items in categories allows us to deduce the interests of users based on all streaming data. These interaction counts are stored for 4 hours, after which the first hour will be subtracted, and the current hour will be added to the interaction counts.
 
-- ...
-
-## Recommendation
+To finally compute our recommendations for the users, we then plan to compute the similarity between users by application of simple distance measures. Users with similar interaction counts for categories are deemed more similar and can then be recommended as additional friends. To ensure that no already connected users are recommended, such users will be excluded from the similarity calculations based on the static data available.
 
 - Based on posts and comments: apply "category" modeling
   - tags (of post and maybe forum), language, forum, and place (static data)
@@ -85,6 +88,15 @@ The computation results of our stream analytics tasks are all output to separate
 - compute intra-user similarity by application of distance measures
   - users with similar interaction counts for categories are more similar
 
-## Anomaly Detection
+### Task 3 - Anomaly Detection
 
-- ...
+TODO:
+
+## Output & Postprocessing
+
+TODO: Where does your application output results? How are these results shown to the user?
+
+- x output to kafka topics for each "task"
+- x show results in simple web ui with kafka consumer
+
+The computation results of our stream analytics tasks are all output to separate Kafka topics. As our streaming application already consumes all of its input from Kafka topics, we decided that producing and storing all of our output in a Kafka topic would be a good approach. This allows us to decouple the computation and processing layer from the vsualization layer, as visualizations will be based purely on Kafka topic contents.
