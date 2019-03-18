@@ -1,0 +1,31 @@
+- separate all input into two streams: suspicious activity / unsuspicious activity
+  - e.g., likes too soon after a post, too many likes within a second, etc.
+  - multiple stages with kafka intermediary
+- describe reasons for suspicions to moderators?
+  - "user wrote 10 suspicious posts within the last minute"...
+- signatures of normal activity based on extracted features
+
+  - https://www.forbes.com/sites/forbesagencycouncil/2018/08/06/bot-or-not-seven-ways-to-detect-an-online-bot/
+  - potentially make use of active post statistics output
+  - 1 Abnormal Account Activity: duration of activeness of a post -> mark outliers/above current 90% percentile
+  - 1 Abnormal Account Activity: contents of text -> word count, etc.
+  - 1 Abnormal Account Activity: timespan between events (i.e. likes)
+  - 2 Ratio Of Engagements: many likes but few comments/replies indicative for buying likes?
+  - 3 Followers Versus Engagements: many of the "likers" don't do much else?
+  - 4 Follower Origin: too many users from same IP?
+  - 6 Percentage Of Followers With Newly Created Accounts
+    - number of interacting users with new accounts too high?
+  - More post tags than usual? Friend count vs. activity?
+  - Number of non-fraudulent activities?
+    - count in split operator?
+    - add count to event for suspicious stream?
+  - Make use of window operator
+    - Too many suspicious events within a window trigger report
+  - ensemble approach, each feature given one vote, (majority) class is assigned
+
+- warm-up period for initialization of averages
+  - e.g., first 1000 events are not scanned for anomalies?
+  - ...
+- apply clustering algorithm?
+  - generate clusters after warmup procedure?
+  - might be hard with fake data?
