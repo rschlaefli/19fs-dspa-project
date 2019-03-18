@@ -1,102 +1,54 @@
 # DSPA 2019 - Design Document
 
-Roland Schlaefli, 12-932-398
-Nicolas Kuechler, 14-712-129
+Roland Schlaefli, 12-932-398 and Nicolas Kuechler, 14-712-129
 
-TODO: Briefly describe what you are planning to build and how you are planning to build it.
+The processing engine of choice for the streaming application is Apache Flink. The main drivers behind this choice were the maturity and popularity (especially in the industry) of the Java ecosystem and Apache Flink itself.
 
-- ...
+Apart from Flink, Apache Kafka is used as an auxiliary system for both input and output streams. Results are visualized in a web UI with a foundation on existing open-source solutions for consumption of Kafka topics. While the current design implementation does not include any state backend or external key-value storage system, this might change in future iterations, where e.g. RocksDB could be a useful addition.
 
-TODO: Briefly argue why your design solves the given problems and describe its advantages over alternative approaches.
+The figure below provides an overview of the overall architecture of the system:
 
-- improvements compared to reading from files
-  - more applicable to real-life problems / scalability in real streaming context
-  - ...
+![architecture-overview.png](architecture-overview.png)
 
-## Input & Preprocessing
+## Input Pipeline
 
-TODO: Where does your application read input from? How does this choice affect latency and semantics (order)?
+The input pipeline consists of three custom Kafka producers that simulate realistic streaming sources. The streams are read from files and written to separate Kafka topics (`post`, `comment`, and `like`). Each event is scheduled such that it is produced proportional to the event time plus a bounded random delay. A speedup parameter can be used to control the speed of the stream. Data transmitted through Kafka is encoded and decoded using Avro schemas, simplifying data ingestion by the Flink consumer.
 
-All streaming input processed in our application is consumed from separate Kafka topics. The data generation and preprocessing for these topics is handled by several Kafka producer classes that ensure data is generated in a reasonable fashion. Events are scheduled such that they are written to Kafka proportionally to the actual creation timestamp of the event (after application of a speedup factor). All data transmitted through Kafka is encoded and decoded using Avro schemas, allowing us to more easily extract data on the consumer side.
+Using Kafka increases the latency of the system but brings the advantage of failure handling and replay capabilities, overall leading to a more reliable system considering the application context. Due to the reliance on event time for processing, the introduction of a bounded random delay can lead to events that arrive out of order. To guarantee correct semantics for time-sensitive operators, periodic watermarks are generated at the source of the consumer based on the same upper bound of random delay as is set in the producer. This necessarily increases the latency but is inevitable for correct results.
 
-The latency of our application is increased by our choice of a Kafka pipeline, as Kafka implements measures for failure handling, redundancy, and persistence on disk. Furthermore, using Kafka means that there is an additional transmission over the network in-between Kafka and Flink, as these services normally would run on separate clusters. The latency will necessarily be increased by the random bounded delay that needs to be considered when watermarking, as time-sensitive operators only run once a watermark has become available. Correct semantics of the event streams are ensured by our approach of computing watermarks based on the bounded delay, as well as our usage of event time for computations. The usage of Kafka does not influence the semantics in a direct way, as it does not perform any preprocessing or reordering of the events based on their timestamp (in our implementation).
+## Task 1 - Active Posts Statistics
 
-- x kafka topics with producers for data generation
-  - x producer reading stream file and scheduling events that write event to kafka proportional to created timestamp of event
-  - x avro schemas
-- read static table data via RichMapFunction to enrich stream where necessary
-- x latency?
-  - x watermarking by max. delay will increase latency for time-sensitive operators
-  - x latency is increased by kafka due to failsafe measures, redundancy, disk operations
-  - x data is transferred via network
-- x semantics?
-  - x event time of events taken for computations
-  - x correct ordering ensured by application of watermarks after bounded delay
+The basic approach of the post statistics computation is to first map comments to a post id, such that all streams can be merged into a single stream with a common schema keyed by post id. Based on all three input streams, all information except a triple consisting of post id, type (post, reply, comment, or like), and a person id along with the event time, can be directly discarded. No additional information or static data is required to compute the results.
 
-TODO: What is the format of the input streams for each of the analytics tasks?
+Based on the prepared input stream, events are assigned to sliding windows of 12-hour length and 30-minute step size. Incremental aggregation functions with an internal state can then be applied to the windows to compute comment, reply, and unique people counts. To achieve unique people counts, an internal set of known person ids will need to be maintained in addition to the mapping of post id to count. If active post statistics are kept for the entire time a post is active, a global state stores the necessary data that is no longer in the current window.
 
-All analytics tasks are fed with at least the three available input streams (using three separate Kafka topics). The pure analytics task (#1) does not make use of any additional data, as all results can be directly computed from the stream contents. The recommendations (#2) will be performed based on streaming data that has been enriched with static data using enrichment functions like `RichMap` and other processing functions. This basic structure also applies to anomaly detection (#3), where we make use of the same enriched streams, although the specific data enriched might differ. The streams ingested from Kafka are decoded from Avro schemas.
+## Task 2 - Recommendations
 
-- x analytics (1): separate streams from separate kafka topics, no static data, based on avro schemas
-- x recommendation (2): separate streams, enrich streams with necessary static data
-  - x enrichment in operators or in preprocessing?
-- x anomalies (3): same as (2)?
+The high-level idea of the friends' recommendation computation is to generate a vector representation of each user (i.e., a user embedding) based on two main components:
 
-## Processing
+- User activity over the last 4 hours (tags of created posts, liked posts or commented posts, tags of the forum a user interacted with, posting/commenting from a place, possibly even topics of the content)
+- Static information (work at organization, study at university, interest in tags, interest in tags of the same class, membership in forum, speaking a language)
 
-TODO: What is your stream processor of choice? What features guided your choice?
+Given user embeddings and a similarity metric (e.g. Euclidean distance or cosine similarity), the top 5 most similar people can be calculated for every person, filtering out inactive users or already existing friendships. In a first iteration, the user embeddings are purely based on simple counts of interactions with the different categories (tags, tag classes, places, languages, ...). In a second iteration, this idea can possibly be extended to a similarity learning method trying to ensure that people that are actually friends also receive a high similarity.
 
-The main processing engine for our streaming application is Apache Flink. Our main drivers were our familiarity with Java, as well as the maturity and popularity of the Java ecosystem and Apache Flink itself (especially in the industry). However, we think that Flink also brings other advantages ... TODO:
+To achieve its goal, the recommendations task processes all three input streams enriched with static data at certain operators. The required static data can be loaded into memory from the respective file in the open() function of rich operators.
 
-- x flink!
-  - x java (familiarity with language)
-  - x maturity & popularity in industry
-  - TODO: google advantages of flink
+## Task 3 - Unusual Activity Detection
 
-TODO: Will you use other auxiliary systems / tools, e.g. for intermediate data?
+Similar to the recommendations task, the unusual activity detection computations are also based on all three streams, enriched by static data. The main concept of the pipeline consists of several steps. In the first step, predefined features are extracted from the input streams. For all of these features, the deviation from the mean (e.g., by x standard deviations) can be used to detect unusual activity. The final decision on flagging an event is taken according to the majority vote among the ensemble of features.
 
-One of the main auxiliary systems we use is Apache Kafka, which we use for consuming input streams, as well as producing output streams. Indirectly, this also means that we have dependencies on Zookeeper and all other systems that Kafka itself depends on. In addition to Kafka, we visualize outputs that have been stored in a Kafka stream by means of a web ui based on existing open-source solutions. Our current design implementation does not include any state backend or external key-value storage system. However, this might change in future iteratios, where we might come to the conclusion that e.g. RocksDB would be a useful addition.
+Possible features that could be included in the ensemble computation include (partially inspired by [Forbes](https://www.forbes.com/sites/forbesagencycouncil/2018/08/06/bot-or-not-seven-ways-to-detect-an-online-bot/)):
 
-- x input data from kafka, output to kafka
-  - x including zookeeper, etc.
-- x web ui as kafka consumer for output visualization
-  - x existing oss project
-- x any external key-value store? state backend?
-  - x probably not, maybe rocksdb for state storage
+- Timespan between events of a user (e.g., likes)
+- Contents of posts or comments of a user (e.g., unique words)
+- Ratio of interactions of a post or user (e.g., many likes, few comments)
+- Number of interacting users with newly created accounts (e.g. friends, likers)
+- Number of tags assigned to a post
+- Number of previous non-fraudulent activities
+- Duration of activeness of a post (e.g., if posts are active over an exceptionally long time)
 
-### Task 1 - Statistical Analysis
+These two types of events are finally split into two output streams: one stream contains usual activity, while another stream contains all the events that are deemed unusual. Further analyzing the stream of unusual events with a window-based approach and flagging all users that accumulate too many suspicious events within a given time-frame allows for a reasonable distinction of one-time outliers from unusual activity.
 
-TODO:
+## Output Pipeline
 
-### Task 2 - Recommendations
-
-Our approach to tackling the recommendations problem is based on modeling categories, counting user interactions with these categories, and finally computing intra-user similarities, which finally allows us to recommend users that are deemed "similar" to the user in question. More specifically, in a first step of our pipeline, we apply category modeling procedures to metadata and content of posts and comments. Tags of posts and forums, language, forum of the post, place, as well as other static data can all serve as a basis for categorization of a post or comment. Additionally, we want to try including also the contents of a post or comment by applying topic modeling strategies to further improve categorization.
-
-The second step in our processing will be an analysis of user interactions with the various categories. Counting interactions of users with items in categories allows us to deduce the interests of users based on all streaming data. These interaction counts are stored for 4 hours, after which the first hour will be subtracted, and the current hour will be added to the interaction counts.
-
-To finally compute our recommendations for the users, we then plan to compute the similarity between users by application of simple distance measures. Users with similar interaction counts for categories are deemed more similar and can then be recommended as additional friends. To ensure that no already connected users are recommended, such users will be excluded from the similarity calculations based on the static data available.
-
-- Based on posts and comments: apply "category" modeling
-  - tags (of post and maybe forum), language, forum, and place (static data)
-    - enrich tags with static information from tagclasses (RichMap sth.)
-    - forum maybe as category of its own, maybe just for tags
-  - maybe content of post or comment (modelet in static categories)
-  - only fixed categorizations in our generated data case
-- Count interactions of users with these categories
-  - based on all streams (incl. likes)
-  - within 4 hour window
-- compute intra-user similarity by application of distance measures
-  - users with similar interaction counts for categories are more similar
-
-### Task 3 - Anomaly Detection
-
-TODO:
-
-## Output & Postprocessing
-
-TODO: Where does your application output results? How are these results shown to the user?
-
-- x output to kafka topics for each "task"
-- x show results in simple web ui with kafka consumer
-
-The computation results of our stream analytics tasks are all output to separate Kafka topics. As our streaming application already consumes all of its input from Kafka topics, we decided that producing and storing all of our output in a Kafka topic would be a good approach. This allows us to decouple the computation and processing layer from the vsualization layer, as visualizations will be based purely on Kafka topic contents.
+The results of the streaming analytics tasks are all written to separate Kafka topics (i.e., ap-statistic, recommendation, and unusual-activity). Since Kafka is already used for the input pipeline, there is little overhead to writing to it in the output pipeline. Alongside the other advantages of Kafka, this also introduces decoupling between the processing layer and the web UI visualization layer.
