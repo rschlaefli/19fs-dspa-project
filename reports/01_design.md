@@ -12,7 +12,7 @@ The figure below gives an overview of the architecture of the system.
 There are three parts Input & Pre-processing, Processing, and Output & Post-processing
 which are described in the following in more detail.
 
-TODO: Insert Image
+![architecture-overview.png](architecture-overview.png)
 
 ## Input & Pre-processing
 
