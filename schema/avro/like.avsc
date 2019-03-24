@@ -1,8 +1,8 @@
-{"type": "record", "name": "ch.ethz.dspa.avro.Like",
+{"type": "record", "name": "ch.ethz.infk.dspa.avro.Like",
  "doc": "A like.",
  "fields": [
      {"name": "personId", "type": "long", "aliases":["Person.id"]},
      {"name": "postId", "type": "long", "aliases":["Post.id"]},
-     {"name": "creationDate", "type": "string"}
+     {"name": "creationDate", "type":{"type": "long", "logicalType": "timestamp-millis"}}
  ]
 }

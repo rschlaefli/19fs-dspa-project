@@ -1,9 +1,9 @@
-{"type": "record", "name": "ch.ethz.dspa.avro.Post",
+{"type": "record", "name": "ch.ethz.infk.dspa.avro.Post",
  "doc": "A post.",
  "fields": [
      {"name": "id", "type": "long", "order": "ignore"},
      {"name": "personId", "type": "long"},
-     {"name": "creationDate", "type": "string"},
+     {"name": "creationDate", "type":{"type": "long", "logicalType": "timestamp-millis"}},
      {"name": "imageFile", "type": "string"},
      {"name": "locationIP", "type": "string"},
      {"name": "browserUsed", "type": "string"},

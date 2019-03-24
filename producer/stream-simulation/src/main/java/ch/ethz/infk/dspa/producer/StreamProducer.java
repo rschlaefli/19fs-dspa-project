@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
@@ -137,19 +138,28 @@ public class StreamProducer {
 		String[] parts = line.split("\\|");
 		for (int i = 0; i < fieldNames.length; i++) {
 
-			Type type = schema.getField(fieldNameMap.get(fieldNames[i])).schema().getType();
+			Schema fieldSchema = schema.getField(fieldNameMap.get(fieldNames[i])).schema();
+
+			Type type = fieldSchema.getType();
+			LogicalType logicalType = fieldSchema.getLogicalType();
+
+			// TODO [nku] refactor code
 
 			Object o;
-			switch (type) {
-			case LONG:
-				if (StringUtils.isEmpty(parts[i])) {
-					o = -1l;
-				} else {
-					o = Long.parseLong(parts[i]);
+			if (logicalType != null && logicalType.getName().equals("timestamp-millis")) {
+				o = ZonedDateTime.parse(parts[i]).toInstant().toEpochMilli();
+			} else {
+				switch (type) {
+				case LONG:
+					if (StringUtils.isEmpty(parts[i])) {
+						o = -1l;
+					} else {
+						o = Long.parseLong(parts[i]);
+					}
+					break;
+				default:
+					o = parts[i];
 				}
-				break;
-			default:
-				o = parts[i];
 			}
 
 			record.put(fieldNameMap.get(fieldNames[i]), o);

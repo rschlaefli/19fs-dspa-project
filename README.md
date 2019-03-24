@@ -42,3 +42,9 @@ Comment Stream Producer
 -seed 3
 -worker 2
 ```
+
+
+### Avro Generating Code
+```
+java -jar ./schema/avro/avro-tools-1.8.2.jar compile schema schema/avro consumer/analysis-consumer/target/generated-sources/avro
+```
