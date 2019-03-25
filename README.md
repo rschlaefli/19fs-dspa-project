@@ -2,9 +2,16 @@
 
 ## Getting Started
 
+- Add data files into the `data/` folder
+- Download the flink version to use from the official mirror and store it in the project root
+  - Default config: https://archive.apache.org/dist/flink/flink-1.7.2/flink-1.7.2-bin-scala_2.11.tgz
+- Override any of the docker build arguments if necessary
+- Run `docker-compose up --build` to build an run the consumer container
+
 ### Stream Producer
 
 Post Stream Producer
+
 ```
 -file ./../data/1k-users-sorted/streams/post_event_stream.csv
 -schema ./../data/schema/avro/post.avsc
@@ -18,6 +25,7 @@ Post Stream Producer
 ```
 
 Likes Stream Producer
+
 ```
 -file ./../data/1k-users-sorted/streams/likes_event_stream.csv
 -schema ./../data/schema/avro/like.avsc
@@ -31,6 +39,7 @@ Likes Stream Producer
 ```
 
 Comment Stream Producer
+
 ```
 -file ./../data/1k-users-sorted/streams/comment_event_stream.csv
 -schema ./../data/schema/avro/comment.avsc
@@ -43,8 +52,8 @@ Comment Stream Producer
 -worker 2
 ```
 
-
 ### Avro Generating Code
+
 ```
-java -jar ./data/schema/avro/avro-tools-1.8.2.jar compile schema data/schema/avro /social-network-analysis/target/generated-sources/avro
+java -jar ./data/schema/avro/avro-tools-1.8.2.jar compile schema data/schema/avro social-network-analysis/target/generated-sources/avro
 ```
