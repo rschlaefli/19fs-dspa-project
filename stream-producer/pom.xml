@@ -3,8 +3,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>ch.ethz.infk.dspa.producer</groupId>
-	<artifactId>stream-simulation</artifactId>
+	<groupId>ch.ethz.infk.dspa</groupId>
+	<artifactId>stream-producer</artifactId>
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
 

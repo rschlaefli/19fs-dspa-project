@@ -1,8 +1,8 @@
-data/
 
 # Maven
 target/
-data/
+data/1k-users-sorted/
+data/10k-users-sorted/
 
 
 # Created by https://www.gitignore.io/api/eclipse
