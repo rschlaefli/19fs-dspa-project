@@ -1,0 +1,33 @@
+server:
+  ## What port to run the service on.
+  port: 8080
+  servlet:
+    session:
+      ## User login session timeout after 1 hour (3600 seconds)
+      timeout: 3600
+
+## Various App Configs
+app:
+  ## Should be unique to your installation.
+  ## This key will be used for symmetric encryption of JKS/TrustStore secrets if you configure any SSL enabled Kafka clusters.
+  key: "SuperSecretKey"
+
+  ## Defines a prefix prepended to the Id of all consumers.
+  consumerIdPrefix: "KafkaWebViewConsumer"
+
+  ## Sets upper limit on the number of concurrent web socket consumers supported.
+  maxConcurrentWebSocketConsumers: 64
+
+  ## Require SSL
+  requireSsl: false
+
+  ## User authentication options
+  user:
+    ## Require user authentication
+    ## Setting to false will disable login requirement.
+    enabled: false
+
+    ## Optional: if you want to use LDAP for user authentication instead of locally defined users.
+    ldap:
+      ## Disabled by default.  See below for more details on how to configure.
+      enabled: false
