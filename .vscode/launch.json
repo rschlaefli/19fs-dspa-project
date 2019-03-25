@@ -2,38 +2,64 @@
   "configurations": [
     {
       "type": "java",
-      "name": "CodeLens (Launch) - App",
+      "name": "Launch Post Producer",
       "request": "launch",
-      "mainClass": "ch.ethz.dspa.producer.App",
-      "projectName": "producer"
+      "mainClass": "ch.ethz.infk.dspa.producer.App",
+      "projectName": "stream-simulation",
+      "args": [
+        "-file ./../../data/1k-users-sorted/streams/post_event_stream.csv",
+        "-schema ./../../schema/avro/post.avsc",
+        "-topic post",
+        "-kafkaserver 127.0.0.1:9092",
+        "-speedup 60",
+        "-rdelay 5",
+        "-sdelay 600",
+        "-seed 1",
+        "-worker 2"
+      ]
     },
     {
       "type": "java",
-      "name": "CodeLens (Launch) - App",
+      "name": "Launch Like Producer",
       "request": "launch",
-      "mainClass": "ch.ethz.dspa.consumer.App",
-      "projectName": "consumer"
+      "mainClass": "ch.ethz.infk.dspa.producer.App",
+      "projectName": "stream-simulation",
+      "args": [
+        "-file ./../../data/1k-users-sorted/streams/likes_event_stream.csv",
+        "-schema ./../../schema/avro/like.avsc",
+        "-topic like",
+        "-kafkaserver 127.0.0.1:9092",
+        "-speedup 60",
+        "-rdelay 5",
+        "-sdelay 600",
+        "-seed 2",
+        "-worker 2"
+      ]
     },
     {
       "type": "java",
-      "name": "CodeLens (Launch) - ProducerDemoWithCallback",
+      "name": "Launch Comment Producer",
       "request": "launch",
-      "mainClass": "ch.uzh.ifi.kafkacourse.ProducerDemoWithCallback",
-      "projectName": "kafka-examples"
+      "mainClass": "ch.ethz.infk.dspa.producer.App",
+      "projectName": "stream-simulation",
+      "args": [
+        "-file ./../../data/1k-users-sorted/streams/comment_event_stream.csv",
+        "-schema ./../../schema/avro/comment.avsc",
+        "-topic comment",
+        "-kafkaserver 127.0.0.1:9092",
+        "-speedup 60",
+        "-rdelay 5",
+        "-sdelay 600",
+        "-seed 3",
+        "-worker 2"
+      ]
     },
     {
       "type": "java",
-      "name": "CodeLens (Launch) - ProducerDemo",
+      "name": "Launch Analysis Consumer",
       "request": "launch",
-      "mainClass": "ch.uzh.ifi.kafkacourse.ProducerDemo",
-      "projectName": "kafka-examples"
-    },
-    {
-      "type": "java",
-      "name": "CodeLens (Launch) - ConsumerDemo",
-      "request": "launch",
-      "mainClass": "ch.uzh.ifi.kafkacourse.ConsumerDemo",
-      "projectName": "kafka-examples"
+      "mainClass": "ch.ethz.infk.dspa.consumer.App",
+      "projectName": "analysis-consumer"
     }
   ]
 }
