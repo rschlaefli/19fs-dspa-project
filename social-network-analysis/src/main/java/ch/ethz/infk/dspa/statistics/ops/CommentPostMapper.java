@@ -1,11 +1,10 @@
 package ch.ethz.infk.dspa.statistics.ops;
 
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
-
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import ch.ethz.infk.dspa.avro.Comment;
 import ch.ethz.infk.dspa.statistics.dto.PostActivity;

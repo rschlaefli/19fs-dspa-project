@@ -1,10 +1,10 @@
 package ch.ethz.infk.dspa.stream;
 
-import java.sql.Time;
 import java.util.Properties;
 
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.windowing.time.Time;
 
 public abstract class SocialNetworkDataStreamBuilder<T> {
 
