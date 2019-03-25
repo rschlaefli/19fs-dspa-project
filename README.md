@@ -6,7 +6,7 @@
 - Download the flink version to use from the official mirror and store it in the project root
   - Default config: https://archive.apache.org/dist/flink/flink-1.7.2/flink-1.7.2-bin-scala_2.11.tgz
 - Override any of the docker build arguments if necessary
-- Run `docker-compose up --build` to build an run the consumer container
+- Run `docker-compose up --build --force-recreate` to build an run the consumer container
 
 ### Stream Producer
 
