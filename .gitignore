@@ -1,9 +1,10 @@
+*.tgz
 
 # Maven
 target/
 data/1k-users-sorted/
 data/10k-users-sorted/
-
+dependency-reduced-pom.xml
 
 # Created by https://www.gitignore.io/api/eclipse
 # Edit at https://www.gitignore.io/?templates=eclipse
