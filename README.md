@@ -6,8 +6,8 @@
 
 Post Stream Producer
 ```
--file ./../../data/1k-users-sorted/streams/post_event_stream.csv
--schema ./../../schema/avro/post.avsc
+-file ./../data/1k-users-sorted/streams/post_event_stream.csv
+-schema ./../schema/avro/post.avsc
 -topic post
 -kafkaserver 127.0.0.1:9092
 -speedup 60
@@ -19,8 +19,8 @@ Post Stream Producer
 
 Likes Stream Producer
 ```
--file ./../../data/1k-users-sorted/streams/likes_event_stream.csv
--schema ./../../schema/avro/like.avsc
+-file ./../data/1k-users-sorted/streams/likes_event_stream.csv
+-schema ./../schema/avro/like.avsc
 -topic like
 -kafkaserver 127.0.0.1:9092
 -speedup 60
@@ -32,8 +32,8 @@ Likes Stream Producer
 
 Comment Stream Producer
 ```
--file ./../../data/1k-users-sorted/streams/comment_event_stream.csv
--schema ./../../schema/avro/comment.avsc
+-file ./../data/1k-users-sorted/streams/comment_event_stream.csv
+-schema ./../schema/avro/comment.avsc
 -topic comment
 -kafkaserver 127.0.0.1:9092
 -speedup 60
@@ -46,5 +46,5 @@ Comment Stream Producer
 
 ### Avro Generating Code
 ```
-java -jar ./schema/avro/avro-tools-1.8.2.jar compile schema schema/avro consumer/analysis-consumer/target/generated-sources/avro
+java -jar ./schema/avro/avro-tools-1.8.2.jar compile schema schema/avro consumer/social-network-analysis/target/generated-sources/avro
 ```
