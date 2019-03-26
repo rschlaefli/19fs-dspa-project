@@ -28,7 +28,6 @@ COPY --from=schema-builder /tmp/generated /tmp/target/generated-sources/avro
 
 # package the flink job into a jar
 RUN mvn package
-RUN ls /tmp/target
 
 # ----- FLINK JOB CLUSTER -----
 # https://github.com/apache/flink/blob/release-1.7/flink-container/docker/Dockerfile
@@ -36,6 +35,9 @@ FROM java:8-jre-alpine
 
 # Install requirements
 RUN apk add --no-cache bash snappy
+
+# allow parametrization of the consumer to be built
+ARG CONSUMER_ROOT="social-network-analysis"
 
 # allow parametrization of the jar to use
 ARG JAR_NAME="social-network-analysis-1.0.0.jar"
@@ -54,7 +56,7 @@ ADD ${FLINK_FILENAME} ${FLINK_INSTALL_PATH}
 
 # inject the compiled job jar
 COPY --from=job-builder /tmp/target/${JAR_NAME} $FLINK_INSTALL_PATH/job.jar
-COPY docker-entrypoint.sh /
+COPY ${CONSUMER_ROOT}/docker-entrypoint.sh /
 
 RUN set -x && \
   ln -s $FLINK_INSTALL_PATH/flink-* $FLINK_HOME && \
