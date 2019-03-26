@@ -1,17 +1,5 @@
 version: "3"
 services:
-  analysis:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      # args:
-      # CONSUMER_ROOT: social-network-analysis
-      # JAR_NAME: social-network-analysis-1.0.0.jar
-      # FLINK_VERSION: 1.7.2
-      # SCALA_VERSION: 2.11
-    depends_on:
-      - kafka
-
   zookeeper:
     image: bitnami/zookeeper
     ports:
@@ -26,8 +14,6 @@ services:
     environment:
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
-    depends_on:
-      - zookeeper
 
   kafka_web:
     build: web
@@ -35,8 +21,82 @@ services:
       - 8080:8080
     volumes:
       - web-data:/app/data
-    depends_on:
-      - kafka
+
+  consumer_analysis:
+    build:
+      context: .
+      dockerfile: social-network-analysis/Dockerfile
+      # args:
+      # CONSUMER_ROOT: social-network-analysis
+      # JAR_NAME: social-network-analysis-1.0.0.jar
+      # FLINK_VERSION: 1.7.2
+      # SCALA_VERSION: 2.11
+
+  # consumer_recommendations
+  # consumer_anomalies
+
+  producer_post:
+    build:
+      context: .
+      dockerfile: stream-producer/Dockerfile
+    volumes:
+      - ./data:/data:ro
+    command: [
+      "java",
+      "-jar",
+      "/opt/producer.jar",
+      "-file", "/data/1k-users-sorted/streams/post_event_stream.csv",
+      "-schema", "/data/schema/avro/post.avsc",
+      "-topic", "post",
+      "-kafkaserver", "kafka:9092",
+      "-speedup", "60",
+      "-rdelay", "5",
+      "-sdelay", "600",
+      "-seed", "1",
+      "-worker", "2"
+    ]
+
+  producer_like:
+    build:
+      context: .
+      dockerfile: stream-producer/Dockerfile
+    volumes:
+      - ./data:/data:ro
+    command: [
+      "java",
+      "-jar",
+      "/opt/producer.jar",
+      "-file", "/data/1k-users-sorted/streams/likes_event_stream.csv",
+      "-schema", "/data/schema/avro/like.avsc",
+      "-topic", "post",
+      "-kafkaserver", "kafka:9092",
+      "-speedup", "60",
+      "-rdelay", "5",
+      "-sdelay", "600",
+      "-seed", "2",
+      "-worker", "2"
+    ]
+
+  producer_comment:
+    build:
+      context: .
+      dockerfile: stream-producer/Dockerfile
+    volumes:
+      - ./data:/data:ro
+    command: [
+      "java",
+      "-jar",
+      "/opt/producer.jar",
+      "-file", "/data/1k-users-sorted/streams/comment_event_stream.csv",
+      "-schema", "/data/schema/avro/comment.avsc",
+      "-topic", "post",
+      "-kafkaserver", "kafka:9092",
+      "-speedup", "60",
+      "-rdelay", "5",
+      "-sdelay", "600",
+      "-seed", "3",
+      "-worker", "2"
+    ]
 
 volumes:
   web-data:
