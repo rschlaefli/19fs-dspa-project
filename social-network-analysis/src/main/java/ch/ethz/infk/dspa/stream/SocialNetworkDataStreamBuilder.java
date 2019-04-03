@@ -8,15 +8,20 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 
 public abstract class SocialNetworkDataStreamBuilder<T> {
 
-	// TODO [nku] refactor server and group id
-	private String bootstrapServers = "127.0.0.1:9092";
-	private String groupId = "consumer-group-1";
+	private String bootstrapServers;
+	private String groupId;
 
 	StreamExecutionEnvironment env;
 	private Time maxOutOfOrderness;
 
 	public SocialNetworkDataStreamBuilder(StreamExecutionEnvironment env) {
 		this.env = env;
+	}
+
+	public SocialNetworkDataStreamBuilder<T> withKafkaConnection(String bootstrapServers, String groupId) {
+		this.bootstrapServers = bootstrapServers;
+		this.groupId = groupId;
+		return this;
 	}
 
 	public SocialNetworkDataStreamBuilder<T> withMaxOutOfOrderness(Time maxOutOfOrderness) {
@@ -30,8 +35,13 @@ public abstract class SocialNetworkDataStreamBuilder<T> {
 		Properties props = new Properties();
 		props.setProperty("bootstrap.servers", bootstrapServers);
 		props.setProperty("group.id", groupId);
-
 		return props;
+	}
+
+	public void ensureValidKafkaConfiguration() {
+		if (this.bootstrapServers == null || this.groupId == null) {
+			throw new IllegalArgumentException("INVALID_KAFKA_CONFIG");
+		}
 	}
 
 	public Time getMaxOutOfOrderness() {

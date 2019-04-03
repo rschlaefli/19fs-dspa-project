@@ -19,6 +19,8 @@ public class PostDataStreamBuilder extends SocialNetworkDataStreamBuilder<Post> 
 	@Override
 	public DataStream<Post> build() {
 
+		ensureValidKafkaConfiguration();
+
 		String topic = "post";
 		AvroDeserializationSchema<Post> avroSchema = AvroDeserializationSchema.forSpecific(Post.class);
 		Properties props = buildKafkaConsumerProperties();

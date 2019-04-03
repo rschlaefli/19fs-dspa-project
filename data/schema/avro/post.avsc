@@ -9,7 +9,7 @@
      {"name": "browserUsed", "type": "string"},
      {"name": "language", "type": "string"},
      {"name": "content", "type": "string"},
-     {"name": "tags", "type": "string"},
+     {"name": "tags", "type": {"type": "array", "items": "long"}},
      {"name": "forumId", "type": "string"},
      {"name": "placeId", "type": "string"}
  ]

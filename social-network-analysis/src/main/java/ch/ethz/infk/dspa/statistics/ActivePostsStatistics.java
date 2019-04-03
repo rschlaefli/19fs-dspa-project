@@ -25,8 +25,13 @@ public class ActivePostsStatistics {
 
 	private final static Logger LOG = LogManager.getLogger();
 
-	String bootstrapServers = "127.0.0.1:9092";
-	String groupId = "consumer-group-1";
+	String bootstrapServers = "localhost:9092";
+	String groupId = "active-posts";
+
+	public ActivePostsStatistics withKafkaServer(String bootstrapServers) {
+		this.bootstrapServers = bootstrapServers;
+		return this;
+	}
 
 	public void start() {
 
@@ -38,14 +43,17 @@ public class ActivePostsStatistics {
 
 		// build data streams
 		DataStream<Post> postStream = new PostDataStreamBuilder(env)
+				.withKafkaConnection(bootstrapServers, groupId)
 				.withMaxOutOfOrderness(Time.seconds(maxDelay))
 				.build();
 
 		DataStream<Comment> commentStream = new CommentDataStreamBuilder(env)
+				.withKafkaConnection(bootstrapServers, groupId)
 				.withMaxOutOfOrderness(Time.seconds(maxDelay))
 				.build();
 
 		DataStream<Like> likeStream = new LikeDataStreamBuilder(env)
+				.withKafkaConnection(bootstrapServers, groupId)
 				.withMaxOutOfOrderness(Time.seconds(maxDelay))
 				.build();
 
@@ -78,6 +86,8 @@ public class ActivePostsStatistics {
 				.aggregate(new TypeCountAggregateFunction(ActivityType.REPLY))
 				.map(count -> "Replies: " + count)
 				.print();
+
+		activityStream.print();
 
 		// unique people count
 		// tupleStream.window(SlidingEventTimeWindows.of(Time.hours(12),

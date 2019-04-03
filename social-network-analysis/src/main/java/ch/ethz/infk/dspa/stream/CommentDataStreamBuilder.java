@@ -19,6 +19,8 @@ public class CommentDataStreamBuilder extends SocialNetworkDataStreamBuilder<Com
 	@Override
 	public DataStream<Comment> build() {
 
+		ensureValidKafkaConfiguration();
+
 		String topic = "comment";
 		AvroDeserializationSchema<Comment> avroSchema = AvroDeserializationSchema.forSpecific(Comment.class);
 		Properties props = buildKafkaConsumerProperties();

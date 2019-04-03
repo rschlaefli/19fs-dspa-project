@@ -8,13 +8,17 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
@@ -75,21 +79,14 @@ public class StreamProducer {
 				GenericRecord record = parseLine(line, fieldNames, schema);
 
 				// build runnable
-				ProducerTask task = new ProducerTask.Builder()
-						.withId(id)
-						.withProducer(producer)
-						.withTopic(topic)
-						.withValue(serialize(record))
-						.build();
+				ProducerTask task = new ProducerTask.Builder().withId(id).withProducer(producer).withTopic(topic)
+						.withValue(serialize(record)).build();
 
 				// calculate delay
 				Duration randomDelay = Duration.ofMillis(rand.nextInt((int) maxRandomDelay.toMillis()));
 
-				LocalDateTime schedulingDateTime = getSchedulingDateTime(baseReferenceDateTime,
-						creationDateTime,
-						baseStartDateTime,
-						randomDelay,
-						speedup);
+				LocalDateTime schedulingDateTime = getSchedulingDateTime(baseReferenceDateTime, creationDateTime,
+						baseStartDateTime, randomDelay, speedup);
 
 				// if task is far in the future, delay scheduling
 				Duration delay = Duration.between(LocalDateTime.now(), schedulingDateTime);
@@ -157,6 +154,20 @@ public class StreamProducer {
 						o = Long.parseLong(parts[i]);
 					}
 					break;
+
+				case ARRAY:
+					if (StringUtils.isEmpty(parts[i]) || parts[i].equals("[]")) {
+						o = new ArrayList<String>();
+					} else {
+						String tagArrayString = parts[i].replace("[", "");
+						tagArrayString = tagArrayString.replace("]", "");
+						List<String> tagIdsAsStringList = Arrays.asList(tagArrayString.split(","));
+						List<Long> tagIdsAsLongList = tagIdsAsStringList.stream().map(tagId -> Long.valueOf(tagId))
+								.collect(Collectors.toList());
+						o = tagIdsAsLongList;
+					}
+					break;
+
 				default:
 					o = parts[i];
 				}
