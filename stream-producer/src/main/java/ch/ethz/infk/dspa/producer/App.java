@@ -24,7 +24,7 @@ public class App {
 			StreamProducer producer = new StreamProducer.Builder()
 					.withWorker(Integer.parseInt(cmd.getOptionValue("worker", "2")))
 					.withFile(cmd.getOptionValue("file")).withTopic(cmd.getOptionValue("topic"))
-					.withSchema(cmd.getOptionValue("schema")).withKafkaServer(cmd.getOptionValue("server"))
+					.withSchema(cmd.getOptionValue("schema"))
 					.withSpeedup(Duration.ofSeconds(Long.parseLong(cmd.getOptionValue("speedup", "1"))).toMillis())
 					.withMaxSchedulingDelay(Duration.ofSeconds(Long.parseLong(cmd.getOptionValue("sdelay", "3600"))))
 					.withMaxRandomDelay(Duration.ofSeconds(Long.parseLong(cmd.getOptionValue("rdelay", "3600"))))

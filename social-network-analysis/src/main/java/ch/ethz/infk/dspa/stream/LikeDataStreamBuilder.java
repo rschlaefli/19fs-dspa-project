@@ -19,6 +19,8 @@ public class LikeDataStreamBuilder extends SocialNetworkDataStreamBuilder<Like> 
 	@Override
 	public DataStream<Like> build() {
 
+		ensureValidKafkaConfiguration();
+
 		String topic = "like";
 		AvroDeserializationSchema<Like> avroSchema = AvroDeserializationSchema.forSpecific(Like.class);
 		Properties props = buildKafkaConsumerProperties();

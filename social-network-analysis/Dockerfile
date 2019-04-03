@@ -69,4 +69,4 @@ RUN set -x && \
 USER flink
 EXPOSE 8081 6123
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["job-cluster", "-j", "ch.ethz.infk.dspa.App"]
+CMD ["job-cluster", "-j", "ch.ethz.infk.dspa.App", "-kafkaserver kafka:9092", "-consumertype activeposts"]
