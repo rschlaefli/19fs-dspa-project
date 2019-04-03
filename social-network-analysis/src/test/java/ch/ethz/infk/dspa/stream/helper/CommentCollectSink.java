@@ -7,7 +7,7 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 
 import ch.ethz.infk.dspa.avro.Comment;
 
-public class TestCollectSink implements SinkFunction<Comment> {
+public class CommentCollectSink implements SinkFunction<Comment> {
 
 	private static final long serialVersionUID = 1L;
 
