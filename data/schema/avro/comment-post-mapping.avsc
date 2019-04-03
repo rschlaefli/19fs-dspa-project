@@ -1,0 +1,8 @@
+{"type": "record", "name": "ch.ethz.infk.dspa.avro.CommentPostMapping",
+ "doc": "A mapping between comment and post.",
+ "fields": [
+     {"name": "postId", "type": "long"},
+     {"name": "commentId", "type": "long"},
+     {"name": "commentCreationDate", "type":{"type": "long", "logicalType": "timestamp-millis"}}
+ ]
+}

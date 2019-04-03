@@ -14,8 +14,6 @@ import ch.ethz.infk.dspa.avro.Like;
 import ch.ethz.infk.dspa.avro.Post;
 import ch.ethz.infk.dspa.statistics.dto.PostActivity;
 import ch.ethz.infk.dspa.statistics.dto.PostActivity.ActivityType;
-import ch.ethz.infk.dspa.statistics.ops.CommentPostMapper;
-import ch.ethz.infk.dspa.statistics.ops.CommentPostMapper.CommentKeySelector;
 import ch.ethz.infk.dspa.statistics.ops.TypeCountAggregateFunction;
 import ch.ethz.infk.dspa.stream.CommentDataStreamBuilder;
 import ch.ethz.infk.dspa.stream.LikeDataStreamBuilder;
@@ -48,6 +46,7 @@ public class ActivePostsStatistics {
 				.build();
 
 		DataStream<Comment> commentStream = new CommentDataStreamBuilder(env)
+				.withPostIdEnriched()
 				.withKafkaConnection(bootstrapServers, groupId)
 				.withMaxOutOfOrderness(Time.seconds(maxDelay))
 				.build();
@@ -65,10 +64,11 @@ public class ActivePostsStatistics {
 				.map(like -> new PostActivity(like.getPostId(), ActivityType.LIKE, like.getPersonId()));
 
 		DataStream<PostActivity> commentActivityStream = commentStream
-				.keyBy(new CommentKeySelector()) // key by comment id (for replies uses original comment)
-				// TODO [nku] problem if reply arrives before comment
-				// TODO [nku] check if it is possible that there are replies to replies
-				.map(new CommentPostMapper());
+				.map(comment -> {
+					ActivityType type = comment.getReplyToCommentId() == null ? ActivityType.COMMENT
+							: ActivityType.REPLY;
+					return new PostActivity(comment.getReplyToPostId(), type, comment.getPersonId());
+				});
 
 		// merge activity streams
 		KeyedStream<PostActivity, Long> activityStream = postActivityStream

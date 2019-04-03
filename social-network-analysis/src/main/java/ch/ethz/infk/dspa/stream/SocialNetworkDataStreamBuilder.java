@@ -48,4 +48,12 @@ public abstract class SocialNetworkDataStreamBuilder<T> {
 		return maxOutOfOrderness;
 	}
 
+	public String getBootstrapServers() {
+		return bootstrapServers;
+	}
+
+	public String getGroupId() {
+		return groupId;
+	}
+
 }
