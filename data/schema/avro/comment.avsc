@@ -4,11 +4,11 @@
      {"name": "id", "type": "long"},
      {"name": "personId", "type": "long"},
      {"name": "creationDate", "type":{"type": "long", "logicalType": "timestamp-millis"}},
-     {"name": "locationIP", "type": "string"},
-     {"name": "browserUsed", "type": "string"},
-     {"name": "content", "type": "string"},
-     {"name": "reply_to_postId", "type": "long"},
-     {"name": "reply_to_commentId", "type": "long"},
-     {"name": "placeId", "type": "long"}
+     {"name": "locationIP", "type": ["null", "string"], "default":null},
+     {"name": "browserUsed", "type": ["null","string"], "default":null},
+     {"name": "content", "type": ["null", "string"], "default":null},
+     {"name": "reply_to_postId", "type": ["null", "long"], "default":null},
+     {"name": "reply_to_commentId", "type": ["null", "long"], "default":null},
+     {"name": "placeId", "type": ["null", "long"], "default":null}
  ]
 }
