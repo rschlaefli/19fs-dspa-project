@@ -29,11 +29,10 @@ public class CommentDataStreamBuilder extends SocialNetworkDataStreamBuilder<Com
 
 	@Override
 	public DataStream<Comment> build() {
-
-		ensureValidKafkaConfiguration();
-
-    if (commentStream == null) {
+		if (commentStream == null) {
 			// if not given, use default kafka source
+			ensureValidKafkaConfiguration();
+
 			SourceFunction<Comment> source = new KafkaConsumerBuilder<Comment>()
 					.withTopic("comment")
 					.withClass(Comment.class)
@@ -56,6 +55,8 @@ public class CommentDataStreamBuilder extends SocialNetworkDataStreamBuilder<Com
 
 			if (commentPostMappingStream == null) {
 				// if not given, use default kafka source
+				ensureValidKafkaConfiguration();
+
 				SourceFunction<CommentPostMapping> source = new KafkaConsumerBuilder<CommentPostMapping>()
 						.withTopic("comment-post-mapping")
 						.withClass(CommentPostMapping.class)
