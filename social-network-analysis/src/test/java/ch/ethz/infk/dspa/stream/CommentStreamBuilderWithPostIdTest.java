@@ -19,7 +19,7 @@ import ch.ethz.infk.dspa.stream.helper.SourceSink;
 import ch.ethz.infk.dspa.stream.helper.CommentCollectSink;
 import ch.ethz.infk.dspa.stream.testdata.CommentTestDataGenerator;
 
-public class CommentPostIdEnrichmentProcessFunctionTest extends AbstractTestBase {
+public class CommentStreamBuilderWithPostIdTest extends AbstractTestBase {
 
 	private static List<Comment> comments;
 	private static Map<Long, Long> map;
