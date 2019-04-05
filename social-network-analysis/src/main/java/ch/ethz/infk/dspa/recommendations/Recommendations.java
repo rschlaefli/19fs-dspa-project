@@ -57,9 +57,9 @@ public class Recommendations {
 
 		SingleOutputStreamOperator<PersonActivity> personActivityStream = postPersonActivityStream
 				.union(commentPersonActivityStream, likePersonActivityStream)
-				.keyBy(activity -> activity.postId)
+				.keyBy(activity -> activity.postId())
 				.process(new CategoryEnrichmentProcessFunction())
-				.keyBy(activity -> activity.personId)
+				.keyBy(activity -> activity.personId())
 				.window(SlidingEventTimeWindows.of(Time.hours(4), Time.hours(1)))
 				.aggregate(new PersonActivityAggregationFunction())
 				.process(new PersonOutputSelectorProcessFunction());
@@ -74,7 +74,7 @@ public class Recommendations {
 		DataStream<PersonSimilarity> personSimilarityStream = null;
 
 		personSimilarityStream.filter(new FriendsFilterFunction())
-				.keyBy(x -> x.person1Id)
+				.keyBy(x -> x.person1Id())
 				.window(SlidingEventTimeWindows.of(Time.hours(4), Time.hours(1))) // TODO ?
 				.aggregate(new TopKAggregateFunction(5))
 				.print();

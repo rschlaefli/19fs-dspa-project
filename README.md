@@ -55,5 +55,5 @@ Comment Stream Producer
 ### Avro Generating Code
 
 ```
-java -jar ./data/schema/avro/avro-tools-1.8.2.jar compile schema data/schema/avro social-network-analysis/target/generated-sources/avro
+java -jar ./data/schema/avro/avro-tools-1.8.2.jar compile -string schema data/schema/avro social-network-analysis/target/generated-sources/avro
 ```

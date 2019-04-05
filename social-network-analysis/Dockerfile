@@ -6,7 +6,7 @@ WORKDIR /tmp
 COPY data/schema/avro /tmp
 
 # run avro tools to compile the schema files
-RUN java -jar avro-tools-1.8.2.jar compile schema . generated/
+RUN java -jar avro-tools-1.8.2.jar compile -string schema . generated/
 
 
 # ----- FLINK JOB COMPILATION -----

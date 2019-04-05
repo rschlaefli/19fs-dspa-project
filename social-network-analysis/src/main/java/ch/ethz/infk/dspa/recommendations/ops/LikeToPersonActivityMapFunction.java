@@ -1,26 +1,24 @@
 package ch.ethz.infk.dspa.recommendations.ops;
 
-import org.apache.flink.api.common.functions.AbstractRichFunction;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.configuration.Configuration;
 
 import ch.ethz.infk.dspa.avro.Like;
 import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
 
-public class LikeToPersonActivityMapFunction extends AbstractRichFunction implements MapFunction<Like, PersonActivity> {
+public class LikeToPersonActivityMapFunction implements MapFunction<Like, PersonActivity> {
 
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public void open(Configuration parameters) throws Exception {
-		// TODO Auto-generated method stub
-		super.open(parameters);
-	}
+	public PersonActivity map(Like like) throws Exception {
 
-	@Override
-	public PersonActivity map(Like value) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		PersonActivity activity = new PersonActivity();
+		activity.setPostId(like.getPostId());
+		activity.setPersonId(like.getPersonId());
+
+		// TODO [nku] check if want to keep creationTime in PersonActivity
+
+		return activity;
 	}
 
 }
