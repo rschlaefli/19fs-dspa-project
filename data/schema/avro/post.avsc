@@ -1,16 +1,16 @@
 {"type": "record", "name": "ch.ethz.infk.dspa.avro.Post",
  "doc": "A post.",
  "fields": [
-     {"name": "id", "type": "long", "order": "ignore"},
+     {"name": "id", "type": "long"},
      {"name": "personId", "type": "long"},
      {"name": "creationDate", "type":{"type": "long", "logicalType": "timestamp-millis"}},
-     {"name": "imageFile", "type": "string"},
-     {"name": "locationIP", "type": "string"},
-     {"name": "browserUsed", "type": "string"},
-     {"name": "language", "type": "string"},
-     {"name": "content", "type": "string"},
-     {"name": "tags", "type": {"type": "array", "items": "long"}},
-     {"name": "forumId", "type": "string"},
-     {"name": "placeId", "type": "string"}
+     {"name": "imageFile", "type": ["null", "string"], "default":null},
+     {"name": "locationIP", "type": ["null", "string"], "default":null},
+     {"name": "browserUsed", "type": ["null", "string"], "default":null},
+     {"name": "language", "type": ["null", "string"], "default":null},
+     {"name": "content", "type": ["null", "string"], "default":null},
+     {"name": "tags", "type": ["null", {"type": "array", "items": "long"}], "default":null},
+     {"name": "forumId", "type": ["null", "long"], "default":null},
+     {"name": "placeId", "type": ["null", "long"], "default":null}
  ]
 }
