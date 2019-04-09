@@ -2,42 +2,52 @@ package ch.ethz.infk.dspa.recommendations.dto;
 
 import java.util.HashMap;
 
-import org.apache.flink.api.java.tuple.Tuple3;
-
-public class PersonActivity extends Tuple3<Long, Long, HashMap<String, Integer>> {
+public class PersonActivity {
 
 	private static final long serialVersionUID = 1L;
 
+	private Long personId;
+	private Long postId;
+	private HashMap<String, Integer> categoryMap;
+
+	public PersonActivity() {
+		categoryMap = new HashMap<String, Integer>();
+	}
+
 	public Long personId() {
-		return this.f0;
+		return this.personId;
 	}
 
 	public Long postId() {
-		return this.f1;
+		return this.postId;
 	}
 
 	public HashMap<String, Integer> categoryMap() {
-		return this.f2;
+		return this.categoryMap;
 	}
 
 	public void setPersonId(Long personId) {
-		this.f0 = personId;
+		this.personId = personId;
 	}
 
 	public void setPostId(Long postId) {
-		this.f1 = postId;
+		this.postId = postId;
 	}
 
 	public void countCategory(String category) {
-		this.f2.merge(category, 1, Integer::sum);
+		this.categoryMap.merge(category, 1, Integer::sum);
 	}
 
 	public void putCategory(String category, Integer count) {
-		this.f2.put(category, count);
+		this.categoryMap.put(category, count);
 	}
 
-	public Integer count(String category) {
-		return this.f2.getOrDefault(category, 0);
+	public int count(String category) {
+		return this.categoryMap.getOrDefault(category, 0);
+	}
+
+	public void mergeCategoryMap(HashMap<String, Integer> other) {
+		other.forEach((category, count) -> categoryMap.merge(category, count, Integer::sum));
 	}
 
 }

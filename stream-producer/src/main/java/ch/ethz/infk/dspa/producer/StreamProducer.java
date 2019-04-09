@@ -142,6 +142,12 @@ public class StreamProducer {
 
 			// TODO [nku] refactor code
 
+			if (type == Type.UNION) {
+				List<Schema> x = fieldSchema.getTypes();
+
+				type = x.get(1).getType();
+			}
+
 			Object o;
 			if (logicalType != null && logicalType.getName().equals("timestamp-millis")) {
 				o = ZonedDateTime.parse(parts[i]).toInstant().toEpochMilli();
@@ -161,7 +167,7 @@ public class StreamProducer {
 					} else {
 						String tagArrayString = parts[i].replace("[", "");
 						tagArrayString = tagArrayString.replace("]", "");
-						List<String> tagIdsAsStringList = Arrays.asList(tagArrayString.split(","));
+						List<String> tagIdsAsStringList = Arrays.asList(tagArrayString.split(", "));
 						List<Long> tagIdsAsLongList = tagIdsAsStringList.stream().map(tagId -> Long.valueOf(tagId))
 								.collect(Collectors.toList());
 						o = tagIdsAsLongList;

@@ -16,7 +16,7 @@ import ch.ethz.infk.dspa.recommendations.ops.CategoryEnrichmentProcessFunction;
 import ch.ethz.infk.dspa.recommendations.ops.CommentToPersonActivityMapFunction;
 import ch.ethz.infk.dspa.recommendations.ops.FriendsFilterFunction;
 import ch.ethz.infk.dspa.recommendations.ops.LikeToPersonActivityMapFunction;
-import ch.ethz.infk.dspa.recommendations.ops.PersonActivityAggregationFunction;
+import ch.ethz.infk.dspa.recommendations.ops.PersonActivityReduceFunction;
 import ch.ethz.infk.dspa.recommendations.ops.PersonOutputSelectorProcessFunction;
 import ch.ethz.infk.dspa.recommendations.ops.PostToPersonActivityMapFunction;
 import ch.ethz.infk.dspa.recommendations.ops.TopKAggregateFunction;
@@ -61,7 +61,7 @@ public class Recommendations {
 				.process(new CategoryEnrichmentProcessFunction())
 				.keyBy(activity -> activity.personId())
 				.window(SlidingEventTimeWindows.of(Time.hours(4), Time.hours(1)))
-				.aggregate(new PersonActivityAggregationFunction())
+				.reduce(new PersonActivityReduceFunction())
 				.process(new PersonOutputSelectorProcessFunction());
 
 		DataStream<PersonActivity> selectedPersonActivityStream = personActivityStream
