@@ -1,36 +1,44 @@
 package ch.ethz.infk.dspa.recommendations.dto;
 
-import org.apache.flink.api.java.tuple.Tuple3;
-
-public class PersonSimilarity extends Tuple3<Long, Long, Double> {
+public class PersonSimilarity {
 
 	private static final long serialVersionUID = 1L;
 
+	private Long person1Id;
+	private Long person2Id;
+	private Double similarity;
+
 	public Long person1Id() {
-		return f0;
+		return person1Id;
 	}
 
 	public Long person2Id() {
-		return f1;
+		return person2Id;
 	}
 
 	public Double similarity() {
-		return f2;
+		return similarity;
 	}
 
 	public PersonSimilarity withPerson1Id(Long id) {
-		f0 = id;
+		this.person1Id = id;
 		return this;
 	}
 
 	public PersonSimilarity withPerson2Id(Long id) {
-		f1 = id;
+		this.person2Id = id;
 		return this;
 	}
 
 	public PersonSimilarity withSimilarity(Double similarity) {
-		f2 = similarity;
+		this.similarity = similarity;
 		return this;
+	}
+
+	@Override
+	public String toString() {
+		return "PersonSimilarity [person1Id=" + person1Id + ", person2Id=" + person2Id + ", similarity=" + similarity
+				+ "]";
 	}
 
 }
