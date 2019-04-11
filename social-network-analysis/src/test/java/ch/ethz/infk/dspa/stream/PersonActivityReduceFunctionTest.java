@@ -1,9 +1,9 @@
 package ch.ethz.infk.dspa.stream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
 import ch.ethz.infk.dspa.recommendations.ops.PersonActivityReduceFunction;
@@ -33,13 +33,13 @@ public class PersonActivityReduceFunctionTest {
 
 		PersonActivity reducedActivity = activityReduce.reduce(activity1, activity2);
 
-		assertEquals("person id test", personId, reducedActivity.personId());
-		assertNull("post id test", reducedActivity.postId());
-		assertEquals("category count: a", 2, reducedActivity.count("a"));
-		assertEquals("category count: b", 3, reducedActivity.count("b"));
-		assertEquals("category count: c", 4, reducedActivity.count("c"));
-		assertEquals("category count: d", 3, reducedActivity.count("d"));
-		assertEquals("category count: e", 0, reducedActivity.count("e"));
+		assertEquals(personId, reducedActivity.personId(), "person id test");
+		assertNull(reducedActivity.postId(), "post id test");
+		assertEquals(2, reducedActivity.count("a"), "category count: a");
+		assertEquals(3, reducedActivity.count("b"), "category count: b");
+		assertEquals(4, reducedActivity.count("c"), "category count: c");
+		assertEquals(3, reducedActivity.count("d"), "category count: d");
+		assertEquals(0, reducedActivity.count("e"), "category count: e");
 
 	}
 

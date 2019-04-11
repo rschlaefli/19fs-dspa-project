@@ -1,6 +1,6 @@
 package ch.ethz.infk.dspa.stream;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Collections;
 import java.util.List;
@@ -10,8 +10,8 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.test.util.AbstractTestBase;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import ch.ethz.infk.dspa.avro.Comment;
 import ch.ethz.infk.dspa.avro.CommentPostMapping;
@@ -24,7 +24,7 @@ public class CommentStreamBuilderWithPostIdTest extends AbstractTestBase {
 	private static List<Comment> comments;
 	private static Map<Long, Long> map;
 
-	@BeforeClass
+	@BeforeAll
 	public static void init() {
 		CommentTestDataGenerator generator = new CommentTestDataGenerator();
 		comments = generator.getComments();
@@ -67,12 +67,12 @@ public class CommentStreamBuilderWithPostIdTest extends AbstractTestBase {
 		enrichedCommentStream.addSink(new CommentCollectSink());
 		env.execute();
 
-		assertEquals("Event Count", map.size(), CommentCollectSink.values.size());
+		assertEquals(map.size(), CommentCollectSink.values.size(), "Event Count");
 
 		for (Comment comment : CommentCollectSink.values) {
 			Long commentId = comment.getId();
 			Long postId = comment.getReplyToPostId();
-			assertEquals("Comment " + commentId, map.get(commentId), postId);
+			assertEquals(map.get(commentId), postId, "Comment " + commentId);
 		}
 	}
 
