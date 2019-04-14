@@ -120,9 +120,14 @@
 			<version>${flink.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-test-utils_2.11</artifactId>
-			<version>${flink.version}</version>
+  			<groupId>org.apache.flink</groupId>
+  			<artifactId>flink-test-utils_2.11</artifactId>
+  			<version>${flink.version}</version>
+		</dependency>
+		<dependency>
+  			<groupId>org.apache.flink</groupId>
+  			<artifactId>flink-runtime-web_2.11</artifactId>
+  			<version>${flink.version}</version>
 		</dependency>
 	</dependencies>
 	<build>

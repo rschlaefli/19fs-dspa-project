@@ -2,6 +2,7 @@ package ch.ethz.infk.dspa.recommendations.ops;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.functions.MapFunction;
 
 import ch.ethz.infk.dspa.avro.Post;
@@ -26,22 +27,22 @@ public class PostToPersonActivityMapFunction implements MapFunction<Post, Person
 		// set categories of post
 		List<Long> tags = post.getTags();
 		if (tags != null) {
-			tags.forEach(tagId -> activity.count(Category.tag(tagId)));
+			tags.forEach(tagId -> activity.countCategory(Category.tag(tagId)));
 		}
 
 		Long forumId = post.getForumId();
 		if (forumId != null) {
-			activity.count(Category.forum(forumId));
+			activity.countCategory(Category.forum(forumId));
 		}
 
 		Long placeId = post.getPlaceId();
 		if (placeId != null) {
-			activity.count(Category.place(placeId));
+			activity.countCategory(Category.place(placeId));
 		}
 
 		String language = post.getLanguage();
-		if (language != null) {
-			activity.count(Category.language(language));
+		if (StringUtils.isNotEmpty(language)) {
+			activity.countCategory(Category.language(language));
 		}
 
 		// TODO potentially add content topic extraction
