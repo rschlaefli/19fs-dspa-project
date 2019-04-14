@@ -1,0 +1,11 @@
+id|personId|creationDate|imageFile|locationIP|browserUsed|language|content|tags|forumId|placeId
+3|100|2012-02-02T04:46:56Z|photo105275.jpg|14.102.224.16|Firefox||||154380|38
+1|100|2012-02-02T02:46:56Z||204.79.194.17|Firefox|en|Demo Content|[7001, 1667]|2440|28
+2|200|2012-02-02T03:46:56Z|photo105274.jpg|14.102.224.16|Firefox||||154380|38
+4|200|2012-02-02T05:46:56Z|photo105278.jpg|62.114.0.3|Firefox||||154380|26
+5|300|2012-02-02T06:46:56Z||46.183.248.8|Safari|en|Demo Content|[1912, 3078, 5183, 545]|10140|63
+7|200|2012-02-02T08:46:56Z||46.183.248.8|Safari|nl|Demo Content|[5183, 545, 2987, 4844]|10140|63
+6|100|2012-02-02T07:46:56Z||46.183.248.8|Safari|en|Demo Content|[1909, 545]|10140|63
+8|300|2012-02-02T09:46:56Z||46.183.248.8|Safari|en|Demo Content|[1912, 3078, 5183, 545]|10140|63
+10|200|2012-02-02T11:46:56Z||46.183.248.8|Safari|nl|Demo Content||10140|63
+9|100|2012-02-02T10:46:56Z||46.183.248.8|Safari|en|Demo Content||10140|63

@@ -1,125 +1,83 @@
 package ch.ethz.infk.dspa.stream.testdata;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.IntStream;
+import java.time.ZonedDateTime;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
+import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
+import org.apache.flink.streaming.api.windowing.time.Time;
 import org.joda.time.DateTime;
 
 import ch.ethz.infk.dspa.avro.Comment;
 
-public class CommentTestDataGenerator {
+public class CommentTestDataGenerator extends AbstractTestDataGenerator<Comment> {
 
-	private List<Comment> comments = new ArrayList<>();
-	private Map<Long, Long> map = new HashMap<>();
+	@Override
+	public AssignerWithPeriodicWatermarks<TestDataPair<Comment>> getTimestampsAndWatermarkAssigner(
+			Time maxOutOfOrderness) {
+		return new BoundedOutOfOrdernessTimestampExtractor<TestDataPair<Comment>>(maxOutOfOrderness) {
+			private static final long serialVersionUID = 1L;
 
-	public CommentTestDataGenerator() {
-		/**
-		 * post p1 - comment c1_1 - reply r1_1_1 - reply r1_1_1_1 - reply r1_1_1_2 -
-		 * reply r1_1_2 post p2 - comment c2_1 - reply r2_1_1 - reply r2_1_2 - comment
-		 * c2_2
-		 */
-
-		Long id = 0l;
-		Long post1 = 10l;
-		Long post2 = 20l;
-
-		final DateTime base = DateTime.now().minusMinutes(100);
-		Iterator<DateTime> seqDateTime = IntStream.range(0, 100)
-				.mapToObj(offset -> base.plusMinutes(offset))
-				.iterator();
-
-		Comment c1_1 = Comment.newBuilder()
-				.setId(id)
-				.setReplyToPostId(post1)
-				.setCreationDate(seqDateTime.next())
-				.setPersonId(0l)
-				.build();
-		map.put(id, post1);
-		comments.add(c1_1);
-
-		Comment r1_1_1 = Comment.newBuilder()
-				.setId(++id)
-				.setReplyToCommentId(c1_1.getId())
-				.setCreationDate(seqDateTime.next())
-				.setPersonId(0l)
-				.build();
-		map.put(id, post1);
-		comments.add(r1_1_1);
-
-		Comment r1_1_1_1 = Comment.newBuilder()
-				.setId(++id)
-				.setReplyToCommentId(r1_1_1.getId())
-				.setCreationDate(seqDateTime.next())
-				.setPersonId(0l)
-				.build();
-		map.put(id, post1);
-		comments.add(r1_1_1_1);
-
-		Comment r1_1_1_2 = Comment.newBuilder()
-				.setId(++id)
-				.setReplyToCommentId(r1_1_1.getId())
-				.setCreationDate(seqDateTime.next())
-				.setPersonId(0l)
-				.build();
-		map.put(id, post1);
-		comments.add(r1_1_1_2);
-
-		Comment r1_1_2 = Comment.newBuilder()
-				.setId(++id)
-				.setReplyToCommentId(c1_1.getId())
-				.setCreationDate(seqDateTime.next())
-				.setPersonId(0l)
-				.build();
-		map.put(id, post1);
-		comments.add(r1_1_2);
-
-		Comment c2_1 = Comment.newBuilder()
-				.setId(++id)
-				.setReplyToPostId(post2)
-				.setCreationDate(seqDateTime.next())
-				.setPersonId(0l)
-				.build();
-		map.put(id, post2);
-		comments.add(c2_1);
-
-		Comment r2_1_1 = Comment.newBuilder()
-				.setId(++id)
-				.setReplyToCommentId(c2_1.getId())
-				.setCreationDate(seqDateTime.next())
-				.setPersonId(0l)
-				.build();
-		map.put(id, post2);
-		comments.add(r2_1_1);
-
-		Comment r2_1_2 = Comment.newBuilder()
-				.setId(++id)
-				.setReplyToCommentId(c2_1.getId())
-				.setCreationDate(seqDateTime.next())
-				.setPersonId(0l)
-				.build();
-		map.put(id, post2);
-		comments.add(r2_1_2);
-
-		Comment c2_2 = Comment.newBuilder()
-				.setId(++id)
-				.setReplyToPostId(post2)
-				.setCreationDate(seqDateTime.next())
-				.setPersonId(0l)
-				.build();
-		map.put(id, post2);
-		comments.add(c2_2);
+			@Override
+			public long extractTimestamp(TestDataPair<Comment> pair) {
+				return pair.element.getCreationDate().getMillis();
+			}
+		};
 	}
 
-	public List<Comment> getComments() {
-		return comments;
+	@Override
+	public Comment generateElement() {
+		return Comment.newBuilder()
+				.setId(1l)
+				.setPersonId(2l)
+				.setCreationDate(DateTime.now())
+				.setLocationIP("locationIP")
+				.setBrowserUsed("browserUsed")
+				.setContent("content")
+				.setReplyToPostId(3l)
+				.setReplyToCommentId(4l)
+				.setPlaceId(3l)
+				.build();
 	}
 
-	public Map<Long, Long> getMap() {
-		return map;
-	}
+	@Override
+	public TestDataPair<Comment> parseLine(String line) {
+		String[] parts = line.split("\\|");
 
+		Long commentId = Long.parseLong(parts[0]);
+		Long personId = Long.parseLong(parts[1]);
+		DateTime creationDate = new DateTime(ZonedDateTime.parse(parts[2]).toInstant().toEpochMilli());
+		String locationIP = parts[3];
+		String browserUsed = parts[4];
+		String content = parts[5];
+
+		Long replyToPostId = null;
+		if (StringUtils.isNotEmpty(parts[6])) {
+			replyToPostId = Long.parseLong(parts[6]);
+		}
+
+		Long replyToCommentId = null;
+		if (StringUtils.isNotEmpty(parts[7])) {
+			replyToCommentId = Long.parseLong(parts[7]);
+		}
+
+		Long placeId = null;
+		if (StringUtils.isNotEmpty(parts[8])) {
+			placeId = Long.parseLong(parts[8]);
+		}
+
+		Comment comment = Comment.newBuilder()
+				.setId(commentId)
+				.setPersonId(personId)
+				.setCreationDate(creationDate)
+				.setLocationIP(locationIP)
+				.setBrowserUsed(browserUsed)
+				.setContent(content)
+				.setReplyToPostId(replyToPostId)
+				.setReplyToCommentId(replyToCommentId)
+				.setPlaceId(placeId)
+				.build();
+
+		return TestDataPair.of(comment, null);
+	}
 }

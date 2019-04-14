@@ -20,6 +20,7 @@
 		<flink.version>1.7.2</flink.version>
 		<commons-cli.version>1.4</commons-cli.version>
 		<commons-lang3.version>3.0</commons-lang3.version>
+		<json.version>20180813</json.version>
 		<entrypoint>ch.ethz.infk.dspa.App</entrypoint>
 	</properties>
 	<dependencies>
@@ -79,6 +80,11 @@
 			<version>${commons-lang3.version}</version>
 		</dependency>
 		<dependency>
+    		<groupId>org.json</groupId>
+    		<artifactId>json</artifactId>
+    		<version>${json.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.kafka</groupId>
 			<artifactId>kafka-clients</artifactId>
 			<version>${kafka-client.version}</version>
@@ -120,9 +126,14 @@
 			<version>${flink.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-test-utils_2.11</artifactId>
-			<version>${flink.version}</version>
+  			<groupId>org.apache.flink</groupId>
+  			<artifactId>flink-test-utils_2.11</artifactId>
+  			<version>${flink.version}</version>
+		</dependency>
+		<dependency>
+  			<groupId>org.apache.flink</groupId>
+  			<artifactId>flink-runtime-web_2.11</artifactId>
+  			<version>${flink.version}</version>
 		</dependency>
 	</dependencies>
 	<build>
