@@ -6,12 +6,11 @@ import static org.junit.Assert.assertNull;
 import org.junit.Test;
 
 import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
-import ch.ethz.infk.dspa.recommendations.ops.PersonActivityReduceFunction;
 
 public class PersonActivityReduceFunctionTest {
 
 	@Test
-	public void testReduce() throws Exception {
+	public void testPersonActivityReduceFunction() throws Exception {
 
 		PersonActivityReduceFunction activityReduce = new PersonActivityReduceFunction();
 

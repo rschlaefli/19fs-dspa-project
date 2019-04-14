@@ -24,7 +24,7 @@ import ch.ethz.infk.dspa.stream.testdata.CommentTestDataGenerator;
 public class CommentStreamBuilderWithPostIdTest extends AbstractTestBase {
 
 	@Test
-	public void testBase() throws Exception {
+	public void testCommentStreamBuilderWithPostId() throws Exception {
 
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 		String testFile = "./../data/test/01_test/comment_event_stream.csv";

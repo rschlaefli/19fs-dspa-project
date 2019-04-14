@@ -1,5 +1,6 @@
 package ch.ethz.infk.dspa.stream;
 
+import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -81,7 +82,9 @@ public class CommentDataStreamBuilder extends SocialNetworkDataStreamBuilder<Com
 			SingleOutputStreamOperator<Comment> enrichedCommentStream = commentStream.connect(commentPostMappingStream)
 					.keyBy(new CommentRoutingKeySelector(), mapping -> mapping.getCommentId(),
 							TypeInformation.of(Long.class))
-					.process(new CommentPostIdEnrichmentProcessFunction());
+					.process(new CommentPostIdEnrichmentProcessFunction())
+					.returns(new TypeHint<Comment>() {
+					});
 
 			// write side output of mappings to sink
 			enrichedCommentStream.getSideOutput(CommentPostIdEnrichmentProcessFunction.MAPPING_TAG)
