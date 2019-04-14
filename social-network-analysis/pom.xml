@@ -20,6 +20,7 @@
 		<flink.version>1.7.2</flink.version>
 		<commons-cli.version>1.4</commons-cli.version>
 		<commons-lang3.version>3.0</commons-lang3.version>
+		<json.version>20180813</json.version>
 		<entrypoint>ch.ethz.infk.dspa.App</entrypoint>
 	</properties>
 	<dependencies>
@@ -77,6 +78,11 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 			<version>${commons-lang3.version}</version>
+		</dependency>
+		<dependency>
+    		<groupId>org.json</groupId>
+    		<artifactId>json</artifactId>
+    		<version>${json.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.kafka</groupId>

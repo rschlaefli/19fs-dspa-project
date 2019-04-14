@@ -10,16 +10,17 @@ import org.joda.time.DateTime;
 
 import ch.ethz.infk.dspa.avro.Comment;
 
-public class CommentTestDataGenerator extends TestDataGenerator<Comment> {
+public class CommentTestDataGenerator extends AbstractTestDataGenerator<Comment> {
 
 	@Override
-	public AssignerWithPeriodicWatermarks<Comment> getTimestampsAndWatermarkAssigner(Time maxOutOfOrderness) {
-		return new BoundedOutOfOrdernessTimestampExtractor<Comment>(maxOutOfOrderness) {
+	public AssignerWithPeriodicWatermarks<TestDataPair<Comment>> getTimestampsAndWatermarkAssigner(
+			Time maxOutOfOrderness) {
+		return new BoundedOutOfOrdernessTimestampExtractor<TestDataPair<Comment>>(maxOutOfOrderness) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public long extractTimestamp(Comment element) {
-				return element.getCreationDate().getMillis();
+			public long extractTimestamp(TestDataPair<Comment> pair) {
+				return pair.element.getCreationDate().getMillis();
 			}
 		};
 	}
@@ -40,7 +41,7 @@ public class CommentTestDataGenerator extends TestDataGenerator<Comment> {
 	}
 
 	@Override
-	public Comment parseLine(String line) {
+	public TestDataPair<Comment> parseLine(String line) {
 		String[] parts = line.split("\\|");
 
 		Long commentId = Long.parseLong(parts[0]);
@@ -77,6 +78,6 @@ public class CommentTestDataGenerator extends TestDataGenerator<Comment> {
 				.setPlaceId(placeId)
 				.build();
 
-		return comment;
+		return TestDataPair.of(comment, null);
 	}
 }

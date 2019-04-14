@@ -9,16 +9,17 @@ import org.joda.time.DateTime;
 
 import ch.ethz.infk.dspa.avro.Like;
 
-public class LikeTestDataGenerator extends TestDataGenerator<Like> {
+public class LikeTestDataGenerator extends AbstractTestDataGenerator<Like> {
 
 	@Override
-	public AssignerWithPeriodicWatermarks<Like> getTimestampsAndWatermarkAssigner(Time maxOutOfOrderness) {
-		return new BoundedOutOfOrdernessTimestampExtractor<Like>(maxOutOfOrderness) {
+	public AssignerWithPeriodicWatermarks<TestDataPair<Like>> getTimestampsAndWatermarkAssigner(
+			Time maxOutOfOrderness) {
+		return new BoundedOutOfOrdernessTimestampExtractor<TestDataPair<Like>>(maxOutOfOrderness) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public long extractTimestamp(Like element) {
-				return element.getCreationDate().getMillis();
+			public long extractTimestamp(TestDataPair<Like> pair) {
+				return pair.element.getCreationDate().getMillis();
 			}
 		};
 	}
@@ -29,7 +30,7 @@ public class LikeTestDataGenerator extends TestDataGenerator<Like> {
 	}
 
 	@Override
-	public Like parseLine(String line) {
+	public TestDataPair<Like> parseLine(String line) {
 		String[] parts = line.split("\\|");
 
 		Long personId = Long.parseLong(parts[0]);
@@ -42,6 +43,6 @@ public class LikeTestDataGenerator extends TestDataGenerator<Like> {
 				.setCreationDate(creationDate)
 				.build();
 
-		return like;
+		return TestDataPair.of(like, null);
 	}
 }

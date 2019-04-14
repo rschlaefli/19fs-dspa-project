@@ -13,14 +13,16 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
 import org.apache.flink.streaming.api.windowing.time.Time;
+import org.joda.time.DateTime;
 
 import scala.NotImplementedError;
 
-public abstract class TestDataGenerator<T> {
+public abstract class AbstractTestDataGenerator<T> {
 
-	public abstract T parseLine(String line);
+	public abstract TestDataPair<T> parseLine(String line);
 
-	public AssignerWithPeriodicWatermarks<T> getTimestampsAndWatermarkAssigner(Time maxOutOfOrderness) {
+	public AssignerWithPeriodicWatermarks<TestDataPair<T>> getTimestampsAndWatermarkAssigner(
+			Time maxOutOfOrderness) {
 		throw new NotImplementedError("Not implemented");
 	}
 
@@ -33,24 +35,11 @@ public abstract class TestDataGenerator<T> {
 
 	/**
 	 * Generate List of T from file
+	 * 
+	 * @throws IOException
 	 */
 	public List<T> generate(String file) throws IOException {
-
-		List<T> stream = new ArrayList<>();
-
-		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-
-			br.readLine(); // skip header
-			String line;
-
-			while ((line = br.readLine()) != null && StringUtils.isNotEmpty(line)) {
-				stream.add(parseLine(line));
-
-			}
-		}
-
-		return stream;
-
+		return generateTestData(file).stream().map(x -> x.element).collect(Collectors.toList());
 	}
 
 	/**
@@ -69,8 +58,29 @@ public abstract class TestDataGenerator<T> {
 	 */
 	public DataStream<T> generate(StreamExecutionEnvironment env, String file, Time maxOutOfOrderness)
 			throws IOException {
-		DataStream<T> stream = generate(env, file);
-		return stream.assignTimestampsAndWatermarks(getTimestampsAndWatermarkAssigner(maxOutOfOrderness));
+		List<TestDataPair<T>> data = generateTestData(file);
+		DataStream<TestDataPair<T>> stream = env.fromCollection(data);
+		return stream.assignTimestampsAndWatermarks(getTimestampsAndWatermarkAssigner(maxOutOfOrderness))
+				.map(x -> x.element);
+	}
+
+	private List<TestDataPair<T>> generateTestData(String file) throws IOException {
+
+		List<TestDataPair<T>> stream = new ArrayList<>();
+
+		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+
+			br.readLine(); // skip header
+			String line;
+
+			while ((line = br.readLine()) != null && StringUtils.isNotEmpty(line)) {
+				stream.add(parseLine(line));
+
+			}
+		}
+
+		return stream;
+
 	}
 
 	protected List<Long> parseLongList(String str) {
@@ -87,6 +97,18 @@ public abstract class TestDataGenerator<T> {
 				.map(x -> Long.parseLong(x))
 				.collect(Collectors.toList());
 
+	}
+
+	public static class TestDataPair<T> {
+		T element;
+		DateTime timestamp;
+
+		public static <T> TestDataPair<T> of(T element, DateTime timestamp) {
+			TestDataPair<T> c = new TestDataPair<>();
+			c.element = element;
+			c.timestamp = timestamp;
+			return c;
+		}
 	}
 
 }

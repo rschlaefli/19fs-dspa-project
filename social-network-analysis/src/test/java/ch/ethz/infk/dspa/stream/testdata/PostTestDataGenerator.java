@@ -11,16 +11,17 @@ import org.joda.time.DateTime;
 
 import ch.ethz.infk.dspa.avro.Post;
 
-public class PostTestDataGenerator extends TestDataGenerator<Post> {
+public class PostTestDataGenerator extends AbstractTestDataGenerator<Post> {
 
 	@Override
-	public AssignerWithPeriodicWatermarks<Post> getTimestampsAndWatermarkAssigner(Time maxOutOfOrderness) {
-		return new BoundedOutOfOrdernessTimestampExtractor<Post>(maxOutOfOrderness) {
+	public AssignerWithPeriodicWatermarks<TestDataPair<Post>> getTimestampsAndWatermarkAssigner(
+			Time maxOutOfOrderness) {
+		return new BoundedOutOfOrdernessTimestampExtractor<TestDataPair<Post>>(maxOutOfOrderness) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public long extractTimestamp(Post element) {
-				return element.getCreationDate().getMillis();
+			public long extractTimestamp(TestDataPair<Post> pair) {
+				return pair.element.getCreationDate().getMillis();
 			}
 		};
 	}
@@ -45,7 +46,7 @@ public class PostTestDataGenerator extends TestDataGenerator<Post> {
 	}
 
 	@Override
-	public Post parseLine(String line) {
+	public TestDataPair<Post> parseLine(String line) {
 		String[] parts = line.split("\\|");
 
 		Long postId = Long.parseLong(parts[0]);
@@ -74,6 +75,7 @@ public class PostTestDataGenerator extends TestDataGenerator<Post> {
 				.setPlaceId(placeId)
 				.build();
 
-		return post;
+		return TestDataPair.of(post, null);
+
 	}
 }

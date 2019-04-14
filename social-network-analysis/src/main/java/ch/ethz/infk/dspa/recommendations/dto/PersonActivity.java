@@ -4,8 +4,6 @@ import java.util.HashMap;
 
 public class PersonActivity {
 
-	private static final long serialVersionUID = 1L;
-
 	private Long personId;
 	private Long postId;
 	private HashMap<String, Integer> categoryMap;
@@ -48,6 +46,10 @@ public class PersonActivity {
 
 	public void mergeCategoryMap(HashMap<String, Integer> other) {
 		other.forEach((category, count) -> categoryMap.merge(category, count, Integer::sum));
+	}
+
+	public void setCategoryMap(HashMap<String, Integer> categoryMap) {
+		this.categoryMap = categoryMap;
 	}
 
 }
