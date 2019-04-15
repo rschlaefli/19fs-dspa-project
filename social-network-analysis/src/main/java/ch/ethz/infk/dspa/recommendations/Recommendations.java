@@ -1,21 +1,23 @@
 package ch.ethz.infk.dspa.recommendations;
 
 import org.apache.flink.streaming.api.TimeCharacteristic;
+import org.apache.flink.streaming.api.datastream.BroadcastStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 
 import ch.ethz.infk.dspa.avro.Comment;
 import ch.ethz.infk.dspa.avro.Like;
 import ch.ethz.infk.dspa.avro.Post;
 import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
-import ch.ethz.infk.dspa.recommendations.dto.PersonSimilarity;
 import ch.ethz.infk.dspa.recommendations.ops.CategoryEnrichmentProcessFunction;
 import ch.ethz.infk.dspa.recommendations.ops.CommentToPersonActivityMapFunction;
 import ch.ethz.infk.dspa.recommendations.ops.FriendsFilterFunction;
 import ch.ethz.infk.dspa.recommendations.ops.LikeToPersonActivityMapFunction;
+import ch.ethz.infk.dspa.recommendations.ops.PersonActivityBroadcastJoinProcessFunction;
 import ch.ethz.infk.dspa.recommendations.ops.PersonActivityReduceFunction;
 import ch.ethz.infk.dspa.recommendations.ops.PersonOutputSelectorProcessFunction;
 import ch.ethz.infk.dspa.recommendations.ops.PostToPersonActivityMapFunction;
@@ -62,21 +64,21 @@ public class Recommendations {
 				.keyBy(activity -> activity.personId())
 				.window(SlidingEventTimeWindows.of(Time.hours(4), Time.hours(1)))
 				.reduce(new PersonActivityReduceFunction())
+				.keyBy(activity -> 0l) // TODO [rsc] should be done differently if possible, don't want to send all to
+										// same operator for output selection
 				.process(new PersonOutputSelectorProcessFunction());
 
-		DataStream<PersonActivity> selectedPersonActivityStream = personActivityStream
-				.getSideOutput(PersonOutputSelectorProcessFunction.selected);
+		BroadcastStream<PersonActivity> selectedPersonActivityStream = personActivityStream
+				.getSideOutput(PersonOutputSelectorProcessFunction.SELECTED)
+				.broadcast(PersonActivityBroadcastJoinProcessFunction.SELECTED_PERSON_STATE_DESCRIPTOR);
 
-		// TODO join the two streams
-		// selectedPersonActivityStream.join(otherStream)
-		// .intervalJoin(personActivityStream).where(activity ).equalTo()
-
-		DataStream<PersonSimilarity> personSimilarityStream = null;
-
-		personSimilarityStream.filter(new FriendsFilterFunction())
-				.keyBy(x -> x.person1Id())
-				.window(SlidingEventTimeWindows.of(Time.hours(4), Time.hours(1))) // TODO ?
-				.aggregate(new TopKAggregateFunction(5))
+		personActivityStream
+				.connect(selectedPersonActivityStream)
+				.process(new PersonActivityBroadcastJoinProcessFunction(10, Time.hours(1)))
+				.filter(new FriendsFilterFunction())
+				.keyBy(similarity -> similarity.person1Id())
+				.window(TumblingEventTimeWindows.of(Time.hours(1)))
+				.aggregate(new TopKAggregateFunction(10))
 				.print();
 
 	}

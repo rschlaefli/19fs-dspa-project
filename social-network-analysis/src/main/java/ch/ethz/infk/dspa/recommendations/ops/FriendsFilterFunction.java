@@ -11,8 +11,8 @@ public class FriendsFilterFunction extends AbstractRichFunction implements Filte
 
 	@Override
 	public boolean filter(PersonSimilarity value) throws Exception {
-		// TODO Auto-generated method stub
-		return false;
+		// TODO [rsc] implement
+		return true;
 	}
 
 }
