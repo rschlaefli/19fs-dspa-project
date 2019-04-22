@@ -30,21 +30,13 @@ public class CommentStreamBuilderWithPostIdTest extends AbstractTestBase {
 		String testFile = "./../data/test/01_test/comment_event_stream.csv";
 		Time maxOutOfOrderness = Time.hours(1);
 
-		// all replies will produce a mapping
-		Long mappingCount = new CommentTestDataGenerator().generate(testFile).stream()
-				.filter(c -> c.getReplyToCommentId() != null).count();
-
-		// create a SourceSink that acts both as Sink and Source for the
-		// CommentPostMappings (instead of going via Kafka)
-		SourceSink mappingSourceSink = new SourceSink(mappingCount);
-
-		// create artificial streams
+		SourceSink mappingSourceSink = CommentTestDataGenerator.generateSourceSink(testFile);
 		DataStream<Comment> commentStream = new CommentTestDataGenerator().generate(env, testFile, maxOutOfOrderness);
 		DataStream<CommentPostMapping> mappingStream = env.addSource(mappingSourceSink);
 
 		// build the enriched comment stream
 		DataStream<Comment> enrichedCommentStream = new CommentDataStreamBuilder(env)
-				.withCommentStream(commentStream)
+				.withInputStream(commentStream)
 				.withPostIdEnriched()
 				.withCommentPostMappingStream(mappingStream)
 				.withCommentPostMappingSink(mappingSourceSink)

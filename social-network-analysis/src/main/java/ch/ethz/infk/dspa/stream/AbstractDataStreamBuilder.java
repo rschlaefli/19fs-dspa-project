@@ -6,30 +6,38 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
 
-public abstract class SocialNetworkDataStreamBuilder<T> {
+public abstract class AbstractDataStreamBuilder<T> {
 
 	private String bootstrapServers;
 	private String groupId;
 
-	StreamExecutionEnvironment env;
 	private Time maxOutOfOrderness;
 
-	public SocialNetworkDataStreamBuilder(StreamExecutionEnvironment env) {
+	StreamExecutionEnvironment env;
+	DataStream<T> stream;
+
+	public AbstractDataStreamBuilder(StreamExecutionEnvironment env) {
 		this.env = env;
 	}
 
-	public SocialNetworkDataStreamBuilder<T> withKafkaConnection(String bootstrapServers, String groupId) {
+	public abstract DataStream<T> build();
+
+	public AbstractDataStreamBuilder<T> withInputStream(DataStream<T> inputStream) {
+		this.stream = inputStream;
+		return this;
+	}
+
+	public AbstractDataStreamBuilder<T> withKafkaConnection(String bootstrapServers, String groupId) {
 		this.bootstrapServers = bootstrapServers;
 		this.groupId = groupId;
 		return this;
 	}
 
-	public SocialNetworkDataStreamBuilder<T> withMaxOutOfOrderness(Time maxOutOfOrderness) {
+	public AbstractDataStreamBuilder<T> withMaxOutOfOrderness(Time maxOutOfOrderness) {
 		this.maxOutOfOrderness = maxOutOfOrderness;
 		return this;
 	}
 
-	public abstract DataStream<T> build();
 
 	public Properties buildKafkaConsumerProperties() {
 		Properties props = new Properties();

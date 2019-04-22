@@ -1,5 +1,9 @@
 package ch.ethz.infk.dspa.recommendations;
 
+import ch.ethz.infk.dspa.AbstractAnalyticsTask;
+import ch.ethz.infk.dspa.recommendations.dto.PersonSimilarity;
+import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.BroadcastStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -14,57 +18,49 @@ import ch.ethz.infk.dspa.avro.Like;
 import ch.ethz.infk.dspa.avro.Post;
 import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
 import ch.ethz.infk.dspa.recommendations.ops.CategoryEnrichmentProcessFunction;
-import ch.ethz.infk.dspa.recommendations.ops.CommentToPersonActivityMapFunction;
 import ch.ethz.infk.dspa.recommendations.ops.FriendsFilterFunction;
-import ch.ethz.infk.dspa.recommendations.ops.LikeToPersonActivityMapFunction;
 import ch.ethz.infk.dspa.recommendations.ops.PersonActivityBroadcastJoinProcessFunction;
 import ch.ethz.infk.dspa.recommendations.ops.PersonActivityReduceFunction;
 import ch.ethz.infk.dspa.recommendations.ops.PersonOutputSelectorProcessFunction;
-import ch.ethz.infk.dspa.recommendations.ops.PostToPersonActivityMapFunction;
 import ch.ethz.infk.dspa.recommendations.ops.TopKAggregateFunction;
 import ch.ethz.infk.dspa.stream.CommentDataStreamBuilder;
 import ch.ethz.infk.dspa.stream.LikeDataStreamBuilder;
 import ch.ethz.infk.dspa.stream.PostDataStreamBuilder;
 
-public class Recommendations {
+import java.util.List;
 
-	public void start() {
+public class RecommendationsAnalyticsTask extends AbstractAnalyticsTask<SingleOutputStreamOperator<List<PersonSimilarity>>, List<PersonSimilarity>> {
 
-		// build stream execution environment
-		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+	@Override
+	public RecommendationsAnalyticsTask initialize() throws Exception {
+		this.withKafkaConsumerGroup("recommendations");
+		super.initialize();
+		return this;
+	}
 
-		long maxDelay = 600;
+	@Override
+	public RecommendationsAnalyticsTask build() {
 
-		// build data streams
-		DataStream<Post> postStream = new PostDataStreamBuilder(env)
-				.withMaxOutOfOrderness(Time.seconds(maxDelay))
-				.build();
+		DataStream<PersonActivity> postPersonActivityStream = this.postStream
+				.map(PersonActivity::of)
+				.returns(PersonActivity.class);
 
-		DataStream<Comment> commentStream = new CommentDataStreamBuilder(env)
-				.withPostIdEnriched()
-				.withMaxOutOfOrderness(Time.seconds(maxDelay))
-				.build();
+		DataStream<PersonActivity> commentPersonActivityStream = this.commentStream
+				.map(PersonActivity::of)
+				.returns(PersonActivity.class);
 
-		DataStream<Like> likeStream = new LikeDataStreamBuilder(env)
-				.withMaxOutOfOrderness(Time.seconds(maxDelay))
-				.build();
-
-		DataStream<PersonActivity> postPersonActivityStream = postStream.map(new PostToPersonActivityMapFunction());
-
-		DataStream<PersonActivity> commentPersonActivityStream = commentStream
-				.map(new CommentToPersonActivityMapFunction());
-
-		DataStream<PersonActivity> likePersonActivityStream = likeStream.map(new LikeToPersonActivityMapFunction());
+		DataStream<PersonActivity> likePersonActivityStream = this.likeStream
+				.map(PersonActivity::of)
+				.returns(PersonActivity.class);
 
 		SingleOutputStreamOperator<PersonActivity> personActivityStream = postPersonActivityStream
 				.union(commentPersonActivityStream, likePersonActivityStream)
-				.keyBy(activity -> activity.postId())
+				.keyBy(PersonActivity::postId)
 				.process(new CategoryEnrichmentProcessFunction())
-				.keyBy(activity -> activity.personId())
+				.keyBy(PersonActivity::personId)
 				.window(SlidingEventTimeWindows.of(Time.hours(4), Time.hours(1)))
 				.reduce(new PersonActivityReduceFunction())
-				.keyBy(activity -> 0l) // TODO [rsc] should be done differently if possible, don't want to send all to
+				.keyBy(activity -> 0L) // TODO [rsc] should be done differently if possible, don't want to send all to
 										// same operator for output selection
 				.process(new PersonOutputSelectorProcessFunction());
 
@@ -72,15 +68,14 @@ public class Recommendations {
 				.getSideOutput(PersonOutputSelectorProcessFunction.SELECTED)
 				.broadcast(PersonActivityBroadcastJoinProcessFunction.SELECTED_PERSON_STATE_DESCRIPTOR);
 
-		personActivityStream
+		this.outputStream = personActivityStream
 				.connect(selectedPersonActivityStream)
 				.process(new PersonActivityBroadcastJoinProcessFunction(10, Time.hours(1)))
 				.filter(new FriendsFilterFunction())
-				.keyBy(similarity -> similarity.person1Id())
+				.keyBy(PersonSimilarity::person1Id)
 				.window(TumblingEventTimeWindows.of(Time.hours(1)))
-				.aggregate(new TopKAggregateFunction(10))
-				.print();
+				.aggregate(new TopKAggregateFunction(10));
 
+		return this;
 	}
-
 }

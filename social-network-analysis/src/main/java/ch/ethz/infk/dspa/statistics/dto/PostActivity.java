@@ -1,5 +1,9 @@
 package ch.ethz.infk.dspa.statistics.dto;
 
+import ch.ethz.infk.dspa.avro.Comment;
+import ch.ethz.infk.dspa.avro.Like;
+import ch.ethz.infk.dspa.avro.Post;
+
 public class PostActivity {
 
 	public enum ActivityType {
@@ -31,4 +35,16 @@ public class PostActivity {
 		return personId;
 	}
 
+	public static PostActivity of(Post post) {
+		return new PostActivity(post.getId(), ActivityType.POST, post.getPersonId());
+	}
+
+	public static PostActivity of(Comment comment) {
+		ActivityType type = comment.getReplyToCommentId() == null ? ActivityType.COMMENT : ActivityType.REPLY;
+		return new PostActivity(comment.getReplyToPostId(), type, comment.getPersonId());
+	}
+
+	public static PostActivity of(Like like) {
+		return new PostActivity(like.getPostId(), ActivityType.LIKE, like.getPersonId());
+	}
 }

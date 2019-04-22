@@ -1,16 +1,18 @@
 package ch.ethz.infk.dspa;
 
+import ch.ethz.infk.dspa.anomalies.AnomaliesAnalyticsTask;
+import ch.ethz.infk.dspa.recommendations.RecommendationsAnalyticsTask;
+import ch.ethz.infk.dspa.statistics.ActivePostsAnalyticsTask;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-
-import ch.ethz.infk.dspa.statistics.ActivePostsStatistics;
+import org.apache.flink.streaming.api.windowing.time.Time;
 
 public class App {
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		Options options = buildOptions();
 
 		try {
@@ -18,24 +20,40 @@ public class App {
 			CommandLineParser parser = new DefaultParser();
 			CommandLine cmd = parser.parse(options, args);
 
-			// TODO: make use of the seed
-			Long seed = cmd.getOptionValue("seed") != null ? Long.parseLong(cmd.getOptionValue("seed")) : null;
+			// parse command line arguments
+			String analyticsType = cmd.getOptionValue("analyticstype");
+			String kafkaServer = cmd.getOptionValue("kafkaserver");
+			long maxDelaySeconds = Long.parseLong(cmd.getOptionValue("maxdelaysec"));
 
-			String consumerType = cmd.getOptionValue("consumertype");
+			// TODO [nku]: make use of the seed
+			// Long seed = cmd.getOptionValue("seed") != null ? Long.parseLong(cmd.getOptionValue("seed")) : null;
 
-			if (consumerType.equals("activeposts")) {
+			AbstractAnalyticsTask analyticsTask;
 
-				ActivePostsStatistics consumer = new ActivePostsStatistics()
-					.withKafkaServer(cmd.getOptionValue("kafkaserver"));
+			switch (analyticsType) {
+				case "activeposts":
+					analyticsTask = new ActivePostsAnalyticsTask();
+					break;
+				case "recommendations":
+					analyticsTask = new RecommendationsAnalyticsTask();
+					break;
+				case "anomalies":
+					analyticsTask = new AnomaliesAnalyticsTask();
+					break;
+				default:
+					throw new IllegalArgumentException("INVALID_ANALYTICS_TYPE");
+			}
 
-				consumer.start();
+			analyticsTask
+					.withKafkaServer(kafkaServer)
+					.withMaxDelay(Time.seconds(maxDelaySeconds))
+					.initialize()
+					.build();
 
-			} else if (consumerType.equals("recommendations")) {
-				// TODO
-			} else if (consumerType.equals("anomalies")) {
-				// TODO
-			} else {
-				throw new IllegalArgumentException("INVALID_CONSUMER_TYPE");
+			try {
+				analyticsTask.start();
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 
 		} catch (ParseException e) {
@@ -50,8 +68,11 @@ public class App {
 		options.addOption(Option.builder("kafkaserver").hasArg().required().type(String.class)
 				.desc("kafka server").build());
 
-		options.addOption(Option.builder("consumertype").hasArg().required().type(String.class)
-				.desc("consumer type").build());
+		options.addOption(Option.builder("analyticstype").hasArg().required().type(String.class)
+				.desc("analytics type").build());
+
+		options.addOption(Option.builder("maxdelaysec").hasArg().required().type(Long.class)
+				.desc("maximum delay in seconds").build());
 
 		/* options.addOption(Option.builder("consumergroup").hasArg().required().type(String.class)
 				.desc("kafka consumer group").build()); */
