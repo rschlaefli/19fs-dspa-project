@@ -1,9 +1,17 @@
 package ch.ethz.infk.dspa.stream.testdata;
 
+import java.io.IOException;
 import java.time.ZonedDateTime;
 
+import ch.ethz.infk.dspa.avro.CommentPostMapping;
+import ch.ethz.infk.dspa.stream.CommentDataStreamBuilder;
+import ch.ethz.infk.dspa.stream.helper.SourceSink;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.flink.runtime.operators.DataSinkTask;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.joda.time.DateTime;
@@ -79,5 +87,15 @@ public class CommentTestDataGenerator extends AbstractTestDataGenerator<Comment>
 				.build();
 
 		return TestDataPair.of(comment, null);
+	}
+
+	public static SourceSink generateSourceSink(String file) throws Exception {
+		// all replies will produce a mapping
+		Long mappingCount = new CommentTestDataGenerator().generate(file).stream()
+				.filter(c -> c.getReplyToCommentId() != null).count();
+
+		// create a SourceSink that acts both as Sink and Source for the
+		// CommentPostMappings (instead of going via Kafka)
+		return new SourceSink(mappingCount);
 	}
 }

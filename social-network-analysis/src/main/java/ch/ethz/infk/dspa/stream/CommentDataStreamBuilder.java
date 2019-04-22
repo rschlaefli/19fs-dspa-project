@@ -1,6 +1,5 @@
 package ch.ethz.infk.dspa.stream;
 
-import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -16,11 +15,10 @@ import ch.ethz.infk.dspa.stream.connectors.KafkaConsumerBuilder;
 import ch.ethz.infk.dspa.stream.connectors.KafkaProducerBuilder;
 import ch.ethz.infk.dspa.stream.ops.CommentPostIdEnrichmentProcessFunction;
 
-public class CommentDataStreamBuilder extends SocialNetworkDataStreamBuilder<Comment> {
+public class CommentDataStreamBuilder extends AbstractDataStreamBuilder<Comment> {
 
 	private boolean withPostId = false;
 
-	private DataStream<Comment> commentStream;
 	private DataStream<CommentPostMapping> commentPostMappingStream;
 	private SinkFunction<CommentPostMapping> commentPostMappingSink;
 
@@ -29,8 +27,29 @@ public class CommentDataStreamBuilder extends SocialNetworkDataStreamBuilder<Com
 	}
 
 	@Override
+	public CommentDataStreamBuilder withInputStream(DataStream<Comment> inputStream) {
+		super.withInputStream(inputStream);
+		return this;
+	}
+
+	public CommentDataStreamBuilder withCommentPostMappingStream(DataStream<CommentPostMapping> mappingStream) {
+		this.commentPostMappingStream = mappingStream;
+		return this;
+	}
+
+	public CommentDataStreamBuilder withCommentPostMappingSink(SinkFunction<CommentPostMapping> sink) {
+		this.commentPostMappingSink = sink;
+		return this;
+	}
+
+	public CommentDataStreamBuilder withPostIdEnriched() {
+		this.withPostId = true;
+		return this;
+	}
+
+	@Override
 	public DataStream<Comment> build() {
-		if (commentStream == null) {
+		if (this.stream == null) {
 			// if not given, use default kafka source
 			ensureValidKafkaConfiguration();
 
@@ -39,10 +58,10 @@ public class CommentDataStreamBuilder extends SocialNetworkDataStreamBuilder<Com
 					.withClass(Comment.class)
 					.withKafkaConnection(getBootstrapServers(), getGroupId())
 					.build();
-			commentStream = env.addSource(source);
+			this.stream = env.addSource(source);
 		}
 
-		commentStream = commentStream.assignTimestampsAndWatermarks(
+		this.stream = this.stream.assignTimestampsAndWatermarks(
 				new BoundedOutOfOrdernessTimestampExtractor<Comment>(getMaxOutOfOrderness()) {
 					private static final long serialVersionUID = 1L;
 
@@ -68,6 +87,9 @@ public class CommentDataStreamBuilder extends SocialNetworkDataStreamBuilder<Com
 			}
 
 			if (commentPostMappingSink == null) {
+				// if not given, use default kafka source
+				ensureValidKafkaConfiguration();
+
 				// if not given, use default kafka sink
 				commentPostMappingSink = new KafkaProducerBuilder<CommentPostMapping>()
 						.withTopic("comment-post-mapping")
@@ -79,41 +101,19 @@ public class CommentDataStreamBuilder extends SocialNetworkDataStreamBuilder<Com
 
 			// TODO [nku] maybe add watermarks and timestamps?
 
-			SingleOutputStreamOperator<Comment> enrichedCommentStream = commentStream.connect(commentPostMappingStream)
-					.keyBy(new CommentRoutingKeySelector(), mapping -> mapping.getCommentId(),
-							TypeInformation.of(Long.class))
+			SingleOutputStreamOperator<Comment> enrichedCommentStream = this.stream.connect(commentPostMappingStream)
+					.keyBy(new CommentRoutingKeySelector(), CommentPostMapping::getCommentId, TypeInformation.of(Long.class))
 					.process(new CommentPostIdEnrichmentProcessFunction())
-					.returns(new TypeHint<Comment>() {
-					});
+					.returns(Comment.class);
 
 			// write side output of mappings to sink
 			enrichedCommentStream.getSideOutput(CommentPostIdEnrichmentProcessFunction.MAPPING_TAG)
 					.addSink(commentPostMappingSink);
 
-			commentStream = enrichedCommentStream;
+			this.stream = enrichedCommentStream;
 		}
 
-		return commentStream;
-	}
-
-	public CommentDataStreamBuilder withPostIdEnriched() {
-		this.withPostId = true;
-		return this;
-	}
-
-	public CommentDataStreamBuilder withCommentStream(DataStream<Comment> commentStream) {
-		this.commentStream = commentStream;
-		return this;
-	}
-
-	public CommentDataStreamBuilder withCommentPostMappingStream(DataStream<CommentPostMapping> mappingStream) {
-		this.commentPostMappingStream = mappingStream;
-		return this;
-	}
-
-	public CommentDataStreamBuilder withCommentPostMappingSink(SinkFunction<CommentPostMapping> sink) {
-		this.commentPostMappingSink = sink;
-		return this;
+		return this.stream;
 	}
 
 	public static class CommentRoutingKeySelector implements KeySelector<Comment, Long> {
