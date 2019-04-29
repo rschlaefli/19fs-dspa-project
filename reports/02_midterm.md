@@ -6,11 +6,11 @@ Roland Schlaefli, 12-932-398 and Nicolas Kuechler, 14-712-129
 
 The main challenges so far were mostly related to documentation and examples for common but non-trivial patterns. While the book and the documentation are great for an introduction to the most important basic building blocks of Flink, we missed a collection of design patterns and best practices for more complex pipelines. Additionally, we found that the transparent handling of watermarks/timestamps without a detailed description of their effects makes it more difficult to develop certain functionality.
 
-To overcome these issues, we decided to develop a unit or integration test for each non-trivial user-defined function depending on whether the function depends on state. This approach allows us to develop each function in isolation and easily verify and understand its behavior. Furthermore, it has often proven helpful to examine the intricacies of operators through debugging.
+To overcome these issues, we decided to develop a unit or integration test for each non-trivial user-defined function depending on whether the function depends on state. This approach allows us to develop each function in isolation and easily verify and understand its behavior. Furthermore, it has often proven helpful to examine the intricacies of operators through debugging several examples.
 
 ## Current Progress
 
-To plan and coordinate the project, we divided each task into granular subtasks represented as GitLab issues. In a first step of each task, we built a code skeleton consisting of the topology of the dataflow graph without implementing any logic for the individual user-defined functions. Detailed descriptions including estimations of progress are provided in the following subsections.
+To plan and coordinate the project, we divided each task into granular subtasks represented as GitLab issues. In a first step of each task, we built a code skeleton consisting of the topology of the dataflow graph without implementing any logic for the individual user-defined functions. Detailed descriptions of the current state including estimations of progress are provided in the following subsections.
 
 ### Data Preparation (#0)
 
@@ -46,6 +46,6 @@ The remaining issues for the final milestone are depicted in the timeline for co
 
 ## Divergences from Original Plan
 
-Contrary to our initially ideated approach of not having intermediate results in external systems, our new solution outputs commentId-postId mappings to a Kafka topic. The pipelines then consume this topic to enrich replies with the corresponding postId. This choice increases latency in case a group of dependent comments arrive almost concurrently but brings the advantage of avoiding broadcasting and buffering each comment to every node to build up the complete comment tree. In a realistic scenario in which most dependent comments arrive with a delay higher than the latency of writing and reading from Kafka, there is no additional latency.
+Contrary to our initially ideated approach of not having intermediate results in external systems, our new solution outputs commentId-postId mappings to a Kafka topic (cid-pid). The pipelines then consume this topic to enrich replies with the corresponding postId. This choice increases latency in case a group of dependent comments arrive almost concurrently but brings the advantage of avoiding broadcasting and buffering each comment to every node to build up the complete comment tree. In a realistic scenario in which most dependent comments arrive with a delay higher than the latency of writing and reading from Kafka, there is no additional latency. The figure below provides an updated overview of the overall architecture of the system from the design document:
 
-![architecture-overview.png](architecture-overview.png)
+![architecture-overview-v2.png](architecture-overview-v2.png)
