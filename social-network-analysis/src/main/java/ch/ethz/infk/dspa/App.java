@@ -46,6 +46,7 @@ public class App {
 
 			analyticsTask
 					.withKafkaServer(kafkaServer)
+					.withStaticFilePath("./../data/1k-users-sorted/tables/")
 					.withMaxDelay(Time.seconds(maxDelaySeconds))
 					.initialize()
 					.build();

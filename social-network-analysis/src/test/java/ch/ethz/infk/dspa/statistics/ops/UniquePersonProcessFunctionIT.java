@@ -1,4 +1,4 @@
-package ch.ethz.infk.dspa.statistics;
+package ch.ethz.infk.dspa.statistics.ops;
 
 import ch.ethz.infk.dspa.statistics.dto.PostActivity;
 import ch.ethz.infk.dspa.statistics.ops.UniquePersonProcessFunction;
@@ -90,14 +90,6 @@ public class UniquePersonProcessFunctionIT {
         for (Tuple3<Long, Long, Integer> expectedResult : expectedResults) {
             assertTrue(actualResults.remove(expectedResult), "Expected result " + expectedResult + " not present!");
         }
-
-
-                actualResults.stream()
-                .sorted(Comparator.comparingLong(tuple -> (long) tuple.f0))
-                .forEach(result -> {
-                    System.out.println("PostId=" + result.f0 + " WindowStart=" + result.f1 + " UniquePeople=" + result.f2);
-                    // assertEquals(counts.next(), result.f2, "Unique people count failed for PostId=" + result.f0 + " WindowStart=" + result.f1 + " UniquePeople=" + result.f2);
-                });
 
         assertTrue(actualResults.isEmpty(), "Received more results than expected!");
     }

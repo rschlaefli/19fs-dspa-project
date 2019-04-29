@@ -20,6 +20,7 @@ public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TY
 
     private String bootstrapServers;
     private String groupId;
+    private String staticFilePath;
 
     private StreamExecutionEnvironment env;
     public DataStream<Post> postStream;
@@ -41,6 +42,11 @@ public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TY
 
     public AbstractAnalyticsTask<OUT_STREAM, OUT_TYPE> withKafkaConsumerGroup(String groupId) {
         this.groupId = groupId;
+        return this;
+    }
+
+    public AbstractAnalyticsTask<OUT_STREAM, OUT_TYPE> withStaticFilePath(String staticFilePath) {
+        this.staticFilePath = staticFilePath;
         return this;
     }
 
@@ -76,6 +82,10 @@ public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TY
         this.commentMappingStream = commentMappingStream;
         this.commentMappingSink = commentMappingSink;
         return this;
+    }
+
+    public String getStaticFilePath() {
+        return this.staticFilePath;
     }
 
     public AbstractAnalyticsTask<OUT_STREAM, OUT_TYPE> initialize() throws Exception {
