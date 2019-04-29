@@ -46,6 +46,6 @@ The remaining issues for the final milestone are depicted in the timeline for co
 
 ## Divergences from Original Plan
 
-TODO: sketch for kafka postid mapping?
-
 Contrary to our initially ideated approach of not having intermediate results in external systems, our new solution outputs commentId-postId mappings to a Kafka topic. The pipelines then consume this topic to enrich replies with the corresponding postId. This choice increases latency in case a group of dependent comments arrive almost concurrently but brings the advantage of avoiding broadcasting and buffering each comment to every node to build up the complete comment tree. In a realistic scenario in which most dependent comments arrive with a delay higher than the latency of writing and reading from Kafka, there is no additional latency.
+
+![architecture-overview.png](architecture-overview.png)
