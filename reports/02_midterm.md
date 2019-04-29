@@ -43,7 +43,6 @@ The main challenges we faced so far were mostly related to documentation and exa
 
 An additional challenge has been and will be the handling of the input formats and missing values, as we read the input data into Avro objects, which we then produce to Kafka for easy consumption.
 
-
 ## Outstanding Tasks
 
 > Outstanding tasks and a timeline for completion.
@@ -55,3 +54,5 @@ Up to the current milestone, we have largely developed based on test data derive
 Furthermore, our general idea is to have one full integration test per task that covers its entire Flink topology. For these tests, we need to derive suitable test data and derive the output as we would expect it from a correctly functioning pipeline.
 
 As we want to produce all of our outputs to Kafka in a final processing step, we will also need to add Kafka sinks to these pipelines and do so in a testable way.
+
+![ms3_planning.png](ms3_planning.png)
