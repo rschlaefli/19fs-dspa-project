@@ -5,6 +5,7 @@ import ch.ethz.infk.dspa.avro.Comment;
 import ch.ethz.infk.dspa.avro.CommentPostMapping;
 import ch.ethz.infk.dspa.avro.Like;
 import ch.ethz.infk.dspa.avro.Post;
+import ch.ethz.infk.dspa.recommendations.RecommendationsAnalyticsTask;
 import ch.ethz.infk.dspa.statistics.dto.PostActivity;
 import ch.ethz.infk.dspa.stream.CommentDataStreamBuilder;
 import ch.ethz.infk.dspa.stream.helper.SourceSink;
@@ -37,14 +38,18 @@ public class ActivePostsAnalyticsTaskIT extends AbstractTestBase {
 
     @BeforeEach
     public void setup() throws Exception {
+        Time maxOutOfOrderness = Time.hours(1);
+
         env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        postStream = new PostTestDataGenerator().generate(env, "./../data/test/01_test/post_event_stream.csv");
-        likeStream = new LikeTestDataGenerator().generate(env, "./../data/test/01_test/likes_event_stream.csv");
-        commentStream = new CommentTestDataGenerator().generate(env, "./../data/test/01_test/comment_event_stream.csv");
+        postStream = new PostTestDataGenerator().generate(env, "./../data/test/01_test/post_event_stream.csv", maxOutOfOrderness);
+        commentStream = new CommentTestDataGenerator().generate(env, "./../data/test/01_test/comment_event_stream.csv", maxOutOfOrderness);
+        likeStream = new LikeTestDataGenerator().generate(env, "./../data/test/01_test/likes_event_stream.csv", maxOutOfOrderness);
 
         mappingSourceSink = CommentTestDataGenerator.generateSourceSink("./../data/test/01_test/comment_event_stream.csv");
         mappingStream = env.addSource(mappingSourceSink);
+
+        TestSink.reset();
     }
 
     @Test
@@ -64,9 +69,9 @@ public class ActivePostsAnalyticsTaskIT extends AbstractTestBase {
             fail("Failure in Flink Topology");
         }
 
-        List<PostActivity> results = TestSink.getResults(PostActivity.class);
-        for (PostActivity p : results) {
-            System.out.println(p.getType());
+        List<String> results = TestSink.getResults(String.class);
+        for (String result : results) {
+            System.out.println(result);
         }
     }
 

@@ -2,6 +2,10 @@ package ch.ethz.infk.dspa.stream.testdata;
 
 import java.time.ZonedDateTime;
 
+import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -10,6 +14,11 @@ import org.joda.time.DateTime;
 import ch.ethz.infk.dspa.avro.Like;
 
 public class LikeTestDataGenerator extends AbstractTestDataGenerator<Like> {
+
+	@Override
+	public DataStream<Like> addReturnType(SingleOutputStreamOperator<Like> out) {
+		return out.returns(Like.class);
+	}
 
 	@Override
 	public AssignerWithPeriodicWatermarks<TestDataPair<Like>> getTimestampsAndWatermarkAssigner(

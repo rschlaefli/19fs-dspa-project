@@ -9,5 +9,8 @@
         <module name="social-network-analysis" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="social-network-analysis" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

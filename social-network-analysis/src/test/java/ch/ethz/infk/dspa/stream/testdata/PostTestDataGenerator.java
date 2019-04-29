@@ -4,6 +4,10 @@ import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -12,6 +16,11 @@ import org.joda.time.DateTime;
 import ch.ethz.infk.dspa.avro.Post;
 
 public class PostTestDataGenerator extends AbstractTestDataGenerator<Post> {
+
+	@Override
+	public DataStream<Post> addReturnType(SingleOutputStreamOperator<Post> out) {
+		return out.returns(Post.class);
+	}
 
 	@Override
 	public AssignerWithPeriodicWatermarks<TestDataPair<Post>> getTimestampsAndWatermarkAssigner(

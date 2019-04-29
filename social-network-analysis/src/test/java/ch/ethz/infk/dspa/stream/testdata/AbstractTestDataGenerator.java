@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -20,6 +21,8 @@ import scala.NotImplementedError;
 public abstract class AbstractTestDataGenerator<T> {
 
 	public abstract TestDataPair<T> parseLine(String line);
+
+	public abstract DataStream<T> addReturnType(SingleOutputStreamOperator<T> out);
 
 	public AssignerWithPeriodicWatermarks<TestDataPair<T>> getTimestampsAndWatermarkAssigner(
 			Time maxOutOfOrderness) {
@@ -60,8 +63,10 @@ public abstract class AbstractTestDataGenerator<T> {
 			throws IOException {
 		List<TestDataPair<T>> data = generateTestData(file);
 		DataStream<TestDataPair<T>> stream = env.fromCollection(data);
-		return stream.assignTimestampsAndWatermarks(getTimestampsAndWatermarkAssigner(maxOutOfOrderness))
+		SingleOutputStreamOperator<T> out =  stream
+				.assignTimestampsAndWatermarks(getTimestampsAndWatermarkAssigner(maxOutOfOrderness))
 				.map(x -> x.element);
+		return addReturnType(out);
 	}
 
 	private List<TestDataPair<T>> generateTestData(String file) throws IOException {

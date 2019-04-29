@@ -9,6 +9,7 @@ import ch.ethz.infk.dspa.stream.helper.SourceSink;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.runtime.operators.DataSinkTask;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
@@ -19,6 +20,11 @@ import org.joda.time.DateTime;
 import ch.ethz.infk.dspa.avro.Comment;
 
 public class CommentTestDataGenerator extends AbstractTestDataGenerator<Comment> {
+
+	@Override
+	public DataStream<Comment> addReturnType(SingleOutputStreamOperator<Comment> out) {
+		return out.returns(Comment.class);
+	}
 
 	@Override
 	public AssignerWithPeriodicWatermarks<TestDataPair<Comment>> getTimestampsAndWatermarkAssigner(
