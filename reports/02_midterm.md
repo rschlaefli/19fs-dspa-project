@@ -4,13 +4,13 @@ Roland Schlaefli, 12-932-398 and Nicolas Kuechler, 14-712-129
 
 ## Challenges & Issues
 
-The main challenges so far were mostly related to documentation and examples for common but non-trivial patterns. While the book and the documentation are great for an introduction to the most important basic building blocks of Flink, we missed a collection of design patterns and best practices for more complex pipelines. Additionally, we found that the transparent handling of watermarks/timestamps without a detailed description of their effects makes it more difficult to develop certain functionality.
+The main challenges so far were mostly related to documentation and examples for common but more complicated patterns. While the book and the documentation are great for an introduction to the most important basic building blocks of Flink, we missed a collection of design patterns and best practices for more complex pipelines. Additionally, we found that the transparent handling of watermarks/timestamps without a detailed description of their effects makes it more difficult to develop certain functionality.
 
 To overcome these issues, we decided to develop a unit or integration test for each non-trivial user-defined function depending on whether the function depends on state. This approach allows us to develop each function in isolation and easily verify and understand its behavior. Furthermore, it has often proven helpful to examine the intricacies of operators through debugging several examples.
 
 ## Current Progress
 
-To plan and coordinate the project, we divided each task into granular subtasks represented as GitLab issues. In a first step of each task, we built a code skeleton consisting of the topology of the dataflow graph without implementing any logic for the individual user-defined functions. Detailed descriptions of the current state including estimations of progress are provided in the following subsections.
+To plan and coordinate the project, we divided each task into granular subtasks represented as Gitlab issues. In a first step of each task, we built a code skeleton consisting of the topology of the dataflow graph without implementing any logic for the individual user-defined functions. Detailed descriptions of the current state including estimations of progress are provided in the following subsections.
 
 ### Data Preparation (#0)
 
