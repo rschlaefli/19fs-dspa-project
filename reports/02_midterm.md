@@ -2,57 +2,50 @@
 
 Roland Schlaefli, 12-932-398 and Nicolas Kuechler, 14-712-129
 
-## Current Progress
-
-> Your progress so far. Which tasks have you implemented?
-
-TODO: rework TLDR
-
-We are currently focusing on finalizing the recommendations task, building up on the anomaly detection task, as well as general improvements in structure and testability throughout the codebase. We describe our progress in more detail in the following...
-
-### Post Statistics (#1)
-
-The majority of issues for the post statistics task has been completed, including the overall pipeline design, counting of the various types of events, as well as computing the number of unique persons interacting with posts. The most important stateful functionality (i.e., unique person counts) has been tested and the skeleton for a full integration test has been created.
-
-### Friend Recommendations (#2)
-
-Our pipeline for the recommendation of new friends is sketched out in code completely with the functionalities largely implemented. Single key parts are still missing, like the enrichment of activities with static data (e.g., tags of forums and relations between places). The majority of user-defined-functions is tested with specific unit or integration tests. Additionally, a full integration test has been implemented as a skeleton.
-
-### Anomaly Detection (#3)
-
-The pipeline for the anomaly detection task is sketched out completely and first user-defined-functions are already implemented. The skeleton has been created such that the number of features included is easily extendable. A first integration test skeleton is ready for future development.
-
-## Divergences from Planning
-
-> Any divergence from your original plan. Did you change your mind about a tool you wanted to use or an algorithm?
-
-TODO: sketch for kafka postid mapping?
-TODO: rework
-
-Contrary to our initially ideated approach of not having intermediate results stored in external systems, our new solution uses a Kafka topic into which postid-comment mappings are produced. The pipelines can then consume this topic to enrich comments with the root postid. This allows for more flexibility regarding the implementation, as we do not need to create a sink that also serves as a source at the same time...
-
-Furthermore, while we were not sure about how to approach testing in general during our initial planning, we ended up using JUnit to test most of our user-defined-functions (map, process, etc.), with the goal of having everything tested. This has greatly helped us in developing these functionalities in isolation and in splitting into separate tasks, allowing for more easy collaboration.
-
 ## Challenges & Issues
 
-> Challenges and issues faced so far and how you solved them or planning to solve them.
+The main challenges so far were mostly related to documentation and examples for common but non-trivial patterns. While the book and the documentation are great for an introduction to the most important basic building blocks of Flink, we missed a collection of design patterns and best practices for more complex pipelines. Additionally, we found that the transparent handling of watermarks/timestamps without a detailed description of their effects makes it more difficult to develop certain functionality.
 
-TODO: extend challenges
+To overcome these issues, we decided to develop a unit or integration test for each non-trivial user-defined function depending on whether the function depends on state. This approach allows us to develop each function in isolation and easily verify and understand its behavior. Furthermore, it has often proven helpful to examine the intricacies of operators through debugging.
 
-The main challenges we faced so far were mostly related to documentation and examples for common patterns. Due to the relatively fast-paced development of Flink, many patterns found in the usual sources are outdated or refer to deprecated methods. It is sometimes hard to find inspiration regarding best practices for non-trivial pipelines. However, the book has been a good support in most of these cases, having more examples on topics like state management.
+## Current Progress
 
-An additional challenge has been and will be the handling of the input formats and missing values, as we read the input data into Avro objects, which we then produce to Kafka for easy consumption.
+To plan and coordinate the project, we divided each task into granular subtasks represented as GitLab issues. In a first step of each task, we built a code skeleton consisting of the topology of the dataflow graph without implementing any logic for the individual user-defined functions. Detailed descriptions including estimations of progress are provided in the following subsections.
 
-## Outstanding Tasks
+### Data Preparation (#0)
 
-> Outstanding tasks and a timeline for completion.
+> Estimated progress: 95%
 
-TODO: add gantt or burndown style chart?
+The three event streams are produced to separate Kafka topics from which they can be consumed by the analytics tasks. All of the required features (e.g., bounded out-of-orderness) are implemented. The only remaining issue is filtering the malformed input data.
 
-Up to the current milestone, we have largely developed based on test data derived from the original datasets, allowing us to write reliable integration and unit tests and develop in isolation. An outstanding task will thus be the cleansing of the malformed original input data and making sure that the pipelines work on these much larger datasets.
+### Active Posts Statistic (#1)
 
-Furthermore, our general idea is to have one full integration test per task that covers its entire Flink topology. For these tests, we need to derive suitable test data and derive the output as we would expect it from a correctly functioning pipeline.
+> Estimated progress: 95%
 
-As we want to produce all of our outputs to Kafka in a final processing step, we will also need to add Kafka sinks to these pipelines and do so in a testable way.
+Almost all issues for the active post statistics task are completed.
+This includes the overall dataflow with the active post windowing logic, the commentId-postId mapping, the comment/reply count, and the unique interacting people count. The outline for a full integration test has been created.
+
+### Recommendations (#2)
+
+> Estimated progress: 80%
+
+The pipeline for the recommendation of new friends is largely implemented. This includes mapping and aggregating events into user embeddings, selecting 10 users for recommendations, calculating similarities between user embeddings, filtering existing friends, and selecting the top-5 most similar users. Computations are based on the activity of the last 4 hours and updated every hour. A full integration test has been implemented as a skeleton.
+
+### Unusual Activity Detection (#3)
+
+> Estimated progress: 20%
+
+The skeleton for the unusual activity detection pipeline is implemented and composed of an extensible set of independent features that are combined in an ensemble approach to decide if a user is suspicious.
+The work on two of these features (timespan between user interactions and post/comment content) has already started. Additionally, a first integration test skeleton is ready for future extensions.
+
+## Remaining Work
+
+The remaining issues for the final milestone are depicted in the timeline for completion. For each analytics task, a time buffer is included in case the complete integration test reveals additional issues.
 
 ![ms3_planning.png](ms3_planning.png)
+
+## Divergences from Original Plan
+
+Contrary to our initially ideated approach of not having intermediate results in external systems, our new solution outputs commentId-postId mappings to a Kafka topic. The pipelines then consume this topic to enrich replies with the corresponding postId. This choice increases latency in case a group of dependent comments arrive almost concurrently but brings the advantage of avoiding broadcasting and buffering each comment to every node to build up the complete comment tree. In a realistic scenario in which most dependent comments arrive with a delay higher than the latency of writing and reading from Kafka, there is no additional latency.
+
+![architecture-overview.png](architecture-overview.png)
