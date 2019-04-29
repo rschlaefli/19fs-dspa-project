@@ -71,7 +71,7 @@ public class RecommendationsAnalyticsTask extends AbstractAnalyticsTask<SingleOu
 		this.outputStream = personActivityStream
 				.connect(selectedPersonActivityStream)
 				.process(new PersonActivityBroadcastJoinProcessFunction(10, Time.hours(1)))
-				.filter(new FriendsFilterFunction())
+				.filter(new FriendsFilterFunction(this.getStaticFilePath() + "person_knows_person.csv"))
 				.keyBy(PersonSimilarity::person1Id)
 				.window(TumblingEventTimeWindows.of(Time.hours(1)))
 				.aggregate(new TopKAggregateFunction(10));
