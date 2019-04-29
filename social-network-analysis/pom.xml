@@ -21,6 +21,7 @@
 		<commons-cli.version>1.4</commons-cli.version>
 		<commons-lang3.version>3.0</commons-lang3.version>
 		<json.version>20180813</json.version>
+		<guava.version>27.1-jre</guava.version>
 		<entrypoint>ch.ethz.infk.dspa.App</entrypoint>
 	</properties>
 	<dependencies>
@@ -135,6 +136,12 @@
   			<artifactId>flink-runtime-web_2.11</artifactId>
   			<version>${flink.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>${guava.version}</version>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<plugins>

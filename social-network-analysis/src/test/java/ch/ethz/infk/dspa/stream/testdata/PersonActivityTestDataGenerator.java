@@ -4,6 +4,10 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -14,6 +18,11 @@ import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
 
 public class PersonActivityTestDataGenerator
 		extends AbstractTestDataGenerator<PersonActivity> {
+
+	@Override
+	public DataStream<PersonActivity> addReturnType(SingleOutputStreamOperator<PersonActivity> out) {
+		return out.returns(PersonActivity.class);
+	}
 
 	@Override
 	public AssignerWithPeriodicWatermarks<TestDataPair<PersonActivity>> getTimestampsAndWatermarkAssigner(
