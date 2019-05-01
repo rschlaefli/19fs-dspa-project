@@ -4,9 +4,10 @@ import org.apache.flink.api.common.functions.AggregateFunction;
 
 import ch.ethz.infk.dspa.statistics.dto.PostActivity;
 import ch.ethz.infk.dspa.statistics.dto.PostActivity.ActivityType;
+import ch.ethz.infk.dspa.statistics.dto.PostActivityCount;
 
 public class TypeCountAggregateFunction
-		implements AggregateFunction<PostActivity, Long, Long> {
+		implements AggregateFunction<PostActivity, PostActivityCount, PostActivityCount> {
 
 	private static final long serialVersionUID = 1L;
 	private final ActivityType TYPE;
@@ -16,28 +17,40 @@ public class TypeCountAggregateFunction
 	}
 
 	@Override
-	public Long createAccumulator() {
-		return 0l;
+	public PostActivityCount createAccumulator() {
+		PostActivityCount accumulator = new PostActivityCount();
+		accumulator.setType(TYPE);
+		return accumulator;
 	}
 
 	@Override
-	public Long add(PostActivity activity, Long accumulator) {
+	public PostActivityCount add(PostActivity activity, PostActivityCount accumulator) {
+
+		if (accumulator.getPostId() == null) {
+			accumulator.setPostId(activity.getPostId());
+		}
 
 		if (TYPE == activity.getType()) {
-			return accumulator += 1;
+			accumulator.incrementCount();
 		}
 
 		return accumulator;
 	}
 
 	@Override
-	public Long getResult(Long accumulator) {
+	public PostActivityCount getResult(PostActivityCount accumulator) {
 		return accumulator;
 	}
 
 	@Override
-	public Long merge(Long a, Long b) {
-		return a + b;
+	public PostActivityCount merge(PostActivityCount a, PostActivityCount b) {
+
+		Long postId = (a.getPostId() != null) ? a.getPostId() : b.getPostId();
+
+		PostActivityCount accumulator = new PostActivityCount(postId, TYPE);
+		accumulator.setCount(a.getCount() + b.getCount());
+
+		return accumulator;
 	}
 
 }

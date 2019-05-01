@@ -63,9 +63,14 @@ public abstract class AbstractTestDataGenerator<T> {
 			throws IOException {
 		List<TestDataPair<T>> data = generateTestData(file);
 		DataStream<TestDataPair<T>> stream = env.fromCollection(data);
-		SingleOutputStreamOperator<T> out =  stream
+		SingleOutputStreamOperator<T> out = stream
 				.assignTimestampsAndWatermarks(getTimestampsAndWatermarkAssigner(maxOutOfOrderness))
-				.map(x -> x.element);
+				.map(x -> {
+					// TODO Uncomment for debugging, this allows that watermarks can be better
+					// observed with the DebugProcessFunction if no window was applied
+					// TimeUnit.MILLISECONDS.sleep(100);
+					return x.element;
+				});
 		return addReturnType(out);
 	}
 
