@@ -53,7 +53,7 @@ public class RecommendationsAnalyticsTaskIT extends AbstractTestBase {
 	public void testRecommendationsConsumer() throws Exception {
 		RecommendationsAnalyticsTask analyticsTask = (RecommendationsAnalyticsTask) new RecommendationsAnalyticsTask()
 				.withStreamingEnvironment(env)
-				.withStaticFilePath("./../data/1k-users-sorted/tables/")
+				.withStaticFilePath("src/test/java/resources/")
 				.withMaxDelay(Time.seconds(600L))
 				.withInputStreams(postStream, commentStream, likeStream)
 				.withCommentPostMappingConfig(mappingStream, mappingSourceSink)
