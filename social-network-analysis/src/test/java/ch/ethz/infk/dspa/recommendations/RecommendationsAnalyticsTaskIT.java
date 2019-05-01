@@ -49,16 +49,17 @@ public class RecommendationsAnalyticsTaskIT extends AbstractTestBase {
         mappingStream = env.addSource(mappingSourceSink);
     }
 
-    @Test
-    public void testRecommendationsConsumer() throws Exception {
-        RecommendationsAnalyticsTask analyticsTask = (RecommendationsAnalyticsTask) new RecommendationsAnalyticsTask()
-                .withStreamingEnvironment(env)
-                .withMaxDelay(Time.seconds(600L))
-                .withInputStreams(postStream, commentStream, likeStream)
-                .withCommentPostMappingConfig(mappingStream, mappingSourceSink)
-                .initialize()
-                .build()
-                .withSink(new TestSink<>());
+	@Test
+	public void testRecommendationsConsumer() throws Exception {
+		RecommendationsAnalyticsTask analyticsTask = (RecommendationsAnalyticsTask) new RecommendationsAnalyticsTask()
+				.withStreamingEnvironment(env)
+				.withStaticFilePath("./../data/1k-users-sorted/tables/")
+				.withMaxDelay(Time.seconds(600L))
+				.withInputStreams(postStream, commentStream, likeStream)
+				.withCommentPostMappingConfig(mappingStream, mappingSourceSink)
+				.initialize()
+				.build()
+				.withSink(new TestSink<>());
 
         try {
             analyticsTask.start();
