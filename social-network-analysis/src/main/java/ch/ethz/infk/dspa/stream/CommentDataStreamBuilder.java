@@ -86,6 +86,17 @@ public class CommentDataStreamBuilder extends AbstractDataStreamBuilder<Comment>
 				commentPostMappingStream = env.addSource(source);
 			}
 
+			this.commentPostMappingStream = this.commentPostMappingStream.assignTimestampsAndWatermarks(
+					new BoundedOutOfOrdernessTimestampExtractor<CommentPostMapping>(getMaxOutOfOrderness()) {
+						private static final long serialVersionUID = 1L;
+
+						@Override
+						public long extractTimestamp(CommentPostMapping element) {
+							return element.getCommentCreationDate().getMillis();
+						}
+
+					});
+
 			if (commentPostMappingSink == null) {
 				// if not given, use default kafka source
 				ensureValidKafkaConfiguration();
