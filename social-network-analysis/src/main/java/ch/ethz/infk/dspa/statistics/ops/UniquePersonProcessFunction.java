@@ -23,11 +23,11 @@ public class UniquePersonProcessFunction extends KeyedProcessFunction<Long, Post
 
     private static final long serialVersionUID = 1L;
 
-    // <window id, set<person id>>
-    private MapState<Long, Set<Long>> state;
+    private final long updateInterval;
+    private final long windowSize;
 
-    private long updateInterval;
-    private long windowSize;
+    // <window timestamp, set<person id>>
+    private MapState<Long, Set<Long>> state;
 
     public UniquePersonProcessFunction() {
         this(Time.hours(1), Time.hours(12));

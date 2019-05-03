@@ -5,10 +5,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -38,7 +40,7 @@ public abstract class AbstractTestDataGenerator<T> {
 
 	/**
 	 * Generate List of T from file
-	 * 
+	 *
 	 * @throws IOException
 	 */
 	public List<T> generate(String file) throws IOException {
@@ -61,6 +63,10 @@ public abstract class AbstractTestDataGenerator<T> {
 	 */
 	public DataStream<T> generate(StreamExecutionEnvironment env, String file, Time maxOutOfOrderness)
 			throws IOException {
+		// set the auto watermark interval to prevent missing/minLong watermarks during test execution
+		ExecutionConfig executionConfig = env.getConfig();
+		executionConfig.setAutoWatermarkInterval(1);
+
 		List<TestDataPair<T>> data = generateTestData(file);
 		DataStream<TestDataPair<T>> stream = env.fromCollection(data);
 		SingleOutputStreamOperator<T> out = stream

@@ -18,6 +18,12 @@ public class PersonActivity {
 		categoryMap = new HashMap<String, Integer>();
 	}
 
+	public PersonActivity(Long personId, Long postId) {
+		this();
+		this.personId = personId;
+		this.postId = postId;
+	}
+
 	public Long personId() {
 		return this.personId;
 	}
