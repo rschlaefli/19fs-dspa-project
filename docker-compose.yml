@@ -92,7 +92,7 @@ services:
       "java",
       "-jar",
       "/opt/producer.jar",
-      "-file", "/data/1k-users-sorted/streams/comment_event_stream.csv",
+      "-file", "/data/1k-users-sorted/streams/comment_event_stream_cleaned.csv",
       "-schema", "/data/schema/avro/comment.avsc",
       "-topic", "post",
       "-kafkaserver", "kafka:9092",
