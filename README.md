@@ -41,7 +41,7 @@ Likes Stream Producer
 Comment Stream Producer
 
 ```
--file ./../data/1k-users-sorted/streams/comment_event_stream.csv
+-file ./../data/1k-users-sorted/streams/comment_event_stream_cleaned.csv
 -schema ./../data/schema/avro/comment.avsc
 -topic comment
 -kafkaserver 127.0.0.1:9092
