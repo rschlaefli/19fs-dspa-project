@@ -167,7 +167,6 @@ public class PersonActivityBroadcastJoinProcessFunction
 		for (Entry<Long, List<PersonActivity>> e : buffer.entrySet()) {
 			checkpointedBufferState.add(e);
 		}
-
 	}
 
 	@Override

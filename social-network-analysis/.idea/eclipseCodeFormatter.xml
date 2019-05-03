@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="EclipseCodeFormatterProjectSettings">
+    <option name="projectSpecificProfile">
+      <ProjectSpecificProfile>
+        <option name="formatter" value="ECLIPSE" />
+        <option name="importOrder" value="com;io;java;javax;net;org;" />
+        <option name="importOrderConfigFilePath" value="$PROJECT_DIR$/eclipse-formatter.xml" />
+        <option name="pathToConfigFileJava" value="$PROJECT_DIR$/eclipse-formatter.xml" />
+        <option name="selectedJavaProfile" value="dspa" />
+      </ProjectSpecificProfile>
+    </option>
+  </component>
+</project>

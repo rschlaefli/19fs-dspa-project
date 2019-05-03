@@ -61,11 +61,7 @@ public class RecommendationsAnalyticsTaskIT extends AbstractTestBase {
 				.build()
 				.withSink(new TestSink<>());
 
-        try {
-            analyticsTask.start();
-        } catch (Exception e) {
-            fail("Failure in Flink Topology");
-        }
+		analyticsTask.start();
 
         /* List<List<PersonSimilarity>> results = TestSink.getResults(List.class);
         for (PostActivity p : results) {

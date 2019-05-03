@@ -60,12 +60,12 @@ public class RecommendationsAnalyticsTask extends AbstractAnalyticsTask<SingleOu
 				.keyBy(PersonActivity::personId)
 				.window(SlidingEventTimeWindows.of(Time.hours(4), Time.hours(1)))
 				.reduce(new PersonActivityReduceFunction())
-				.keyBy(activity -> 0L) // TODO [rsc] should be done differently if possible, don't want to send all to
-										// same operator for output selection
-				.process(new PersonOutputSelectorProcessFunction());
+				.process(new PersonOutputSelectorProcessFunction(10, Time.hours(1)));
 
 		BroadcastStream<PersonActivity> selectedPersonActivityStream = personActivityStream
 				.getSideOutput(PersonOutputSelectorProcessFunction.SELECTED)
+				.process(new PersonOutputSelectorProcessFunction(10, Time.hours(1)))
+				.setParallelism(1)
 				.broadcast(PersonActivityBroadcastJoinProcessFunction.SELECTED_PERSON_STATE_DESCRIPTOR);
 
 		this.outputStream = personActivityStream
