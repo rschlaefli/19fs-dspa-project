@@ -6,7 +6,7 @@
         <option name="formatter" value="ECLIPSE" />
         <option name="importOrder" value="com;io;java;javax;net;org;" />
         <option name="importOrderConfigFilePath" value="$PROJECT_DIR$/eclipse-formatter.xml" />
-        <option name="pathToConfigFileJava" value="$PROJECT_DIR$/eclipse-formatter.xml" />
+        <option name="pathToConfigFileJava" value="$PROJECT_DIR$/../stream-producer/eclipse-formatter.xml" />
         <option name="selectedJavaProfile" value="dspa" />
       </ProjectSpecificProfile>
     </option>

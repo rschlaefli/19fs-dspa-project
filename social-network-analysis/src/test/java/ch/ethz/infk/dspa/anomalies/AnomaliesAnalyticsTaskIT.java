@@ -58,11 +58,7 @@ public class AnomaliesAnalyticsTaskIT extends AbstractTestBase {
                 .build()
                 .withSink(new TestSink<>());
 
-        try {
-            analyticsTask.start();
-        } catch (Exception e) {
-            fail("Failure in Flink Topology");
-        }
+        analyticsTask.start();
 
         List<Feature> results = TestSink.getResults(Feature.class);
         for (Feature f : results) {
