@@ -3,18 +3,18 @@ package ch.ethz.infk.dspa.anomalies.dto;
 import ch.ethz.infk.dspa.avro.Comment;
 import ch.ethz.infk.dspa.avro.Like;
 import ch.ethz.infk.dspa.avro.Post;
+import org.joda.time.DateTime;
 
 public class Feature<T> {
 
-    enum FeatureId {
+    public enum FeatureId {
         TIMESTAMP,
         CONTENTS_SHORT,
         CONTENTS_MEDIUM,
         CONTENTS_LONG,
-        INTERACTIONS
     }
 
-    enum EventType {
+    public enum EventType {
         POST,
         COMMENT,
         LIKE
@@ -83,7 +83,11 @@ public class Feature<T> {
     }
 
     public String getGUID() {
-        return this.eventType + this.eventId;
+        return this.eventType + "_" + this.eventId;
+    }
+
+    public boolean hasEventTypeWithContents() {
+        return this.eventType == EventType.POST || this.eventType == EventType.COMMENT;
     }
 
     public static Feature of(Post post) {
