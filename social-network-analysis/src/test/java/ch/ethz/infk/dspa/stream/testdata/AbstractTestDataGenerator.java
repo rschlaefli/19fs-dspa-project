@@ -3,6 +3,7 @@ package ch.ethz.infk.dspa.stream.testdata;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -22,6 +23,8 @@ import scala.NotImplementedError;
 
 public abstract class AbstractTestDataGenerator<T> {
 
+	private List<TestDataPair<T>> testData;
+
 	public abstract TestDataPair<T> parseLine(String line);
 
 	public abstract DataStream<T> addReturnType(SingleOutputStreamOperator<T> out);
@@ -36,6 +39,10 @@ public abstract class AbstractTestDataGenerator<T> {
 	 */
 	public T generateElement() {
 		throw new NotImplementedError("Not implemented");
+	}
+
+	public List<TestDataPair<T>> getTestData() {
+		return testData;
 	}
 
 	/**
@@ -82,7 +89,7 @@ public abstract class AbstractTestDataGenerator<T> {
 
 	private List<TestDataPair<T>> generateTestData(String file) throws IOException {
 
-		List<TestDataPair<T>> stream = new ArrayList<>();
+		testData = new ArrayList<>();
 
 		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
 
@@ -90,12 +97,12 @@ public abstract class AbstractTestDataGenerator<T> {
 			String line;
 
 			while ((line = br.readLine()) != null && StringUtils.isNotEmpty(line)) {
-				stream.add(parseLine(line));
+				testData.add(parseLine(line));
 
 			}
 		}
 
-		return stream;
+		return testData;
 
 	}
 
@@ -115,6 +122,10 @@ public abstract class AbstractTestDataGenerator<T> {
 
 	}
 
+	protected DateTime parseDateTime(String dateTimeStr) {
+		return new DateTime(ZonedDateTime.parse(dateTimeStr).toInstant().toEpochMilli());
+	}
+
 	public static class TestDataPair<T> {
 		T element;
 		DateTime timestamp;
@@ -125,6 +136,15 @@ public abstract class AbstractTestDataGenerator<T> {
 			c.timestamp = timestamp;
 			return c;
 		}
+
+		public T getElement() {
+			return element;
+		}
+
+		public DateTime getTimestamp() {
+			return timestamp;
+		}
+
 	}
 
 }

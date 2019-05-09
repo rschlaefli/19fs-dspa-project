@@ -1,23 +1,15 @@
 package ch.ethz.infk.dspa.stream.testdata;
 
-import java.io.IOException;
-import java.time.ZonedDateTime;
-
-import ch.ethz.infk.dspa.avro.CommentPostMapping;
-import ch.ethz.infk.dspa.stream.CommentDataStreamBuilder;
-import ch.ethz.infk.dspa.stream.helper.SourceSink;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.flink.runtime.operators.DataSinkTask;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.joda.time.DateTime;
 
 import ch.ethz.infk.dspa.avro.Comment;
+import ch.ethz.infk.dspa.stream.helper.SourceSink;
 
 public class CommentTestDataGenerator extends AbstractTestDataGenerator<Comment> {
 
@@ -60,7 +52,7 @@ public class CommentTestDataGenerator extends AbstractTestDataGenerator<Comment>
 
 		Long commentId = Long.parseLong(parts[0]);
 		Long personId = Long.parseLong(parts[1]);
-		DateTime creationDate = new DateTime(ZonedDateTime.parse(parts[2]).toInstant().toEpochMilli());
+		DateTime creationDate = parseDateTime(parts[2]);
 		String locationIP = parts[3];
 		String browserUsed = parts[4];
 		String content = parts[5];

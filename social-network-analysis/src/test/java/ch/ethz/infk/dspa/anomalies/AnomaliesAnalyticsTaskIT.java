@@ -1,6 +1,7 @@
 package ch.ethz.infk.dspa.anomalies;
 
 import ch.ethz.infk.dspa.anomalies.dto.Feature;
+import ch.ethz.infk.dspa.anomalies.dto.FraudulentUser;
 import ch.ethz.infk.dspa.avro.Comment;
 import ch.ethz.infk.dspa.avro.CommentPostMapping;
 import ch.ethz.infk.dspa.avro.Like;
@@ -60,9 +61,9 @@ public class AnomaliesAnalyticsTaskIT extends AbstractTestBase {
 
         analyticsTask.start();
 
-        List<Feature> results = TestSink.getResults(Feature.class);
-        for (Feature f : results) {
-            System.out.println(f.getEventType());
-        }
-    }
+		List<FraudulentUser> results = TestSink.getResults(FraudulentUser.class);
+		for (FraudulentUser f : results) {
+			System.out.println(f);
+		}
+	}
 }

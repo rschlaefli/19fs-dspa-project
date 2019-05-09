@@ -1,76 +1,63 @@
 package ch.ethz.infk.dspa.anomalies.dto;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Range;
-import com.google.common.math.Stats;
-
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+
+import com.google.common.collect.ImmutableMap;
 
 public class FeatureStatistics {
 
-    // define how many standard deviations around the mean are regarded as "normal"
-    // TODO: extract this map somewhere else so we can parameterize
-    public static final Map<Feature.FeatureId, Double> FEATURE_THRESHOLDS = ImmutableMap.of(
-            Feature.FeatureId.TIMESTAMP, 1D,
-            Feature.FeatureId.CONTENTS_LONG, 2D,
-            Feature.FeatureId.CONTENTS_MEDIUM, 2D,
-            Feature.FeatureId.CONTENTS_SHORT, 3D
-    );
+	// define how many standard deviations around the mean are regarded as "normal"
+	// TODO: extract this map somewhere else so we can parameterize
+	public static final Map<Feature.FeatureId, Double> FEATURE_THRESHOLDS = ImmutableMap.of(
+			Feature.FeatureId.TIMESTAMP, 1D,
+			Feature.FeatureId.CONTENTS_LONG, 2D,
+			Feature.FeatureId.CONTENTS_MEDIUM, 2D,
+			Feature.FeatureId.CONTENTS_SHORT, 3D);
 
-    private Feature feature;
-    private Double rollingStd;
-    private Double rollingMean;
-    private long rollingCount;
+	private Feature feature;
+	private Double stdDev;
+	private Double mean;
 
-    public FeatureStatistics(Feature currentFeature) {
-        this.feature = currentFeature;
-    }
+	public FeatureStatistics(Feature currentFeature) {
+		this.feature = currentFeature;
+	}
 
-    // compute the internal statistics based on a list of features
-    public FeatureStatistics withStatisticsFrom(List<Feature> features) {
-        // TODO: improve statistics computations (incremental)
-        List<Double> values = features.stream().map(Feature::getFeatureValue).collect(Collectors.toList());
-        Stats statistics = Stats.of(values);
-        this.rollingMean = statistics.mean();
-        this.rollingStd = statistics.populationStandardDeviation();
-        this.rollingCount = statistics.count();
-        return this;
-    }
+	public Double getStdDev() {
+		return stdDev;
+	}
 
-    public Double getRollingStd() {
-        return this.rollingStd;
-    }
+	public void setStdDev(Double stdDev) {
+		this.stdDev = stdDev;
+	}
 
-    public Double getRollingMean() {
-        return this.rollingMean;
-    }
+	public Double getMean() {
+		return mean;
+	}
 
-    public long getRollingCount() {
-        return this.rollingCount;
-    }
+	public void setMean(Double mean) {
+		this.mean = mean;
+	}
 
-    public Feature.FeatureId getFeatureId() {
-        return this.feature.getFeatureId();
-    }
+	public Feature.FeatureId getFeatureId() {
+		return this.feature.getFeatureId();
+	}
 
-    public String getEventGUID() {
-        return this.feature.getGUID();
-    }
+	public String getEventGUID() {
+		return this.feature.getGUID();
+	}
 
-    public Double getApplicableThreshold() {
-        return FEATURE_THRESHOLDS.get(this.feature.getFeatureId());
-    }
+	public Double getApplicableThreshold() {
+		return FEATURE_THRESHOLDS.get(this.feature.getFeatureId());
+	}
 
-    public Feature getFeature() {
-        return this.feature;
-    }
+	public Feature getFeature() {
+		return this.feature;
+	}
 
-    // compute and store whether the event is to be regarded as anomalous based on current statistics
-    public boolean isAnomalous() {
-        Double maximumDeviation = this.rollingStd * getApplicableThreshold();
-        Double featureValue = this.feature.getFeatureValue();
-        return featureValue < this.rollingMean - maximumDeviation || featureValue > this.rollingMean + maximumDeviation;
-    }
+	// compute and store whether the event is to be regarded as anomalous based on current statistics
+	public boolean isAnomalous() {
+		Double maximumDeviation = this.stdDev * getApplicableThreshold();
+		Double featureValue = this.feature.getFeatureValue();
+		return featureValue < this.mean - maximumDeviation || featureValue > this.mean + maximumDeviation;
+	}
 }
