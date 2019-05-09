@@ -1,12 +1,13 @@
 package ch.ethz.infk.dspa.recommendations.dto;
 
+import java.util.HashMap;
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+
 import ch.ethz.infk.dspa.avro.Comment;
 import ch.ethz.infk.dspa.avro.Like;
 import ch.ethz.infk.dspa.avro.Post;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.HashMap;
-import java.util.List;
 
 public class PersonActivity {
 
@@ -22,46 +23,6 @@ public class PersonActivity {
 		this();
 		this.personId = personId;
 		this.postId = postId;
-	}
-
-	public Long personId() {
-		return this.personId;
-	}
-
-	public Long postId() {
-		return this.postId;
-	}
-
-	public HashMap<String, Integer> categoryMap() {
-		return this.categoryMap;
-	}
-
-	public void setPersonId(Long personId) {
-		this.personId = personId;
-	}
-
-	public void setPostId(Long postId) {
-		this.postId = postId;
-	}
-
-	public void countCategory(String category) {
-		this.categoryMap.merge(category, 1, Integer::sum);
-	}
-
-	public void putCategory(String category, Integer count) {
-		this.categoryMap.put(category, count);
-	}
-
-	public int count(String category) {
-		return this.categoryMap.getOrDefault(category, 0);
-	}
-
-	public void mergeCategoryMap(HashMap<String, Integer> other) {
-		other.forEach((category, count) -> categoryMap.merge(category, count, Integer::sum));
-	}
-
-	public void setCategoryMap(HashMap<String, Integer> categoryMap) {
-		this.categoryMap = categoryMap;
 	}
 
 	public static PersonActivity of(Post post) {
@@ -124,5 +85,45 @@ public class PersonActivity {
 		// TODO [nku] check if want to keep creationTime in PersonActivity
 
 		return activity;
+	}
+
+	public Long personId() {
+		return this.personId;
+	}
+
+	public Long postId() {
+		return this.postId;
+	}
+
+	public HashMap<String, Integer> categoryMap() {
+		return this.categoryMap;
+	}
+
+	public void setPersonId(Long personId) {
+		this.personId = personId;
+	}
+
+	public void setPostId(Long postId) {
+		this.postId = postId;
+	}
+
+	public void countCategory(String category) {
+		this.categoryMap.merge(category, 1, Integer::sum);
+	}
+
+	public void putCategory(String category, Integer count) {
+		this.categoryMap.put(category, count);
+	}
+
+	public int count(String category) {
+		return this.categoryMap.getOrDefault(category, 0);
+	}
+
+	public void mergeCategoryMap(HashMap<String, Integer> other) {
+		other.forEach((category, count) -> categoryMap.merge(category, count, Integer::sum));
+	}
+
+	public void setCategoryMap(HashMap<String, Integer> categoryMap) {
+		this.categoryMap = categoryMap;
 	}
 }

@@ -17,6 +17,10 @@ public class PostActivityCount {
 		this.type = type;
 	}
 
+	public static String csvHeader() {
+		return "postId;activityType;count";
+	}
+
 	public Long getPostId() {
 		return postId;
 	}
@@ -43,10 +47,6 @@ public class PostActivityCount {
 
 	public void setCount(long count) {
 		this.count = count;
-	}
-
-	public static String csvHeader() {
-		return "postId;activityType;count";
 	}
 
 	public String toCsv() {

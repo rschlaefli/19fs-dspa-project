@@ -6,13 +6,6 @@ import ch.ethz.infk.dspa.avro.Post;
 
 public class PostActivity {
 
-	public enum ActivityType {
-		POST,
-		LIKE,
-		COMMENT,
-		REPLY
-	}
-
 	private Long postId;
 	private ActivityType type;
 	private Long personId;
@@ -21,6 +14,19 @@ public class PostActivity {
 		this.postId = postId;
 		this.type = type;
 		this.personId = personId;
+	}
+
+	public static PostActivity of(Post post) {
+		return new PostActivity(post.getId(), ActivityType.POST, post.getPersonId());
+	}
+
+	public static PostActivity of(Comment comment) {
+		ActivityType type = comment.getReplyToCommentId() == null ? ActivityType.COMMENT : ActivityType.REPLY;
+		return new PostActivity(comment.getReplyToPostId(), type, comment.getPersonId());
+	}
+
+	public static PostActivity of(Like like) {
+		return new PostActivity(like.getPostId(), ActivityType.LIKE, like.getPersonId());
 	}
 
 	public Long getPostId() {
@@ -35,16 +41,10 @@ public class PostActivity {
 		return personId;
 	}
 
-	public static PostActivity of(Post post) {
-		return new PostActivity(post.getId(), ActivityType.POST, post.getPersonId());
-	}
-
-	public static PostActivity of(Comment comment) {
-		ActivityType type = comment.getReplyToCommentId() == null ? ActivityType.COMMENT : ActivityType.REPLY;
-		return new PostActivity(comment.getReplyToPostId(), type, comment.getPersonId());
-	}
-
-	public static PostActivity of(Like like) {
-		return new PostActivity(like.getPostId(), ActivityType.LIKE, like.getPersonId());
+	public enum ActivityType {
+		POST,
+		LIKE,
+		COMMENT,
+		REPLY
 	}
 }

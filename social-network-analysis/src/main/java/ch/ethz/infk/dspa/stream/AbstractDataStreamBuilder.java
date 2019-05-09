@@ -8,13 +8,11 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 
 public abstract class AbstractDataStreamBuilder<T> {
 
-	private String bootstrapServers;
-	private String groupId;
-
-	private Time maxOutOfOrderness;
-
 	StreamExecutionEnvironment env;
 	DataStream<T> stream;
+	private String bootstrapServers;
+	private String groupId;
+	private Time maxOutOfOrderness;
 
 	public AbstractDataStreamBuilder(StreamExecutionEnvironment env) {
 		this.env = env;
@@ -37,7 +35,6 @@ public abstract class AbstractDataStreamBuilder<T> {
 		this.maxOutOfOrderness = maxOutOfOrderness;
 		return this;
 	}
-
 
 	public Properties buildKafkaConsumerProperties() {
 		Properties props = new Properties();

@@ -1,6 +1,8 @@
 package ch.ethz.infk.dspa.anomalies.ops.features;
 
-import ch.ethz.infk.dspa.anomalies.dto.Feature;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.flink.api.common.state.MapState;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.api.common.state.ValueState;
@@ -13,9 +15,11 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
 
-import java.util.*;
+import ch.ethz.infk.dspa.anomalies.dto.Feature;
 
 public class TimespanFeatureProcessFunction extends KeyedProcessFunction<Long, Feature, Feature> {
+
+	private static final long serialVersionUID = 1L;
 
 	// store the maximum timestamp that was seen before
 	// if a feature arrives with event time larger than this but smaller than the watermark
@@ -23,6 +27,14 @@ public class TimespanFeatureProcessFunction extends KeyedProcessFunction<Long, F
 	// otherwise, we need to buffer the event until the watermark is at least equal
 	private MapState<Long, List<Feature>> featureMapState;
 	private ValueState<Long> lastEventBeforeWatermarkState;
+
+	public static DataStream<Feature> applyTo(DataStream<Feature> postInputStream,
+			DataStream<Feature> commentFeatureStream, DataStream<Feature> likeInputStream) {
+		return postInputStream
+				.union(commentFeatureStream, likeInputStream)
+				.keyBy(Feature::getPersonId)
+				.process(new TimespanFeatureProcessFunction());
+	}
 
 	@Override
 	public void open(Configuration parameters) throws Exception {
@@ -76,12 +88,5 @@ public class TimespanFeatureProcessFunction extends KeyedProcessFunction<Long, F
 		// remove all entries for the current timestamp
 		// they will not be needed anymore
 		this.featureMapState.remove(timestamp);
-	}
-
-	public static DataStream<Feature> applyTo(DataStream<Feature> postInputStream, DataStream<Feature> commentFeatureStream, DataStream<Feature> likeInputStream) {
-		return postInputStream
-				.union(commentFeatureStream, likeInputStream)
-				.keyBy(Feature::getPersonId)
-				.process(new TimespanFeatureProcessFunction());
 	}
 }

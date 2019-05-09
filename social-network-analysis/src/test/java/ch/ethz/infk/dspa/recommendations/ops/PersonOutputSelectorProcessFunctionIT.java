@@ -14,7 +14,6 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import ch.ethz.infk.dspa.debug.DebugProcessFunction;
 import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
 import ch.ethz.infk.dspa.stream.helper.TestSink;
 import ch.ethz.infk.dspa.stream.testdata.PersonActivityTestDataGenerator;

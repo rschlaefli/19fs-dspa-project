@@ -82,17 +82,6 @@ public class OnlineAverageProcessFunctionTest extends AbstractTestBase {
 
 	}
 
-	private static class StatsContainer {
-		double mean;
-		double stdDev;
-
-		public StatsContainer(double mean, double stdDev) {
-			this.mean = mean;
-			this.stdDev = stdDev;
-		}
-
-	}
-
 	private HashMap<String, StatsContainer> buildExpectedResults(List<TestDataPair<Feature>> testData) {
 		HashMap<Long, Double> meanMap = new HashMap<>();
 		HashMap<Long, Double> stdDevMap = new HashMap<>();
@@ -129,6 +118,17 @@ public class OnlineAverageProcessFunctionTest extends AbstractTestBase {
 		}
 
 		return expectedResults;
+	}
+
+	private static class StatsContainer {
+		double mean;
+		double stdDev;
+
+		public StatsContainer(double mean, double stdDev) {
+			this.mean = mean;
+			this.stdDev = stdDev;
+		}
+
 	}
 
 }
