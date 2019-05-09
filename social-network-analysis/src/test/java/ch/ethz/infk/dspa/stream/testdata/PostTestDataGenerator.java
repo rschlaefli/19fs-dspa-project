@@ -1,11 +1,8 @@
 package ch.ethz.infk.dspa.stream.testdata;
 
-import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.flink.api.common.typeinfo.TypeHint;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
@@ -60,7 +57,7 @@ public class PostTestDataGenerator extends AbstractTestDataGenerator<Post> {
 
 		Long postId = Long.parseLong(parts[0]);
 		Long personId = Long.parseLong(parts[1]);
-		DateTime creationDate = new DateTime(ZonedDateTime.parse(parts[2]).toInstant().toEpochMilli());
+		DateTime creationDate = parseDateTime(parts[2]);
 		String imageFile = parts[3];
 		String locationIP = parts[4];
 		String browserUsed = parts[5];

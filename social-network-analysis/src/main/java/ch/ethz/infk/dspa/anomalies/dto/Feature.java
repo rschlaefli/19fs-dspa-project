@@ -3,114 +3,149 @@ package ch.ethz.infk.dspa.anomalies.dto;
 import ch.ethz.infk.dspa.avro.Comment;
 import ch.ethz.infk.dspa.avro.Like;
 import ch.ethz.infk.dspa.avro.Post;
-import org.joda.time.DateTime;
 
-public class Feature<T> {
+public class Feature {
 
-    public enum FeatureId {
-        TIMESTAMP,
-        CONTENTS_SHORT,
-        CONTENTS_MEDIUM,
-        CONTENTS_LONG,
-    }
+	public enum FeatureId {
+		TIMESTAMP,
+		CONTENTS_SHORT,
+		CONTENTS_MEDIUM,
+		CONTENTS_LONG,
+	}
 
-    public enum EventType {
-        POST,
-        COMMENT,
-        LIKE
-    }
+	public enum EventType {
+		POST,
+		COMMENT,
+		LIKE
+	}
 
-    private Long personId;
-    private String eventId;
-    private EventType eventType;
-    private T event;
+	private FeatureId featureId;
+	private Double featureValue;
 
-    private FeatureId featureId;
-    private Double featureValue;
+	// events
+	private Post post = null;
+	private Comment comment = null;
+	private Like like = null;
 
-    public Feature<T> withEventType(EventType eventType) {
-        this.eventType = eventType;
-        return this;
-    }
+	public Feature withEvent(Post post) {
+		if (comment != null || like != null) {
+			throw new IllegalArgumentException("Event already set");
+		}
+		this.post = post;
+		return this;
+	}
 
-    public Feature<T> withPersonId(Long personId) {
-        this.personId = personId;
-        return this;
-    }
+	public Feature withEvent(Comment comment) {
+		if (post != null || like != null) {
+			throw new IllegalArgumentException("Event already set");
+		}
+		this.comment = comment;
+		return this;
+	}
 
-    public Feature<T> withEventId(String eventId) {
-        this.eventId = eventId;
-        return this;
-    }
+	public Feature withEvent(Like like) {
+		if (post != null || comment != null) {
+			throw new IllegalArgumentException("Event already set");
+		}
+		this.like = like;
+		return this;
+	}
 
-    public Feature<T> withEvent(T event) {
-        this.event = event;
-        return this;
-    }
+	public Feature withFeatureId(FeatureId featureId) {
+		this.featureId = featureId;
+		return this;
+	}
 
-    public Feature<T> withFeatureId(FeatureId featureId) {
-        this.featureId = featureId;
-        return this;
-    }
+	public Feature withFeatureValue(Double featureValue) {
+		this.featureValue = featureValue;
+		return this;
+	}
 
-    public Feature<T> withFeatureValue(Double featureValue) {
-        this.featureValue = featureValue;
-        return this;
-    }
+	public FeatureId getFeatureId() {
+		return this.featureId;
+	}
 
-    public Long getPersonId() {
-        return this.personId;
-    }
+	public Double getFeatureValue() {
+		return this.featureValue;
+	}
 
-    public String getEventId() {
-        return this.eventId;
-    }
+	public EventType getEventType() {
+		if (post != null) {
+			return EventType.POST;
+		}
 
-    public EventType getEventType() {
-        return this.eventType;
-    }
+		if (comment != null) {
+			return EventType.COMMENT;
+		}
 
-    public FeatureId getFeatureId() {
-        return this.featureId;
-    }
+		if (like != null) {
+			return EventType.LIKE;
+		}
 
-    public T getEvent() {
-        return this.event;
-    }
+		throw new IllegalArgumentException("No event set in feature");
+	}
 
-    public Double getFeatureValue() {
-        return this.featureValue;
-    }
+	public Long getPersonId() {
+		if (post != null) {
+			return post.getPersonId();
+		}
 
-    public String getGUID() {
-        return this.eventType + "_" + this.eventId;
-    }
+		if (comment != null) {
+			return comment.getPersonId();
+		}
 
-    public boolean hasEventTypeWithContents() {
-        return this.eventType == EventType.POST || this.eventType == EventType.COMMENT;
-    }
+		if (like != null) {
+			return like.getPersonId();
+		}
 
-    public static Feature of(Post post) {
-        return new Feature<Post>()
-                .withEventType(EventType.POST)
-                .withPersonId(post.getPersonId())
-                .withEventId(post.getId().toString())
-                .withEvent(post);
-    }
+		throw new IllegalArgumentException("No event set in feature");
+	}
 
-    public static Feature of(Comment comment) {
-        return new Feature<Comment>()
-                .withEventType(EventType.COMMENT)
-                .withPersonId(comment.getPersonId())
-                .withEventId(comment.getReplyToPostId().toString())
-                .withEvent(comment);
-    }
+	public String getEventId() {
+		if (post != null) {
+			return String.valueOf(post.getId());
+		}
 
-    public static Feature of(Like like) {
-        return new Feature<Like>()
-                .withEventType(EventType.LIKE)
-                .withPersonId(like.getPersonId())
-                .withEventId(like.getPersonId() + "_" + like.getPostId())
-                .withEvent(like);
-    }
+		if (comment != null) {
+			return String.valueOf(comment.getId());
+		}
+
+		if (like != null) {
+			return String.join("_", String.valueOf(like.getPersonId()), String.valueOf(like.getPostId()));
+		}
+
+		throw new IllegalArgumentException("No event set in feature");
+
+	}
+
+	public Post getPost() {
+		return post;
+	}
+
+	public Comment getComment() {
+		return comment;
+	}
+
+	public Like getLike() {
+		return like;
+	}
+
+	public String getGUID() {
+		return getEventType() + "_" + getEventId();
+	}
+
+	public static Feature of(Post post) {
+		return new Feature()
+				.withEvent(post);
+	}
+
+	public static Feature of(Comment comment) {
+		return new Feature()
+				.withEvent(comment);
+	}
+
+	public static Feature of(Like like) {
+		return new Feature()
+				.withEvent(like);
+	}
 }
