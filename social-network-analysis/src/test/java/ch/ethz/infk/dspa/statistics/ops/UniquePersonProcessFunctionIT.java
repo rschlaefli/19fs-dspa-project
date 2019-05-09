@@ -28,7 +28,7 @@ public class UniquePersonProcessFunctionIT {
     void setup() throws IOException {
         env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        postActivityStream = new PostActivityTestDataGenerator().generate(env, "./src/test/java/resources/post_activity_event_stream.csv", Time.hours(1));
+        postActivityStream = new PostActivityTestDataGenerator().generate(env, "src/test/java/resources/statistics/streams/post_activity_stream.csv", Time.hours(1));
 
         TestSink.reset();
     }

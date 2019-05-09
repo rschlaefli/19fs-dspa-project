@@ -41,15 +41,15 @@ public class ActivePostsAnalyticsTaskIT extends AbstractTestBase {
 		// their event times don't suit each other --> create new test streams for this
 		// integration test
 
-		postStream = new PostTestDataGenerator().generate(env, "./../data/test/01_test/post_event_stream.csv",
+		postStream = new PostTestDataGenerator().generate(env, "src/test/java/resources/post_stream.csv",
 				maxOutOfOrderness);
-		commentStream = new CommentTestDataGenerator().generate(env, "./../data/test/01_test/comment_event_stream.csv",
+		commentStream = new CommentTestDataGenerator().generate(env, "src/test/java/resources/comment_stream.csv",
 				maxOutOfOrderness);
-		likeStream = new LikeTestDataGenerator().generate(env, "./../data/test/01_test/likes_event_stream.csv",
+		likeStream = new LikeTestDataGenerator().generate(env, "src/test/java/resources/like_stream.csv",
 				maxOutOfOrderness);
 
 		mappingSourceSink = CommentTestDataGenerator
-				.generateSourceSink("./../data/test/01_test/comment_event_stream.csv");
+				.generateSourceSink("src/test/java/resources/comment_stream.csv");
 		mappingStream = env.addSource(mappingSourceSink);
 
 		TestSink.reset();

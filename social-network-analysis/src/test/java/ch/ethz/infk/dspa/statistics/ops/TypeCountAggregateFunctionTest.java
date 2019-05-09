@@ -20,7 +20,7 @@ public class TypeCountAggregateFunctionTest {
 	@BeforeAll
 	public static void setup() throws IOException {
 		postActivities = new PostActivityTestDataGenerator()
-				.generate("./src/test/java/resources/post_activity_event_stream.csv");
+				.generate("./src/test/java/resources/statistics/streams/post_activity_stream.csv");
 	}
 
 	@Test

@@ -27,7 +27,7 @@ public class CommentStreamBuilderWithPostIdTest extends AbstractTestBase {
 	public void testCommentStreamBuilderWithPostId() throws Exception {
 
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-		String testFile = "./../data/test/01_test/comment_event_stream.csv";
+		String testFile = "src/test/java/resources/stream/comment_stream.csv";
 		Time maxOutOfOrderness = Time.hours(1);
 
 		SourceSink mappingSourceSink = CommentTestDataGenerator.generateSourceSink(testFile);

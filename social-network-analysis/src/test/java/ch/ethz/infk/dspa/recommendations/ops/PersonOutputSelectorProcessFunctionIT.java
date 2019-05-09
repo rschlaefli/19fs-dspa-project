@@ -30,7 +30,7 @@ public class PersonOutputSelectorProcessFunctionIT {
 		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
 		personActivityStream = new PersonActivityTestDataGenerator().generate(env,
-				"src/test/java/resources/diverse_person_activity_event_stream.csv", Time.hours(1));
+				"src/test/java/resources/recommendations/streams/person_activity_stream_diverse.csv", Time.hours(1));
 
 		TestSink.reset();
 	}
