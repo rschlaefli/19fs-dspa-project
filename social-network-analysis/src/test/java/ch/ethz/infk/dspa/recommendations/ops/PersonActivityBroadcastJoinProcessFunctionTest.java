@@ -24,7 +24,7 @@ public class PersonActivityBroadcastJoinProcessFunctionTest extends AbstractTest
 	public void testPersonActivityBroadcastJoinProcessFunction() throws Exception {
 
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-		String testFile = "./../data/test/01_test/reduced_person_activity_event_stream.csv";
+		String testFile = "src/test/java/resources/recommendations/streams/person_activity_stream_reduced.csv";
 		Time maxOutOfOrderness = Time.hours(1);
 
 		DataStream<PersonActivity> activityStream = new PersonActivityTestDataGenerator().generate(env, testFile,

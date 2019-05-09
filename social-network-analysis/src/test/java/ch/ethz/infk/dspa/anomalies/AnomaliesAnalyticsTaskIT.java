@@ -40,11 +40,11 @@ public class AnomaliesAnalyticsTaskIT extends AbstractTestBase {
 
         env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        postStream = new PostTestDataGenerator().generate(env, "./../data/test/01_test/post_event_stream.csv", maxOutOfOrderness);
-        commentStream = new CommentTestDataGenerator().generate(env, "./../data/test/01_test/comment_event_stream.csv", maxOutOfOrderness);
-        likeStream = new LikeTestDataGenerator().generate(env, "./../data/test/01_test/likes_event_stream.csv", maxOutOfOrderness);
+        postStream = new PostTestDataGenerator().generate(env, "src/test/java/resources/post_stream.csv", maxOutOfOrderness);
+        commentStream = new CommentTestDataGenerator().generate(env, "src/test/java/resources/comment_stream.csv", maxOutOfOrderness);
+        likeStream = new LikeTestDataGenerator().generate(env, "src/test/java/resources/like_stream.csv", maxOutOfOrderness);
 
-        mappingSourceSink = CommentTestDataGenerator.generateSourceSink("./../data/test/01_test/comment_event_stream.csv");
+        mappingSourceSink = CommentTestDataGenerator.generateSourceSink("src/test/java/resources/comment_stream.csv");
         mappingStream = env.addSource(mappingSourceSink);
     }
 

@@ -20,12 +20,12 @@ public class FriendsFilterFunctionTest {
 
     @BeforeEach
     void setup() throws IOException {
-        similarities = new PersonSimilarityTestDataGenerator().generate("src/test/java/resources/person_similarity_event_stream.csv");
+        similarities = new PersonSimilarityTestDataGenerator().generate("src/test/java/resources/recommendations/streams/person_similarity_stream.csv");
     }
 
     @Test
     void testFriendsFilterFunction_loadsExpectedKnowsRelation() throws Exception {
-        FriendsFilterFunction filterFunction = new FriendsFilterFunction("src/test/java/resources/person_knows_person.csv");
+        FriendsFilterFunction filterFunction = new FriendsFilterFunction("src/test/java/resources/recommendations/relations/person_knows_person.csv");
 
         // assert that the static data is correctly loaded
         filterFunction.open(new Configuration());
@@ -49,7 +49,7 @@ public class FriendsFilterFunctionTest {
 
     @Test
     void testFriendsFilterFunction_filtersAsExpected() throws Exception {
-        FriendsFilterFunction filterFunction = new FriendsFilterFunction("src/test/java/resources/person_knows_person.csv");
+        FriendsFilterFunction filterFunction = new FriendsFilterFunction("src/test/java/resources/recommendations/relations/person_knows_person.csv");
         filterFunction.open(new Configuration());
 
         // assert that the correct similarities are returned or filtered out
