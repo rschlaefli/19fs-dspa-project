@@ -15,6 +15,8 @@ import ch.ethz.infk.dspa.anomalies.dto.FraudulentUser;
 public class EventStatisticsWindowProcessFunction
 		extends ProcessWindowFunction<EventStatistics, FraudulentUser, Long, TimeWindow> {
 
+	private static final long serialVersionUID = 1L;
+
 	private double isFraudulentThreshold;
 
 	public EventStatisticsWindowProcessFunction() {

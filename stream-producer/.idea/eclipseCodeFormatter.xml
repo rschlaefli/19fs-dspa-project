@@ -4,7 +4,6 @@
     <option name="projectSpecificProfile">
       <ProjectSpecificProfile>
         <option name="formatter" value="ECLIPSE" />
-        <option name="importOrder" value="com;io;java;javax;net;org;" />
         <option name="importOrderConfigFilePath" value="$PROJECT_DIR$/../eclipse.importorder" />
         <option name="importOrderFromFile" value="true" />
         <option name="pathToConfigFileJava" value="$PROJECT_DIR$/../eclipse-formatter.xml" />

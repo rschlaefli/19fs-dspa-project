@@ -10,6 +10,15 @@ public class ContentsFeatureProcessFunction extends KeyedProcessFunction<Long, F
 
 	private static final long serialVersionUID = 1L;
 
+	public static DataStream<Feature> applyTo(DataStream<Feature> postInputStream,
+			DataStream<Feature> commentInputStream) {
+		return postInputStream
+				.union(commentInputStream)
+				.keyBy(Feature::getPersonId)
+				// .filter(Feature::hasEventTypeWithContents)
+				.process(new ContentsFeatureProcessFunction());
+	}
+
 	@Override
 	public void processElement(Feature feature, Context ctx, Collector<Feature> out) throws Exception {
 
@@ -41,14 +50,5 @@ public class ContentsFeatureProcessFunction extends KeyedProcessFunction<Long, F
 		}
 
 		out.collect(updatedFeature);
-	}
-
-	public static DataStream<Feature> applyTo(DataStream<Feature> postInputStream,
-			DataStream<Feature> commentInputStream) {
-		return postInputStream
-				.union(commentInputStream)
-				.keyBy(Feature::getPersonId)
-				// .filter(Feature::hasEventTypeWithContents)
-				.process(new ContentsFeatureProcessFunction());
 	}
 }

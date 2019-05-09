@@ -16,11 +16,9 @@ import ch.ethz.infk.dspa.avro.CommentPostMapping;
 
 public class CommentPostIdEnrichmentProcessFunction extends CoProcessFunction<Comment, CommentPostMapping, Comment> {
 
-	private static final long serialVersionUID = 1L;
-
 	public static final OutputTag<CommentPostMapping> MAPPING_TAG = new OutputTag<>("comment-post",
 			TypeInformation.of(CommentPostMapping.class));
-
+	private static final long serialVersionUID = 1L;
 	private transient ValueState<Long> postId;
 	private transient ListState<Comment> children;
 

@@ -30,7 +30,8 @@ public class ActivePostsAnalyticsTask extends AbstractAnalyticsTask<DataStream<S
 		// map data streams to activity streams
 		DataStream<PostActivity> postActivityStream = this.postStream.map(PostActivity::of).returns(PostActivity.class);
 		DataStream<PostActivity> likeActivityStream = this.likeStream.map(PostActivity::of).returns(PostActivity.class);
-		DataStream<PostActivity> commentActivityStream = this.commentStream.map(PostActivity::of).returns(PostActivity.class);
+		DataStream<PostActivity> commentActivityStream = this.commentStream.map(PostActivity::of)
+				.returns(PostActivity.class);
 
 		// merge activity streams
 		KeyedStream<PostActivity, Long> activityStream = postActivityStream

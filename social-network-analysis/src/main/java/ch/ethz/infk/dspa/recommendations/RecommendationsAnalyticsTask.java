@@ -1,35 +1,26 @@
 package ch.ethz.infk.dspa.recommendations;
 
-import ch.ethz.infk.dspa.AbstractAnalyticsTask;
-import ch.ethz.infk.dspa.recommendations.dto.PersonSimilarity;
-import org.apache.flink.api.common.typeinfo.TypeHint;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.streaming.api.TimeCharacteristic;
+import java.util.List;
+
 import org.apache.flink.streaming.api.datastream.BroadcastStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 
-import ch.ethz.infk.dspa.avro.Comment;
-import ch.ethz.infk.dspa.avro.Like;
-import ch.ethz.infk.dspa.avro.Post;
+import ch.ethz.infk.dspa.AbstractAnalyticsTask;
 import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
+import ch.ethz.infk.dspa.recommendations.dto.PersonSimilarity;
 import ch.ethz.infk.dspa.recommendations.ops.CategoryEnrichmentProcessFunction;
 import ch.ethz.infk.dspa.recommendations.ops.FriendsFilterFunction;
 import ch.ethz.infk.dspa.recommendations.ops.PersonActivityBroadcastJoinProcessFunction;
 import ch.ethz.infk.dspa.recommendations.ops.PersonActivityReduceFunction;
 import ch.ethz.infk.dspa.recommendations.ops.PersonOutputSelectorProcessFunction;
 import ch.ethz.infk.dspa.recommendations.ops.TopKAggregateFunction;
-import ch.ethz.infk.dspa.stream.CommentDataStreamBuilder;
-import ch.ethz.infk.dspa.stream.LikeDataStreamBuilder;
-import ch.ethz.infk.dspa.stream.PostDataStreamBuilder;
 
-import java.util.List;
-
-public class RecommendationsAnalyticsTask extends AbstractAnalyticsTask<SingleOutputStreamOperator<List<PersonSimilarity>>, List<PersonSimilarity>> {
+public class RecommendationsAnalyticsTask
+		extends AbstractAnalyticsTask<SingleOutputStreamOperator<List<PersonSimilarity>>, List<PersonSimilarity>> {
 
 	@Override
 	public RecommendationsAnalyticsTask initialize() throws Exception {

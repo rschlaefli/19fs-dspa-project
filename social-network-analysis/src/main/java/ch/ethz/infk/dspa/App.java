@@ -1,8 +1,5 @@
 package ch.ethz.infk.dspa;
 
-import ch.ethz.infk.dspa.anomalies.AnomaliesAnalyticsTask;
-import ch.ethz.infk.dspa.recommendations.RecommendationsAnalyticsTask;
-import ch.ethz.infk.dspa.statistics.ActivePostsAnalyticsTask;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -10,6 +7,10 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.flink.streaming.api.windowing.time.Time;
+
+import ch.ethz.infk.dspa.anomalies.AnomaliesAnalyticsTask;
+import ch.ethz.infk.dspa.recommendations.RecommendationsAnalyticsTask;
+import ch.ethz.infk.dspa.statistics.ActivePostsAnalyticsTask;
 
 public class App {
 	public static void main(String[] args) throws Exception {
@@ -26,22 +27,23 @@ public class App {
 			long maxDelaySeconds = Long.parseLong(cmd.getOptionValue("maxdelaysec"));
 
 			// TODO [nku]: make use of the seed
-			// Long seed = cmd.getOptionValue("seed") != null ? Long.parseLong(cmd.getOptionValue("seed")) : null;
+			// Long seed = cmd.getOptionValue("seed") != null ? Long.parseLong(cmd.getOptionValue("seed")) :
+			// null;
 
-			AbstractAnalyticsTask analyticsTask;
+			AbstractAnalyticsTask<?, ?> analyticsTask;
 
 			switch (analyticsType) {
-				case "activeposts":
-					analyticsTask = new ActivePostsAnalyticsTask();
-					break;
-				case "recommendations":
-					analyticsTask = new RecommendationsAnalyticsTask();
-					break;
-				case "anomalies":
-					analyticsTask = new AnomaliesAnalyticsTask();
-					break;
-				default:
-					throw new IllegalArgumentException("INVALID_ANALYTICS_TYPE");
+			case "activeposts":
+				analyticsTask = new ActivePostsAnalyticsTask();
+				break;
+			case "recommendations":
+				analyticsTask = new RecommendationsAnalyticsTask();
+				break;
+			case "anomalies":
+				analyticsTask = new AnomaliesAnalyticsTask();
+				break;
+			default:
+				throw new IllegalArgumentException("INVALID_ANALYTICS_TYPE");
 			}
 
 			analyticsTask
@@ -75,8 +77,10 @@ public class App {
 		options.addOption(Option.builder("maxdelaysec").hasArg().required().type(Long.class)
 				.desc("maximum delay in seconds").build());
 
-		/* options.addOption(Option.builder("consumergroup").hasArg().required().type(String.class)
-				.desc("kafka consumer group").build()); */
+		/*
+		 * options.addOption(Option.builder("consumergroup").hasArg().required().type(String.class)
+		 * .desc("kafka consumer group").build());
+		 */
 
 		return options;
 	}
