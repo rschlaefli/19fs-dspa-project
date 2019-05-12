@@ -7,17 +7,8 @@ import org.apache.flink.util.Collector;
 import ch.ethz.infk.dspa.anomalies.dto.Feature;
 
 public class ContentsFeatureProcessFunction extends KeyedProcessFunction<Long, Feature, Feature> {
-
+	// TODO [rsc] use map function instead of process function
 	private static final long serialVersionUID = 1L;
-
-	public static DataStream<Feature> applyTo(DataStream<Feature> postInputStream,
-			DataStream<Feature> commentInputStream) {
-		return postInputStream
-				.union(commentInputStream)
-				.keyBy(Feature::getPersonId)
-				// .filter(Feature::hasEventTypeWithContents)
-				.process(new ContentsFeatureProcessFunction());
-	}
 
 	@Override
 	public void processElement(Feature feature, Context ctx, Collector<Feature> out) throws Exception {
@@ -50,5 +41,14 @@ public class ContentsFeatureProcessFunction extends KeyedProcessFunction<Long, F
 		}
 
 		out.collect(updatedFeature);
+	}
+
+	public static DataStream<Feature> applyTo(DataStream<Feature> postInputStream,
+			DataStream<Feature> commentInputStream) {
+		return postInputStream
+				.union(commentInputStream)
+				.keyBy(Feature::getPersonId) // TODO [rsc] why key by?
+				// .filter(Feature::hasEventTypeWithContents)
+				.process(new ContentsFeatureProcessFunction());
 	}
 }

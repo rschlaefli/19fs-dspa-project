@@ -15,6 +15,7 @@ import ch.ethz.infk.dspa.anomalies.ops.EnsembleAggregationFunction;
 import ch.ethz.infk.dspa.anomalies.ops.EventStatisticsWindowProcessFunction;
 import ch.ethz.infk.dspa.anomalies.ops.OnlineAverageProcessFunction;
 import ch.ethz.infk.dspa.anomalies.ops.features.ContentsFeatureProcessFunction;
+import ch.ethz.infk.dspa.anomalies.ops.features.TagCountFeatureMapFunction;
 import ch.ethz.infk.dspa.anomalies.ops.features.TimespanFeatureProcessFunction;
 
 public class AnomaliesAnalyticsTask
@@ -58,9 +59,10 @@ public class AnomaliesAnalyticsTask
 				commentFeatureStream, likeFeatureStream);
 		DataStream<Feature> contentsFeatureStream = ContentsFeatureProcessFunction.applyTo(postFeatureStream,
 				commentFeatureStream);
+		DataStream<Feature> tagCountFeatureStream = TagCountFeatureMapFunction.applyTo(postFeatureStream);
 
 		// merge feature streams into a single one
-		return timespanFeatureStream.union(contentsFeatureStream);
+		return timespanFeatureStream.union(contentsFeatureStream, tagCountFeatureStream);
 	}
 
 	SingleOutputStreamOperator<FeatureStatistics> applyOnlineAveraging(DataStream<Feature> featureStream) {
