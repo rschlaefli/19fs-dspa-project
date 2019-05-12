@@ -12,7 +12,8 @@ public class FeatureStatistics {
 			Feature.FeatureId.TIMESTAMP, 1D,
 			Feature.FeatureId.CONTENTS_LONG, 2D,
 			Feature.FeatureId.CONTENTS_MEDIUM, 2D,
-			Feature.FeatureId.CONTENTS_SHORT, 3D);
+			Feature.FeatureId.CONTENTS_SHORT, 3D,
+			Feature.FeatureId.TAG_COUNT, 2D);
 
 	private Feature feature;
 	private Double stdDev;

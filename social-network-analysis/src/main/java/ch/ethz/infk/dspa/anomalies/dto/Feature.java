@@ -6,6 +6,20 @@ import ch.ethz.infk.dspa.avro.Post;
 
 public class Feature {
 
+	public enum FeatureId {
+		TIMESTAMP,
+		CONTENTS_SHORT,
+		CONTENTS_MEDIUM,
+		CONTENTS_LONG,
+		TAG_COUNT
+	}
+
+	public enum EventType {
+		POST,
+		COMMENT,
+		LIKE
+	}
+
 	private FeatureId featureId;
 	private Double featureValue;
 	// events
@@ -135,16 +149,4 @@ public class Feature {
 		return getEventType() + "_" + getEventId();
 	}
 
-	public enum FeatureId {
-		TIMESTAMP,
-		CONTENTS_SHORT,
-		CONTENTS_MEDIUM,
-		CONTENTS_LONG,
-	}
-
-	public enum EventType {
-		POST,
-		COMMENT,
-		LIKE
-	}
 }
