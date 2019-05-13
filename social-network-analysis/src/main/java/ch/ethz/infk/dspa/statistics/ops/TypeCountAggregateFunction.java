@@ -1,10 +1,10 @@
 package ch.ethz.infk.dspa.statistics.ops;
 
-import ch.ethz.infk.dspa.statistics.dto.StatisticsOutput;
 import org.apache.flink.api.common.functions.AggregateFunction;
 
 import ch.ethz.infk.dspa.statistics.dto.PostActivity;
 import ch.ethz.infk.dspa.statistics.dto.PostActivity.ActivityType;
+import ch.ethz.infk.dspa.statistics.dto.StatisticsOutput;
 
 public class TypeCountAggregateFunction
 		implements AggregateFunction<PostActivity, StatisticsOutput, StatisticsOutput> {
@@ -19,8 +19,6 @@ public class TypeCountAggregateFunction
 	@Override
 	public StatisticsOutput createAccumulator() {
 		StatisticsOutput accumulator = new StatisticsOutput();
-
-		accumulator.setActivityType(TYPE);
 
 		if (TYPE == ActivityType.COMMENT) {
 			accumulator.setOutputType(StatisticsOutput.OutputType.COMMENT_COUNT);
@@ -55,7 +53,6 @@ public class TypeCountAggregateFunction
 
 		StatisticsOutput accumulator = new StatisticsOutput();
 		accumulator.setPostId(postId);
-		accumulator.setActivityType(TYPE);
 		accumulator.setValue(a.getValue() + b.getValue());
 
 		return accumulator;

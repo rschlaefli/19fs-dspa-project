@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>ch.ethz.infk.dspa</groupId>
     <artifactId>social-network-analysis</artifactId>
@@ -23,6 +24,7 @@
         <commons-beanutils.version>1.9.3</commons-beanutils.version>
         <json.version>20180813</json.version>
         <guava.version>27.1-jre</guava.version>
+        <opennlp.version>1.9.1</opennlp.version>
         <gson.version>2.8.5</gson.version>
         <entrypoint>ch.ethz.infk.dspa.App</entrypoint>
     </properties>
@@ -105,6 +107,11 @@
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
             <version>${joda.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.opennlp</groupId>
+            <artifactId>opennlp-tools</artifactId>
+            <version>${opennlp.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -190,7 +197,7 @@
                             <filters>
                                 <filter>
                                     <!-- Do not copy the signatures in the META-INF folder.
-									Otherwise, this might cause SecurityExceptions when using the JAR. -->
+                                    Otherwise, this might cause SecurityExceptions when using the JAR. -->
                                     <artifact>*:*</artifact>
                                     <excludes>
                                         <exclude>META-INF/*.SF</exclude>
@@ -200,7 +207,8 @@
                                 </filter>
                             </filters>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>${entrypoint</mainClass>
                                 </transformer>
                             </transformers>

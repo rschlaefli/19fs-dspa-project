@@ -21,8 +21,8 @@ import ch.ethz.infk.dspa.helper.function.DoubleSumReduceFunction;
 import ch.ethz.infk.dspa.helper.function.LongSumReduceFunction;
 
 /**
- * ProcessFunction implementing Welford's online algorithm to keep an online mean and variance/stdDev
- *
+ * ProcessFunction implementing Welford's online algorithm to keep an online mean and
+ * variance/stdDev
  */
 public class OnlineAverageProcessFunction
 		extends KeyedProcessFunction<Feature.FeatureId, Feature, FeatureStatistics> {

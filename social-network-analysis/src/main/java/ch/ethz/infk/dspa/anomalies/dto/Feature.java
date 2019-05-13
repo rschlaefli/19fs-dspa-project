@@ -7,7 +7,7 @@ import ch.ethz.infk.dspa.avro.Post;
 public class Feature {
 
 	public enum FeatureId {
-		TIMESTAMP,
+		TIMESPAN,
 		CONTENTS_SHORT,
 		CONTENTS_MEDIUM,
 		CONTENTS_LONG,

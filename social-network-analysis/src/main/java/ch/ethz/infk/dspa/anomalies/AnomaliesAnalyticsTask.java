@@ -17,7 +17,7 @@ import ch.ethz.infk.dspa.anomalies.dto.FraudulentUser;
 import ch.ethz.infk.dspa.anomalies.ops.EnsembleAggregationFunction;
 import ch.ethz.infk.dspa.anomalies.ops.EventStatisticsWindowProcessFunction;
 import ch.ethz.infk.dspa.anomalies.ops.OnlineAverageProcessFunction;
-import ch.ethz.infk.dspa.anomalies.ops.features.ContentsFeatureProcessFunction;
+import ch.ethz.infk.dspa.anomalies.ops.features.ContentsFeatureMapFunction;
 import ch.ethz.infk.dspa.anomalies.ops.features.TagCountFeatureMapFunction;
 import ch.ethz.infk.dspa.anomalies.ops.features.TimespanFeatureProcessFunction;
 
@@ -67,7 +67,7 @@ public class AnomaliesAnalyticsTask
 		// compute features over the stream
 		DataStream<Feature> timespanFeatureStream = new TimespanFeatureProcessFunction()
 				.applyTo(postFeatureStream, commentFeatureStream, likeFeatureStream);
-		DataStream<Feature> contentsFeatureStream = new ContentsFeatureProcessFunction(contentsShortUntilLength,
+		DataStream<Feature> contentsFeatureStream = new ContentsFeatureMapFunction(contentsShortUntilLength,
 				contentsLongFromLength)
 						.applyTo(postFeatureStream, commentFeatureStream);
 		DataStream<Feature> tagCountFeatureStream = TagCountFeatureMapFunction
@@ -90,7 +90,7 @@ public class AnomaliesAnalyticsTask
 			SingleOutputStreamOperator<FeatureStatistics> featureStatisticsStream) {
 		// construct a map of thresholds for maximum expected deviations from mean
 		final ImmutableMap<Feature.FeatureId, Double> thresholds = new ImmutableMap.Builder<Feature.FeatureId, Double>()
-				.put(Feature.FeatureId.TIMESTAMP, this.config.getDouble("tasks.anomalies.features.timespan.threshold"))
+				.put(Feature.FeatureId.TIMESPAN, this.config.getDouble("tasks.anomalies.features.timespan.threshold"))
 				.put(Feature.FeatureId.CONTENTS_SHORT,
 						this.config.getDouble("tasks.anomalies.features.contents.short.threshold"))
 				.put(Feature.FeatureId.CONTENTS_MEDIUM,

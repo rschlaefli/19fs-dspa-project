@@ -50,7 +50,7 @@ public class TimespanFeatureProcessFunction extends KeyedProcessFunction<Long, F
 	@Override
 	public void processElement(Feature feature, Context ctx, Collector<Feature> out) throws Exception {
 		// set the feature id of the feature
-		feature.withFeatureId(Feature.FeatureId.TIMESTAMP);
+		feature.withFeatureId(Feature.FeatureId.TIMESPAN);
 
 		// extract a list of all features for the current timestamp
 		List<Feature> currentFeatures = this.featureMapState.get(ctx.timestamp());

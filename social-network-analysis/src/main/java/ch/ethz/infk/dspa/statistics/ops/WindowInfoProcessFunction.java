@@ -10,7 +10,8 @@ public class WindowInfoProcessFunction extends ProcessFunction<StatisticsOutput,
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public void processElement(StatisticsOutput element, Context ctx, Collector<StatisticsOutput> out) throws Exception {
+	public void processElement(StatisticsOutput element, Context ctx, Collector<StatisticsOutput> out)
+			throws Exception {
 		element.setTimestamp(ctx.timestamp());
 		out.collect(element);
 	}
