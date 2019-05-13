@@ -13,6 +13,16 @@ import ch.ethz.infk.dspa.stream.helper.SourceSink;
 
 public class CommentTestDataGenerator extends AbstractTestDataGenerator<Comment> {
 
+	public static SourceSink generateSourceSink(String file) throws Exception {
+		// all replies will produce a mapping
+		Long mappingCount = new CommentTestDataGenerator().generate(file).stream()
+				.filter(c -> c.getReplyToCommentId() != null).count();
+
+		// create a SourceSink that acts both as Sink and Source for the
+		// CommentPostMappings (instead of going via Kafka)
+		return new SourceSink(mappingCount);
+	}
+
 	@Override
 	public DataStream<Comment> addReturnType(SingleOutputStreamOperator<Comment> out) {
 		return out.returns(Comment.class);
@@ -85,15 +95,5 @@ public class CommentTestDataGenerator extends AbstractTestDataGenerator<Comment>
 				.build();
 
 		return TestDataPair.of(comment, null);
-	}
-
-	public static SourceSink generateSourceSink(String file) throws Exception {
-		// all replies will produce a mapping
-		Long mappingCount = new CommentTestDataGenerator().generate(file).stream()
-				.filter(c -> c.getReplyToCommentId() != null).count();
-
-		// create a SourceSink that acts both as Sink and Source for the
-		// CommentPostMappings (instead of going via Kafka)
-		return new SourceSink(mappingCount);
 	}
 }

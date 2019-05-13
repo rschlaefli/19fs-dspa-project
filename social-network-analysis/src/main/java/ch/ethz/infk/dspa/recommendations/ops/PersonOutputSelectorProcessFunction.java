@@ -21,11 +21,9 @@ import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
 public class PersonOutputSelectorProcessFunction extends ProcessFunction<PersonActivity, PersonActivity>
 		implements CheckpointedFunction {
 
+	private static final long serialVersionUID = 1L;
 	public static OutputTag<PersonActivity> SELECTED = new OutputTag<>("selected",
 			TypeInformation.of(PersonActivity.class));
-
-	private static final long serialVersionUID = 1L;
-
 	private final int selectionCount;
 	private final long windowSize;
 

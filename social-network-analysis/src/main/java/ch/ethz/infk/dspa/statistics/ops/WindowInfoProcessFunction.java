@@ -9,7 +9,7 @@ public class WindowInfoProcessFunction<T> extends ProcessFunction<T, Tuple2<Long
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public void processElement(T element, Context ctx, Collector<Tuple2<Long, T>> out) throws Exception {
+	public void processElement(T element, Context ctx, Collector<Tuple2<Long, T>> out) {
 		Long timestamp = ctx.timestamp();
 		out.collect(Tuple2.of(timestamp, element));
 	}

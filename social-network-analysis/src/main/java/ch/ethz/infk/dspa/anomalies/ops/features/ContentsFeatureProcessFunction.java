@@ -7,8 +7,23 @@ import org.apache.flink.util.Collector;
 import ch.ethz.infk.dspa.anomalies.dto.Feature;
 
 public class ContentsFeatureProcessFunction extends KeyedProcessFunction<Long, Feature, Feature> {
-
+	// TODO [rsc] use map function instead of process function
 	private static final long serialVersionUID = 1L;
+
+	private final int shortUntilLength;
+	private final int longFromLength;
+
+	public ContentsFeatureProcessFunction(int shortUntilLength, int longFromLength) {
+		this.shortUntilLength = shortUntilLength;
+		this.longFromLength = longFromLength;
+	}
+
+	public DataStream<Feature> applyTo(DataStream<Feature> postInputStream, DataStream<Feature> commentInputStream) {
+		return postInputStream
+				.union(commentInputStream)
+				.keyBy(Feature::getPersonId)
+				.process(this);
+	}
 
 	@Override
 	public void processElement(Feature feature, Context ctx, Collector<Feature> out) throws Exception {
@@ -26,11 +41,11 @@ public class ContentsFeatureProcessFunction extends KeyedProcessFunction<Long, F
 		// create different features with different ids and value formulas applied
 		// depending on the length of the content
 		Feature updatedFeature;
-		if (contents.length() > 1000) {
+		if (contents.length() >= longFromLength) {
 			updatedFeature = feature
 					.withFeatureId(Feature.FeatureId.CONTENTS_LONG)
 					.withFeatureValue(0.5);
-		} else if (contents.length() > 250) {
+		} else if (contents.length() > shortUntilLength) {
 			updatedFeature = feature
 					.withFeatureId(Feature.FeatureId.CONTENTS_MEDIUM)
 					.withFeatureValue(0.5);
@@ -41,14 +56,5 @@ public class ContentsFeatureProcessFunction extends KeyedProcessFunction<Long, F
 		}
 
 		out.collect(updatedFeature);
-	}
-
-	public static DataStream<Feature> applyTo(DataStream<Feature> postInputStream,
-			DataStream<Feature> commentInputStream) {
-		return postInputStream
-				.union(commentInputStream)
-				.keyBy(Feature::getPersonId)
-				// .filter(Feature::hasEventTypeWithContents)
-				.process(new ContentsFeatureProcessFunction());
 	}
 }

@@ -1,5 +1,7 @@
 package ch.ethz.infk.dspa.statistics;
 
+import ch.ethz.infk.dspa.helper.Config;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -16,6 +18,8 @@ import ch.ethz.infk.dspa.statistics.ops.TypeCountAggregateFunction;
 import ch.ethz.infk.dspa.statistics.ops.UniquePersonProcessFunction;
 import ch.ethz.infk.dspa.statistics.ops.WindowInfoProcessFunction;
 
+import static java.lang.System.exit;
+
 public class ActivePostsAnalyticsTask extends AbstractAnalyticsTask<DataStream<String>, String> {
 
 	@Override
@@ -27,10 +31,21 @@ public class ActivePostsAnalyticsTask extends AbstractAnalyticsTask<DataStream<S
 
 	@Override
 	public ActivePostsAnalyticsTask build() {
+		Time windowLength = Time.hours(this.config.getLong("tasks.statistics.window.lengthInHours"));
+		Time windowSlide = Time.minutes(this.config.getLong("tasks.statistics.window.slideInMinutes"));
+		Time uniquePeopleUpdateInterval = Time
+				.hours(this.config.getLong("tasks.statistics.uniquePeople.updateIntervalInHours"));
+
 		// map data streams to activity streams
-		DataStream<PostActivity> postActivityStream = this.postStream.map(PostActivity::of).returns(PostActivity.class);
-		DataStream<PostActivity> likeActivityStream = this.likeStream.map(PostActivity::of).returns(PostActivity.class);
-		DataStream<PostActivity> commentActivityStream = this.commentStream.map(PostActivity::of).returns(PostActivity.class);
+		DataStream<PostActivity> postActivityStream = this.postStream
+				.map(PostActivity::of)
+				.returns(PostActivity.class);
+		DataStream<PostActivity> likeActivityStream = this.likeStream
+				.map(PostActivity::of)
+				.returns(PostActivity.class);
+		DataStream<PostActivity> commentActivityStream = this.commentStream
+				.map(PostActivity::of)
+				.returns(PostActivity.class);
 
 		// merge activity streams
 		KeyedStream<PostActivity, Long> activityStream = postActivityStream
@@ -39,7 +54,7 @@ public class ActivePostsAnalyticsTask extends AbstractAnalyticsTask<DataStream<S
 
 		// create windows for subsequent aggregations to work on
 		WindowedStream<PostActivity, Long, TimeWindow> windowedActivityStream = activityStream
-				.window(SlidingEventTimeWindows.of(Time.hours(12), Time.minutes(30)));
+				.window(SlidingEventTimeWindows.of(windowLength, windowSlide));
 
 		// comment count
 		SingleOutputStreamOperator<String> commentCountStream = windowedActivityStream
@@ -55,13 +70,17 @@ public class ActivePostsAnalyticsTask extends AbstractAnalyticsTask<DataStream<S
 
 		// unique people count
 		SingleOutputStreamOperator<String> uniquePersonCountStream = activityStream
-				.process(new UniquePersonProcessFunction())
+				.process(new UniquePersonProcessFunction(uniquePeopleUpdateInterval, windowLength))
 				.map(result -> String.format("%d;%d;PEOPLE;%d", result.f1, result.f0, result.f2));
 
-		this.outputStream = commentCountStream.union(
-				replyCountStream,
-				uniquePersonCountStream);
+		this.outputStream = commentCountStream
+				.union(replyCountStream, uniquePersonCountStream);
 
 		return this;
+	}
+
+	@Override
+	public void start() throws Exception {
+		super.start("Active Post Statistics");
 	}
 }

@@ -18,11 +18,6 @@ public class TestSink<IN> implements SinkFunction<IN> {
 		reset();
 	}
 
-	@Override
-	public void invoke(IN value) throws Exception {
-		sink.add(value);
-	}
-
 	public static void reset() {
 		sink.clear();
 	}
@@ -30,6 +25,11 @@ public class TestSink<IN> implements SinkFunction<IN> {
 	public static <T> List<T> getResults(Class<T> type) {
 		Stream<T> stream = sink.stream().map(x -> type.cast(x));
 		return stream.collect(Collectors.toList());
+	}
+
+	@Override
+	public void invoke(IN value) throws Exception {
+		sink.add(value);
 	}
 
 }

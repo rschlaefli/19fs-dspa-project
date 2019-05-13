@@ -4,8 +4,6 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.flink.api.common.typeinfo.TypeHint;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
@@ -68,7 +66,7 @@ public class PersonActivityTestDataGenerator
 		if (parts.length > 3 && StringUtils.isNotEmpty(parts[3])) {
 			JSONObject jsonObj = new JSONObject(parts[3]);
 			jsonObj.toMap().entrySet().stream()
-					.forEach(e -> categoryMap.put((String) e.getKey(), (Integer) e.getValue()));
+					.forEach(e -> categoryMap.put(e.getKey(), (Integer) e.getValue()));
 		}
 
 		PersonActivity activity = new PersonActivity();

@@ -11,6 +11,7 @@ public class Feature {
 		CONTENTS_SHORT,
 		CONTENTS_MEDIUM,
 		CONTENTS_LONG,
+		TAG_COUNT
 	}
 
 	public enum EventType {
@@ -21,11 +22,25 @@ public class Feature {
 
 	private FeatureId featureId;
 	private Double featureValue;
-
 	// events
 	private Post post = null;
 	private Comment comment = null;
 	private Like like = null;
+
+	public static Feature of(Post post) {
+		return new Feature()
+				.withEvent(post);
+	}
+
+	public static Feature of(Comment comment) {
+		return new Feature()
+				.withEvent(comment);
+	}
+
+	public static Feature of(Like like) {
+		return new Feature()
+				.withEvent(like);
+	}
 
 	public Feature withEvent(Post post) {
 		if (comment != null || like != null) {
@@ -134,18 +149,4 @@ public class Feature {
 		return getEventType() + "_" + getEventId();
 	}
 
-	public static Feature of(Post post) {
-		return new Feature()
-				.withEvent(post);
-	}
-
-	public static Feature of(Comment comment) {
-		return new Feature()
-				.withEvent(comment);
-	}
-
-	public static Feature of(Like like) {
-		return new Feature()
-				.withEvent(like);
-	}
 }

@@ -71,9 +71,9 @@ public class PersonSimilarity {
 			if (other.person2Id != null) return false;
 		} else if (!person2Id.equals(other.person2Id)) return false;
 		if (similarity == null) {
-			if (other.similarity != null) return false;
-		} else if (!similarity.equals(other.similarity)) return false;
-		return true;
+			return other.similarity == null;
+		} else
+			return similarity.equals(other.similarity);
 	}
 
 }

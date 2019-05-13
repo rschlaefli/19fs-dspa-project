@@ -113,7 +113,8 @@ public class CommentDataStreamBuilder extends AbstractDataStreamBuilder<Comment>
 			// TODO [nku] maybe add watermarks and timestamps?
 
 			SingleOutputStreamOperator<Comment> enrichedCommentStream = this.stream.connect(commentPostMappingStream)
-					.keyBy(new CommentRoutingKeySelector(), CommentPostMapping::getCommentId, TypeInformation.of(Long.class))
+					.keyBy(new CommentRoutingKeySelector(), CommentPostMapping::getCommentId,
+							TypeInformation.of(Long.class))
 					.process(new CommentPostIdEnrichmentProcessFunction())
 					.returns(Comment.class);
 
