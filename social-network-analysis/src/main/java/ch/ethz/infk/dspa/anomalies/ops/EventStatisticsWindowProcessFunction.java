@@ -19,10 +19,6 @@ public class EventStatisticsWindowProcessFunction
 
 	private double isFraudulentThreshold;
 
-	public EventStatisticsWindowProcessFunction() {
-		this(0.75);
-	}
-
 	public EventStatisticsWindowProcessFunction(double isFraudulentThreshold) {
 		this.isFraudulentThreshold = isFraudulentThreshold;
 	}
@@ -31,7 +27,7 @@ public class EventStatisticsWindowProcessFunction
 	public void process(Long personId, Context context, Iterable<EventStatistics> elements,
 			Collector<FraudulentUser> out) throws Exception {
 		List<EventStatistics> anomalousEvents = Streams.stream(elements)
-				.filter(eventStatistics -> eventStatistics.getIsAnomalousWithMajority(0.8))
+				.filter(eventStatistics -> eventStatistics.getIsAnomalousWithMajority(this.isFraudulentThreshold))
 				.collect(Collectors.toList());
 
 		// TODO [rsc]: change to incremental implementation?

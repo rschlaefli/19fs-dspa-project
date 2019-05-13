@@ -1,5 +1,7 @@
 package ch.ethz.infk.dspa;
 
+import ch.ethz.infk.dspa.helper.Config;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -16,6 +18,7 @@ import ch.ethz.infk.dspa.stream.PostDataStreamBuilder;
 
 public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TYPE>, OUT_TYPE> {
 
+	public Configuration config;
 	public DataStream<Post> postStream;
 	public DataStream<Comment> commentStream;
 	public DataStream<CommentPostMapping> commentMappingStream;
@@ -27,6 +30,11 @@ public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TY
 	private String groupId;
 	private String staticFilePath;
 	private StreamExecutionEnvironment env;
+
+	public AbstractAnalyticsTask<OUT_STREAM, OUT_TYPE> withPropertiesConfiguration(Configuration config) {
+		this.config = config;
+		return this;
+	}
 
 	public AbstractAnalyticsTask<OUT_STREAM, OUT_TYPE> withStreamingEnvironment(StreamExecutionEnvironment env) {
 		this.env = env;
@@ -88,12 +96,28 @@ public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TY
 	}
 
 	public AbstractAnalyticsTask<OUT_STREAM, OUT_TYPE> initialize() throws Exception {
+		if (this.config == null) {
+			this.config = Config.getConfig();
+		}
+
 		if (this.maxDelay == null) {
 			throw new IllegalArgumentException("MISSING_MAX_DELAY");
 		}
 
 		if (this.bootstrapServers == null) {
-			this.bootstrapServers = "localhost:9092";
+			if (config.getString("kafka.server") != null) {
+				this.bootstrapServers = config.getString("kafka.server");
+			} else {
+				throw new IllegalArgumentException("MISSING_BOOTSTRAP_SERVERS");
+			}
+		}
+
+		if (this.staticFilePath == null) {
+			if (config.getString("files.staticPath") != null) {
+				this.bootstrapServers = config.getString("files.staticPath");
+			} else {
+				throw new IllegalArgumentException("MISSING_STATIC_PATH");
+			}
 		}
 
 		if (this.env == null) {
@@ -152,7 +176,11 @@ public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TY
 		return this;
 	}
 
+	public void start(String jobName) throws Exception {
+		this.env.execute(jobName);
+	}
+
 	public void start() throws Exception {
-		this.env.execute("Flink Streaming Social Network Analysis");
+		start("Flink Streaming Social Network Analysis");
 	}
 }

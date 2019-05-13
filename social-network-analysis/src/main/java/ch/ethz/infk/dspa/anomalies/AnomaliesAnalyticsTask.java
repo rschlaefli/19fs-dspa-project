@@ -1,5 +1,8 @@
 package ch.ethz.infk.dspa.anomalies;
 
+import ch.ethz.infk.dspa.helper.Config;
+import com.google.common.collect.ImmutableMap;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.windowing.assigners.EventTimeSessionWindows;
@@ -18,6 +21,8 @@ import ch.ethz.infk.dspa.anomalies.ops.features.ContentsFeatureProcessFunction;
 import ch.ethz.infk.dspa.anomalies.ops.features.TagCountFeatureMapFunction;
 import ch.ethz.infk.dspa.anomalies.ops.features.TimespanFeatureProcessFunction;
 
+import java.util.Map;
+
 public class AnomaliesAnalyticsTask
 		extends AbstractAnalyticsTask<SingleOutputStreamOperator<FraudulentUser>, FraudulentUser> {
 
@@ -30,17 +35,13 @@ public class AnomaliesAnalyticsTask
 
 	@Override
 	public AnomaliesAnalyticsTask build() {
-		// stage 1
 		DataStream<Feature> featureStream = composeFeatureStream();
 
-		// stage 2
 		SingleOutputStreamOperator<FeatureStatistics> featureStatisticsStream = applyOnlineAveraging(featureStream);
 
-		// stage 3
 		SingleOutputStreamOperator<EventStatistics> eventStatisticsStream = applyEnsembleAggregation(
 				featureStatisticsStream);
 
-		// stage 4
 		SingleOutputStreamOperator<FraudulentUser> fraudulentUserStream = computeFraudulentUsers(eventStatisticsStream);
 
 		this.outputStream = fraudulentUserStream;
@@ -49,17 +50,28 @@ public class AnomaliesAnalyticsTask
 	}
 
 	DataStream<Feature> composeFeatureStream() {
+		final int contentsShortUntilLength = this.config.getInt("tasks.anomalies.features.contents.short.maxLength");
+		final int contentsLongFromLength = this.config.getInt("tasks.anomalies.features.contents.long.minLength");
+
 		// map the input streams to separate features
-		DataStream<Feature> postFeatureStream = this.postStream.map(Feature::of).returns(Feature.class);
-		DataStream<Feature> commentFeatureStream = this.commentStream.map(Feature::of).returns(Feature.class);
-		DataStream<Feature> likeFeatureStream = this.likeStream.map(Feature::of).returns(Feature.class);
+		DataStream<Feature> postFeatureStream = this.postStream
+				.map(Feature::of)
+				.returns(Feature.class);
+		DataStream<Feature> commentFeatureStream = this.commentStream
+				.map(Feature::of)
+				.returns(Feature.class);
+		DataStream<Feature> likeFeatureStream = this.likeStream
+				.map(Feature::of)
+				.returns(Feature.class);
 
 		// compute features over the stream
-		DataStream<Feature> timespanFeatureStream = TimespanFeatureProcessFunction.applyTo(postFeatureStream,
-				commentFeatureStream, likeFeatureStream);
-		DataStream<Feature> contentsFeatureStream = ContentsFeatureProcessFunction.applyTo(postFeatureStream,
-				commentFeatureStream);
-		DataStream<Feature> tagCountFeatureStream = TagCountFeatureMapFunction.applyTo(postFeatureStream);
+		DataStream<Feature> timespanFeatureStream = new TimespanFeatureProcessFunction()
+				.applyTo(postFeatureStream, commentFeatureStream, likeFeatureStream);
+		DataStream<Feature> contentsFeatureStream = new ContentsFeatureProcessFunction(contentsShortUntilLength,
+				contentsLongFromLength)
+						.applyTo(postFeatureStream, commentFeatureStream);
+		DataStream<Feature> tagCountFeatureStream = TagCountFeatureMapFunction
+				.applyTo(postFeatureStream);
 
 		// merge feature streams into a single one
 		return timespanFeatureStream.union(contentsFeatureStream, tagCountFeatureStream);
@@ -76,23 +88,46 @@ public class AnomaliesAnalyticsTask
 
 	SingleOutputStreamOperator<EventStatistics> applyEnsembleAggregation(
 			SingleOutputStreamOperator<FeatureStatistics> featureStatisticsStream) {
+		// construct a map of thresholds for maximum expected deviations from mean
+		final ImmutableMap<Feature.FeatureId, Double> thresholds = new ImmutableMap.Builder<Feature.FeatureId, Double>()
+				.put(Feature.FeatureId.TIMESTAMP, this.config.getDouble("tasks.anomalies.features.timespan.threshold"))
+				.put(Feature.FeatureId.CONTENTS_SHORT,
+						this.config.getDouble("tasks.anomalies.features.contents.short.threshold"))
+				.put(Feature.FeatureId.CONTENTS_MEDIUM,
+						this.config.getDouble("tasks.anomalies.features.contents.medium.threshold"))
+				.put(Feature.FeatureId.CONTENTS_LONG,
+						this.config.getDouble("tasks.anomalies.features.contents.long.threshold"))
+				.put(Feature.FeatureId.TAG_COUNT,
+						this.config.getDouble("tasks.anomalies.features.tagCount.threshold"))
+				.build();
+
 		// analyze events based on all their computed feature statistics
 		// apply an ensemble decision over all of these statistics
 		return featureStatisticsStream
 				.keyBy(FeatureStatistics::getEventGUID)
 				.window(EventTimeSessionWindows.withGap(Time.minutes(15)))
-				.aggregate(new EnsembleAggregationFunction());
+				.aggregate(new EnsembleAggregationFunction(thresholds));
 	}
 
 	SingleOutputStreamOperator<FraudulentUser> computeFraudulentUsers(
 			SingleOutputStreamOperator<EventStatistics> eventStatisticsStream) {
+		Time fraudulentUserUpdateInterval = Time
+				.hours(this.config.getLong("tasks.anomalies.fraudulentUsers.updateIntervalInHours"));
+		double fraudulentUserEnsembleThreshold = this.config
+				.getDouble("tasks.anomalies.fraudulentUsers.ensembleThreshold");
+
 		// extract all events that are deemed anomalous based on the majority decision
 		// for each user, check whether there are more than allowed anomalous events within a given
 		// timeframe
 		// finally, output all fraudulent users alongside an overview of all anomalous feature decisions
 		return eventStatisticsStream
 				.keyBy(EventStatistics::getPersonId)
-				.window(TumblingEventTimeWindows.of(Time.hours(1)))
-				.process(new EventStatisticsWindowProcessFunction());
+				.window(TumblingEventTimeWindows.of(fraudulentUserUpdateInterval))
+				.process(new EventStatisticsWindowProcessFunction(fraudulentUserEnsembleThreshold));
+	}
+
+	@Override
+	public void start() throws Exception {
+		super.start("Unusual Activities");
 	}
 }

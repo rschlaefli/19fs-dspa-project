@@ -32,18 +32,14 @@ public class UniquePersonProcessFunction extends KeyedProcessFunction<Long, Post
 	// <window timestamp, set<person id>>
 	private MapState<Long, Set<Long>> state;
 
-	public UniquePersonProcessFunction() {
-		this(Time.hours(1), Time.hours(12));
-	}
-
 	public UniquePersonProcessFunction(Time updateInterval, Time windowSize) {
 		this.updateInterval = updateInterval.toMilliseconds();
 		this.windowSize = windowSize.toMilliseconds();
 	}
 
 	@Override
-	public void open(Configuration parameters) throws Exception {
-		state = getRuntimeContext().getMapState(new MapStateDescriptor<>(
+	public void open(Configuration parameters) {
+		this.state = getRuntimeContext().getMapState(new MapStateDescriptor<>(
 				"UniquePersonProcessState",
 				BasicTypeInfo.LONG_TYPE_INFO,
 				TypeInformation.of(new TypeHint<Set<Long>>() {
@@ -58,9 +54,9 @@ public class UniquePersonProcessFunction extends KeyedProcessFunction<Long, Post
 		long intervalEnd = intervalStart + this.updateInterval;
 
 		// add the person id to the set for the current window
-		Set<Long> updatedSet = state.contains(intervalStart) ? state.get(intervalStart) : new HashSet<>();
+		Set<Long> updatedSet = this.state.contains(intervalStart) ? this.state.get(intervalStart) : new HashSet<>();
 		updatedSet.add(value.getPersonId());
-		state.put(intervalStart, updatedSet);
+		this.state.put(intervalStart, updatedSet);
 
 		// notify at the end of the current window interval
 		ctx.timerService().registerEventTimeTimer(intervalEnd);
@@ -74,17 +70,17 @@ public class UniquePersonProcessFunction extends KeyedProcessFunction<Long, Post
 
 		// remove the window interval at the beginning of the 12-hour window
 		// this interval has moved outside the window to be counted
-		state.remove(windowStart - this.updateInterval);
+		this.state.remove(windowStart - this.updateInterval);
 
 		// leave early if the state does not contain any more keys
 		// meaning that the post has gotten inactive and should not be maintained
-		if (!state.keys().iterator().hasNext()) {
-			state.clear();
+		if (!this.state.keys().iterator().hasNext()) {
+			this.state.clear();
 			return;
 		}
 
 		// compute the global set of unique users over the last 12 hours
-		Set<Long> globalSet = Streams.stream(state.entries())
+		Set<Long> globalSet = Streams.stream(this.state.entries())
 				// filter events that lie beyond the scope of the window
 				.filter(entry -> entry.getKey() < timestamp)
 				.map(Map.Entry::getValue)

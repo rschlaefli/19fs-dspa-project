@@ -2,6 +2,8 @@ package ch.ethz.infk.dspa.anomalies;
 
 import java.util.List;
 
+import ch.ethz.infk.dspa.helper.Config;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -22,6 +24,7 @@ import ch.ethz.infk.dspa.stream.testdata.PostTestDataGenerator;
 
 public class AnomaliesAnalyticsTaskIT extends AbstractTestBase {
 
+	private Configuration config;
 	private StreamExecutionEnvironment env;
 	private DataStream<Post> postStream;
 	private DataStream<Comment> commentStream;
@@ -32,16 +35,17 @@ public class AnomaliesAnalyticsTaskIT extends AbstractTestBase {
 
 	@BeforeEach
 	public void setup() throws Exception {
-		Time maxOutOfOrderness = Time.hours(1);
+		final Time maxOutOfOrderness = Time.hours(1);
 
+		config = Config.getConfig("src/main/java/ch/ethz/infk/dspa/config.properties");
 		env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-		postStream = new PostTestDataGenerator().generate(env, "src/test/java/resources/post_stream.csv",
-				maxOutOfOrderness);
-		commentStream = new CommentTestDataGenerator().generate(env, "src/test/java/resources/comment_stream.csv",
-				maxOutOfOrderness);
-		likeStream = new LikeTestDataGenerator().generate(env, "src/test/java/resources/like_stream.csv",
-				maxOutOfOrderness);
+		postStream = new PostTestDataGenerator()
+				.generate(env, "src/test/java/resources/post_stream.csv", maxOutOfOrderness);
+		commentStream = new CommentTestDataGenerator()
+				.generate(env, "src/test/java/resources/comment_stream.csv", maxOutOfOrderness);
+		likeStream = new LikeTestDataGenerator()
+				.generate(env, "src/test/java/resources/like_stream.csv", maxOutOfOrderness);
 
 		mappingSourceSink = CommentTestDataGenerator.generateSourceSink("src/test/java/resources/comment_stream.csv");
 		mappingStream = env.addSource(mappingSourceSink);
@@ -50,6 +54,7 @@ public class AnomaliesAnalyticsTaskIT extends AbstractTestBase {
 	@Test
 	public void testAnomaliesConsumer() throws Exception {
 		AnomaliesAnalyticsTask analyticsTask = (AnomaliesAnalyticsTask) new AnomaliesAnalyticsTask()
+				.withPropertiesConfiguration(config)
 				.withStreamingEnvironment(env)
 				.withMaxDelay(Time.seconds(600L))
 				.withInputStreams(postStream, commentStream, likeStream)
