@@ -23,44 +23,16 @@ public class NTuple10<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> extends Tuple10<T0
 			String name8, T8 value8, String name9, T9 value9) {
 		super(value0, value1, value2, value3, value4, value5, value6, value7, value8, value9);
 
-		nameMap.put(name0, 0);
-		nameMap.put(name1, 1);
-		nameMap.put(name2, 2);
-		nameMap.put(name3, 3);
-		nameMap.put(name4, 4);
-		nameMap.put(name5, 5);
-		nameMap.put(name6, 6);
-		nameMap.put(name7, 7);
-		nameMap.put(name8, 8);
-		nameMap.put(name9, 9);
-	}
-
-	public void setName(String name, int pos) {
-		nameMap.put(name, pos);
-	}
-
-	public void setNames(List<String> names) {
-		if (names.size() != getArity()) {
-			throw new IllegalArgumentException("Size of names must match arity of tuple");
-		}
-
-		nameMap.clear();
-		for (int pos = 0; pos < names.size(); pos++) {
-			nameMap.put(names.get(pos), pos);
-		}
-	}
-
-	public <T> T get(String name) {
-
-		if (!nameMap.containsKey(name)) {
-			throw new IllegalArgumentException("Access with unknown name in Named Tuple");
-		}
-
-		return getField(nameMap.get(name));
-	}
-
-	public Map<String, Integer> getNameMap() {
-		return nameMap;
+		this.nameMap.put(name0, 0);
+		this.nameMap.put(name1, 1);
+		this.nameMap.put(name2, 2);
+		this.nameMap.put(name3, 3);
+		this.nameMap.put(name4, 4);
+		this.nameMap.put(name5, 5);
+		this.nameMap.put(name6, 6);
+		this.nameMap.put(name7, 7);
+		this.nameMap.put(name8, 8);
+		this.nameMap.put(name9, 9);
 	}
 
 	public static <T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> NTuple10<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> of(
@@ -72,6 +44,23 @@ public class NTuple10<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> extends Tuple10<T0
 			T9 value9) {
 		return new NTuple10<>(name0, value0, name1, value1, name2, value2, name3, value3, name4, value4, name5, value5,
 				name6, value6, name7, value7, name8, value8, name9, value9);
+	}
+
+	public void setName(String name, int pos) {
+		this.nameMap.put(name, pos);
+	}
+
+	public void setNames(List<String> names) {
+		NTuple.setNames(names, getArity(), this.nameMap);
+	}
+
+	public <T> T get(String name) {
+		NTuple.ensureContainsName(this.nameMap, name);
+		return getField(this.nameMap.get(name));
+	}
+
+	public Map<String, Integer> getNameMap() {
+		return this.nameMap;
 	}
 
 }

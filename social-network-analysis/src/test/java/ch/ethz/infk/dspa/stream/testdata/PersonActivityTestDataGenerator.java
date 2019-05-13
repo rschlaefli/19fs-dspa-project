@@ -65,8 +65,7 @@ public class PersonActivityTestDataGenerator
 		HashMap<String, Integer> categoryMap = new HashMap<>();
 		if (parts.length > 3 && StringUtils.isNotEmpty(parts[3])) {
 			JSONObject jsonObj = new JSONObject(parts[3]);
-			jsonObj.toMap().entrySet().stream()
-					.forEach(e -> categoryMap.put(e.getKey(), (Integer) e.getValue()));
+			jsonObj.toMap().entrySet().forEach(e -> categoryMap.put(e.getKey(), (Integer) e.getValue()));
 		}
 
 		PersonActivity activity = new PersonActivity();

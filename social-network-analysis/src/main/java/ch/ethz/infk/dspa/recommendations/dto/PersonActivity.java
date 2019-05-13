@@ -2,6 +2,7 @@ package ch.ethz.infk.dspa.recommendations.dto;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -13,10 +14,11 @@ public class PersonActivity {
 
 	private Long personId;
 	private Long postId;
+
 	private HashMap<String, Integer> categoryMap;
 
 	public PersonActivity() {
-		categoryMap = new HashMap<String, Integer>();
+		this.categoryMap = new HashMap<String, Integer>();
 	}
 
 	public PersonActivity(Long personId, Long postId) {
@@ -27,8 +29,6 @@ public class PersonActivity {
 
 	public static PersonActivity of(Post post) {
 		PersonActivity activity = new PersonActivity();
-
-		// set postId and personId
 		activity.setPostId(post.getId());
 		activity.setPersonId(post.getPersonId());
 
@@ -120,10 +120,19 @@ public class PersonActivity {
 	}
 
 	public void mergeCategoryMap(HashMap<String, Integer> other) {
-		other.forEach((category, count) -> categoryMap.merge(category, count, Integer::sum));
+		other.forEach((category, count) -> this.categoryMap.merge(category, count, Integer::sum));
 	}
 
 	public void setCategoryMap(HashMap<String, Integer> categoryMap) {
 		this.categoryMap = categoryMap;
+	}
+
+	public Long extractIdFromKeySet(String prefix) {
+		return this.categoryMap.keySet().stream()
+				.filter(key -> key.startsWith(String.format("%s_", prefix)))
+				.map(keyWithId -> keyWithId.split("_")[1])
+				.map(Long::valueOf)
+				.findFirst()
+				.orElse(null);
 	}
 }
