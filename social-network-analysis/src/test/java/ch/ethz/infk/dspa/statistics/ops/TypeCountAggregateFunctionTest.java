@@ -5,12 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 import java.util.List;
 
+import ch.ethz.infk.dspa.statistics.dto.StatisticsOutput;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import ch.ethz.infk.dspa.statistics.dto.PostActivity;
 import ch.ethz.infk.dspa.statistics.dto.PostActivity.ActivityType;
-import ch.ethz.infk.dspa.statistics.dto.PostActivityCount;
 import ch.ethz.infk.dspa.stream.testdata.PostActivityTestDataGenerator;
 
 public class TypeCountAggregateFunctionTest {
@@ -56,13 +56,13 @@ public class TypeCountAggregateFunctionTest {
 	}
 
 	private Long calculateTypeCountAggregateResult(TypeCountAggregateFunction function) {
-		PostActivityCount accumulator = function.createAccumulator();
+		StatisticsOutput accumulator = function.createAccumulator();
 
 		for (PostActivity activity : postActivities) {
 			accumulator = function.add(activity, accumulator);
 		}
 
-		return function.getResult(accumulator).getCount();
+		return function.getResult(accumulator).getValue();
 	}
 
 }

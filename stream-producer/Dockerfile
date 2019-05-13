@@ -12,7 +12,7 @@ RUN mvn install
 COPY ${PRODUCER_ROOT}/src /tmp/src
 
 # package the producer into a jar
-RUN mvn package
+RUN mvn package -DskipTests=true
 
 
 FROM openjdk:8-jre-alpine

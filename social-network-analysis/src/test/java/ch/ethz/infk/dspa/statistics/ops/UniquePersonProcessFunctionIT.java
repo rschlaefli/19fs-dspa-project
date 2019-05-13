@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import ch.ethz.infk.dspa.statistics.dto.StatisticsOutput;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -46,47 +47,51 @@ public class UniquePersonProcessFunctionIT {
 			fail("Failure in Flink Topology");
 		}
 
-		List<Tuple3<Long, Long, Integer>> expectedResults = Arrays.asList(
-				Tuple3.of(0L, 1339747200000L, 1),
-				Tuple3.of(0L, 1339750800000L, 2),
-				Tuple3.of(0L, 1339754400000L, 3),
-				Tuple3.of(0L, 1339758000000L, 3),
-				Tuple3.of(0L, 1339761600000L, 3),
-				Tuple3.of(0L, 1339765200000L, 3),
-				Tuple3.of(0L, 1339768800000L, 3),
-				Tuple3.of(0L, 1339772400000L, 3),
-				Tuple3.of(0L, 1339776000000L, 3),
-				Tuple3.of(0L, 1339779600000L, 3),
-				Tuple3.of(0L, 1339783200000L, 3),
-				Tuple3.of(0L, 1339786800000L, 3),
-				Tuple3.of(0L, 1339790400000L, 2),
-				Tuple3.of(1L, 1339758000000L, 1),
-				Tuple3.of(1L, 1339761600000L, 2),
-				Tuple3.of(1L, 1339765200000L, 2),
-				Tuple3.of(1L, 1339768800000L, 2),
-				Tuple3.of(1L, 1339772400000L, 2),
-				Tuple3.of(1L, 1339776000000L, 2),
-				Tuple3.of(1L, 1339779600000L, 2),
-				Tuple3.of(1L, 1339783200000L, 2),
-				Tuple3.of(1L, 1339786800000L, 2),
-				Tuple3.of(1L, 1339790400000L, 2),
-				Tuple3.of(2L, 1339765200000L, 1),
-				Tuple3.of(2L, 1339768800000L, 1),
-				Tuple3.of(2L, 1339772400000L, 2),
-				Tuple3.of(2L, 1339776000000L, 2),
-				Tuple3.of(2L, 1339779600000L, 3),
-				Tuple3.of(2L, 1339783200000L, 3),
-				Tuple3.of(2L, 1339786800000L, 3),
-				Tuple3.of(2L, 1339790400000L, 3),
-				Tuple3.of(3L, 1339783200000L, 1),
-				Tuple3.of(3L, 1339786800000L, 1),
-				Tuple3.of(3L, 1339790400000L, 1),
-				Tuple3.of(4L, 1339786800000L, 1),
-				Tuple3.of(4L, 1339790400000L, 1));
+		List<StatisticsOutput> expectedResults = Arrays.asList(
+				new StatisticsOutput(1339747200000L, 0L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339750800000L, 0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339754400000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339758000000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339761600000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339765200000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339768800000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339772400000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339776000000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339779600000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339783200000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339786800000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339790400000L, 0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
 
-		List<Tuple3> actualResults = TestSink.getResults(Tuple3.class);
+				new StatisticsOutput(1339758000000L, 1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339761600000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339765200000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339768800000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339772400000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339776000000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339779600000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339783200000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339786800000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339790400000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
 
-		for (Tuple3<Long, Long, Integer> expectedResult : expectedResults) {
+				new StatisticsOutput(1339765200000L, 2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339768800000L, 2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339772400000L, 2L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339776000000L, 2L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339779600000L, 2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339783200000L, 2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339786800000L, 2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339790400000L, 2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+
+				new StatisticsOutput(1339783200000L, 3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339786800000L, 3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339790400000L, 3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+
+				new StatisticsOutput(1339786800000L, 4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1339790400000L, 4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT));
+
+		List<StatisticsOutput> actualResults = TestSink.getResults(StatisticsOutput.class);
+
+		for (StatisticsOutput expectedResult : expectedResults) {
 			assertTrue(actualResults.remove(expectedResult), "Expected result " + expectedResult + " not present!");
 		}
 

@@ -2,11 +2,24 @@
 
 ## Getting Started
 
-- Add data files into the `data/` folder
+- Add data files into the `data/` folder (1K)
+- Run the cleanup scripts using Python
+  - `python comment_stream_cleaning.py`
 - Download the flink version to use from the official mirror and store it in the project root
-  - Default config: https://archive.apache.org/dist/flink/flink-1.7.2/flink-1.7.2-bin-scala_2.11.tgz
+  - Default config: https://archive.apache.org/dist/flink/flink-1.8.0/flink-1.8.0-bin-scala_2.11.tgz
 - Override any of the docker build arguments if necessary
-- Run `docker-compose up --build --force-recreate` to build an run the consumer container
+- Start the Kafka/Zookeeper/WebUI infrastructure by running `scripts/run_infrastructure.sh`
+  - The Kafka WebUI will be available on `localhost:8080`
+  - Setup the Kafka cluster using `kafka:9092`
+- Initialize necessary input and output topics in Kafka
+  - Run `scripts/run_ropic_creation.sh`
+- Run the consumers using `scripts/run_consumers.sh`
+  - This starts all the analytics tasks in job clusters in separate containers
+  - Active post statistics Flink UI: `localhost:8081`
+  - Recommendations Flink UI: `localhost:8082`
+  - Anomalies Flink UI: `localhost:8083`
+- Run the producers using `scripts/run_producers.sh`
+  - This starts producing inputs to all three Kafka input topics simultaneously (post, comment, like)
 
 ### Stream Producer
 
@@ -57,3 +70,7 @@ Comment Stream Producer
 ```
 java -jar ./data/schema/avro/avro-tools-1.8.2.jar compile -string schema data/schema/avro social-network-analysis/target/generated-sources/avro
 ```
+
+## Troubleshooting
+
+- To connect to Kafka from the host machine, use `localhost:29092`. `kafka:9092` is only available inside Docker containers.

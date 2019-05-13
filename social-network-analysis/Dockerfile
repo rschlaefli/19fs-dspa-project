@@ -27,21 +27,21 @@ COPY ${CONSUMER_ROOT}/src /tmp/src
 COPY --from=schema-builder /tmp/generated /tmp/target/generated-sources/avro
 
 # package the flink job into a jar
-RUN mvn package
+RUN mvn package -DskipTests=true
 
 # ----- FLINK JOB CLUSTER -----
-# https://github.com/apache/flink/blob/release-1.7/flink-container/docker/Dockerfile
+# https://github.com/apache/flink/blob/release-1.8/flink-container/docker/Dockerfile
 FROM java:8-jre-alpine
 
 # Install requirements
-RUN apk add --no-cache bash snappy
+RUN apk add --no-cache bash snappy libc6-compat
 
 # allow parametrization of the consumer to be built
 ARG CONSUMER_ROOT="social-network-analysis"
 
 # allow parametrization of the jar to use
 ARG JAR_NAME="social-network-analysis-1.0.0.jar"
-ARG FLINK_VERSION="1.7.2"
+ARG FLINK_VERSION="1.8.0"
 ARG SCALA_VERSION="2.11"
 
 # Flink environment variables
@@ -69,4 +69,4 @@ RUN set -x && \
 USER flink
 EXPOSE 8081 6123
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["job-cluster", "-j", "ch.ethz.infk.dspa.App", "-kafkaserver kafka:9092", "-consumertype activeposts"]
+CMD ["--help"]

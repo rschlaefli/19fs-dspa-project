@@ -36,7 +36,7 @@ public class OnlineAverageProcessFunctionTest extends AbstractTestBase {
 
 		// build test data
 		env = StreamExecutionEnvironment.getExecutionEnvironment();
-		String testFile = "./../data/test/01_test/feature_event_stream.csv";
+		String testFile = "src/test/java/resources/anomalies/streams/feature_event_stream.csv";
 		Time maxOutOfOrderness = Time.hours(1);
 
 		FeatureTestDataGenerator testDataGenerator = new FeatureTestDataGenerator();
