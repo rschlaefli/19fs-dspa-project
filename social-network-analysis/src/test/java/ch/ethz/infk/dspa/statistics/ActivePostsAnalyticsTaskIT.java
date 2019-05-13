@@ -69,7 +69,7 @@ public class ActivePostsAnalyticsTaskIT extends AbstractTestBase {
 				.withCommentPostMappingConfig(mappingStream, mappingSourceSink)
 				.initialize()
 				.build();
-				// .withSink(new TestSink<>());
+		// .withSink(new TestSink<>());
 
 		analyticsTask.toStringStream().print();
 
