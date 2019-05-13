@@ -53,7 +53,8 @@ public class RecommendationsAnalyticsTask
 		SingleOutputStreamOperator<PersonActivity> personActivityStream = postPersonActivityStream
 				.union(commentPersonActivityStream, likePersonActivityStream)
 				.keyBy(PersonActivity::postId)
-				.process(new CategoryEnrichmentProcessFunction())
+				.process(new CategoryEnrichmentProcessFunction(this.getStaticFilePath() + "forum_hasTag_tag.csv",
+						this.getStaticFilePath() + "place_isPartOf_place.csv"))
 				.keyBy(PersonActivity::personId)
 				.window(SlidingEventTimeWindows.of(windowLength, windowSlide))
 				.reduce(new PersonActivityReduceFunction())
