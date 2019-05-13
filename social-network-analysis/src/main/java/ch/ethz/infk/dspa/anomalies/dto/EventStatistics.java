@@ -1,8 +1,11 @@
 package ch.ethz.infk.dspa.anomalies.dto;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.flink.api.java.tuple.Tuple2;
 
 public class EventStatistics {
@@ -13,11 +16,13 @@ public class EventStatistics {
 
 	private Long personId;
 	private String eventGUID;
+	private Map<Feature.FeatureId, Double> thresholds;
 
-	public EventStatistics() {
+	public EventStatistics(ImmutableMap<Feature.FeatureId, Double> thresholds) {
 		votedFeatureIds = new HashSet<>();
 		votesFraudulent = new HashSet<>();
 		votesNonFraudulent = new HashSet<>();
+		this.thresholds = new HashMap<>(thresholds);
 	}
 
 	// add a new vote based on a FeatureStatistics
@@ -39,7 +44,7 @@ public class EventStatistics {
 		}
 
 		// add the vote to the correct set depending on its decision
-		if (featureStatistics.isAnomalous()) {
+		if (featureStatistics.isAnomalous(this.thresholds)) {
 			this.votesFraudulent.add(featureStatistics.getFeature());
 		} else {
 			this.votesNonFraudulent.add(featureStatistics.getFeature());

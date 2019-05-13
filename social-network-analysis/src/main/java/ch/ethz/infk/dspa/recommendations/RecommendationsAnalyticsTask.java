@@ -2,6 +2,8 @@ package ch.ethz.infk.dspa.recommendations;
 
 import java.util.List;
 
+import ch.ethz.infk.dspa.helper.Config;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.datastream.BroadcastStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -31,6 +33,10 @@ public class RecommendationsAnalyticsTask
 
 	@Override
 	public RecommendationsAnalyticsTask build() {
+		Time windowLength = Time.hours(this.config.getLong("tasks.recommendations.window.lengthInHours"));
+		Time windowSlide = Time.hours(this.config.getLong("tasks.recommendations.window.slideInHours"));
+		int selectionCount = this.config.getInt("tasks.recommendations.selectionCount");
+		int topKCount = this.config.getInt("tasks.recommendations.topKCount");
 
 		DataStream<PersonActivity> postPersonActivityStream = this.postStream
 				.map(PersonActivity::of)
@@ -49,24 +55,30 @@ public class RecommendationsAnalyticsTask
 				.keyBy(PersonActivity::postId)
 				.process(new CategoryEnrichmentProcessFunction())
 				.keyBy(PersonActivity::personId)
-				.window(SlidingEventTimeWindows.of(Time.hours(4), Time.hours(1)))
+				.window(SlidingEventTimeWindows.of(windowLength, windowSlide))
 				.reduce(new PersonActivityReduceFunction())
-				.process(new PersonOutputSelectorProcessFunction(10, Time.hours(1)));
+				.process(new PersonOutputSelectorProcessFunction(selectionCount, windowSlide));
 
 		BroadcastStream<PersonActivity> selectedPersonActivityStream = personActivityStream
 				.getSideOutput(PersonOutputSelectorProcessFunction.SELECTED)
-				.process(new PersonOutputSelectorProcessFunction(10, Time.hours(1)))
+				.process(new PersonOutputSelectorProcessFunction(selectionCount, windowSlide))
 				.setParallelism(1)
 				.broadcast(PersonActivityBroadcastJoinProcessFunction.SELECTED_PERSON_STATE_DESCRIPTOR);
 
 		this.outputStream = personActivityStream
 				.connect(selectedPersonActivityStream)
-				.process(new PersonActivityBroadcastJoinProcessFunction(10, Time.hours(1)))
-				.filter(new FriendsFilterFunction(this.getStaticFilePath() + "person_knows_person.csv"))
+				.process(new PersonActivityBroadcastJoinProcessFunction(selectionCount, windowSlide))
+				.filter(new FriendsFilterFunction(
+						this.getStaticFilePath() + "person_knows_person.csv"))
 				.keyBy(PersonSimilarity::person1Id)
-				.window(TumblingEventTimeWindows.of(Time.hours(1)))
-				.aggregate(new TopKAggregateFunction(10));
+				.window(TumblingEventTimeWindows.of(windowSlide))
+				.aggregate(new TopKAggregateFunction(topKCount));
 
 		return this;
+	}
+
+	@Override
+	public void start() throws Exception {
+		super.start("Friends Recommendations");
 	}
 }

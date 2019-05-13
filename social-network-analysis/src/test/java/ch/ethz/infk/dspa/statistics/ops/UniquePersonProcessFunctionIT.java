@@ -25,9 +25,9 @@ public class UniquePersonProcessFunctionIT {
 
 	@BeforeEach
 	void setup() throws IOException {
-		env = StreamExecutionEnvironment.getExecutionEnvironment();
+		this.env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-		postActivityStream = new PostActivityTestDataGenerator().generate(env,
+		this.postActivityStream = new PostActivityTestDataGenerator().generate(this.env,
 				"src/test/java/resources/statistics/streams/post_activity_stream.csv", Time.hours(1));
 
 		TestSink.reset();
@@ -35,13 +35,13 @@ public class UniquePersonProcessFunctionIT {
 
 	@Test
 	void testUniquePersonProcessFunction() {
-		postActivityStream
+		this.postActivityStream
 				.keyBy(PostActivity::getPostId)
-				.process(new UniquePersonProcessFunction())
+				.process(new UniquePersonProcessFunction(Time.hours(1), Time.hours(12)))
 				.addSink(new TestSink<>());
 
 		try {
-			env.execute();
+			this.env.execute();
 		} catch (Exception e) {
 			fail("Failure in Flink Topology");
 		}

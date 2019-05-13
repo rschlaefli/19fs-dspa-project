@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
 
+import ch.ethz.infk.dspa.helper.Config;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -23,6 +25,7 @@ import ch.ethz.infk.dspa.stream.testdata.PostTestDataGenerator;
 
 public class ActivePostsAnalyticsTaskIT extends AbstractTestBase {
 
+	private Configuration config;
 	private StreamExecutionEnvironment env;
 	private DataStream<Post> postStream;
 	private DataStream<Comment> commentStream;
@@ -33,20 +36,21 @@ public class ActivePostsAnalyticsTaskIT extends AbstractTestBase {
 
 	@BeforeEach
 	public void setup() throws Exception {
-		Time maxOutOfOrderness = Time.hours(1);
+		final Time maxOutOfOrderness = Time.hours(1);
 
+		config = Config.getConfig("src/main/java/ch/ethz/infk/dspa/config.properties");
 		env = StreamExecutionEnvironment.getExecutionEnvironment();
 
 		// TODO [rsc] these test data files are not good for this integration test since
 		// their event times don't suit each other --> create new test streams for this
 		// integration test
 
-		postStream = new PostTestDataGenerator().generate(env, "src/test/java/resources/post_stream.csv",
-				maxOutOfOrderness);
-		commentStream = new CommentTestDataGenerator().generate(env, "src/test/java/resources/comment_stream.csv",
-				maxOutOfOrderness);
-		likeStream = new LikeTestDataGenerator().generate(env, "src/test/java/resources/like_stream.csv",
-				maxOutOfOrderness);
+		postStream = new PostTestDataGenerator()
+				.generate(env, "src/test/java/resources/post_stream.csv", maxOutOfOrderness);
+		commentStream = new CommentTestDataGenerator()
+				.generate(env, "src/test/java/resources/comment_stream.csv", maxOutOfOrderness);
+		likeStream = new LikeTestDataGenerator()
+				.generate(env, "src/test/java/resources/like_stream.csv", maxOutOfOrderness);
 
 		mappingSourceSink = CommentTestDataGenerator
 				.generateSourceSink("src/test/java/resources/comment_stream.csv");
@@ -58,6 +62,7 @@ public class ActivePostsAnalyticsTaskIT extends AbstractTestBase {
 	@Test
 	public void testActivePostsAnalyticsTask() throws Exception {
 		ActivePostsAnalyticsTask analyticsTask = (ActivePostsAnalyticsTask) new ActivePostsAnalyticsTask()
+				.withPropertiesConfiguration(config)
 				.withStreamingEnvironment(env)
 				.withMaxDelay(Time.seconds(600L))
 				.withInputStreams(postStream, commentStream, likeStream)

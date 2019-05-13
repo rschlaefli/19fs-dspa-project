@@ -28,12 +28,12 @@ public class TimespanFeatureProcessFunction extends KeyedProcessFunction<Long, F
 	private MapState<Long, List<Feature>> featureMapState;
 	private ValueState<Long> lastEventBeforeWatermarkState;
 
-	public static DataStream<Feature> applyTo(DataStream<Feature> postInputStream,
+	public DataStream<Feature> applyTo(DataStream<Feature> postInputStream,
 			DataStream<Feature> commentFeatureStream, DataStream<Feature> likeInputStream) {
 		return postInputStream
 				.union(commentFeatureStream, likeInputStream)
 				.keyBy(Feature::getPersonId)
-				.process(new TimespanFeatureProcessFunction());
+				.process(this);
 	}
 
 	@Override

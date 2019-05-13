@@ -1,9 +1,13 @@
 package ch.ethz.infk.dspa.anomalies.ops;
 
+import ch.ethz.infk.dspa.anomalies.dto.Feature;
+import com.google.common.collect.ImmutableMap;
 import org.apache.flink.api.common.functions.AggregateFunction;
 
 import ch.ethz.infk.dspa.anomalies.dto.EventStatistics;
 import ch.ethz.infk.dspa.anomalies.dto.FeatureStatistics;
+
+import java.util.Map;
 
 public class EnsembleAggregationFunction
 		implements AggregateFunction<FeatureStatistics, EventStatistics, EventStatistics> {
@@ -12,9 +16,15 @@ public class EnsembleAggregationFunction
 
 	private static final long serialVersionUID = 1L;
 
+	private final ImmutableMap<Feature.FeatureId, Double> thresholds;
+
+	public EnsembleAggregationFunction(ImmutableMap<Feature.FeatureId, Double> thresholds) {
+		this.thresholds = thresholds;
+	}
+
 	@Override
 	public EventStatistics createAccumulator() {
-		return new EventStatistics();
+		return new EventStatistics(this.thresholds);
 	}
 
 	@Override
