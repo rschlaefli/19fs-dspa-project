@@ -1,7 +1,6 @@
 package ch.ethz.infk.dspa.statistics;
 
-import ch.ethz.infk.dspa.helper.Config;
-import org.apache.commons.configuration2.Configuration;
+import ch.ethz.infk.dspa.statistics.dto.StatisticsOutput;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -13,14 +12,11 @@ import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import ch.ethz.infk.dspa.AbstractAnalyticsTask;
 import ch.ethz.infk.dspa.statistics.dto.PostActivity;
 import ch.ethz.infk.dspa.statistics.dto.PostActivity.ActivityType;
-import ch.ethz.infk.dspa.statistics.dto.PostActivityCount;
 import ch.ethz.infk.dspa.statistics.ops.TypeCountAggregateFunction;
 import ch.ethz.infk.dspa.statistics.ops.UniquePersonProcessFunction;
 import ch.ethz.infk.dspa.statistics.ops.WindowInfoProcessFunction;
 
-import static java.lang.System.exit;
-
-public class ActivePostsAnalyticsTask extends AbstractAnalyticsTask<DataStream<String>, String> {
+public class ActivePostsAnalyticsTask extends AbstractAnalyticsTask<DataStream<StatisticsOutput>, StatisticsOutput> {
 
 	@Override
 	public ActivePostsAnalyticsTask initialize() throws Exception {
@@ -57,21 +53,18 @@ public class ActivePostsAnalyticsTask extends AbstractAnalyticsTask<DataStream<S
 				.window(SlidingEventTimeWindows.of(windowLength, windowSlide));
 
 		// comment count
-		SingleOutputStreamOperator<String> commentCountStream = windowedActivityStream
+		SingleOutputStreamOperator<StatisticsOutput> commentCountStream = windowedActivityStream
 				.aggregate(new TypeCountAggregateFunction(ActivityType.COMMENT))
-				.process(new WindowInfoProcessFunction<PostActivityCount>())
-				.map(result -> String.format("%d;%s", result.f0, result.f1.toCsv()));
+				.process(new WindowInfoProcessFunction());
 
 		// reply count
-		SingleOutputStreamOperator<String> replyCountStream = windowedActivityStream
+		SingleOutputStreamOperator<StatisticsOutput> replyCountStream = windowedActivityStream
 				.aggregate(new TypeCountAggregateFunction(ActivityType.REPLY))
-				.process(new WindowInfoProcessFunction<PostActivityCount>())
-				.map(result -> String.format("%d;%s", result.f0, result.f1.toCsv()));
+				.process(new WindowInfoProcessFunction());
 
 		// unique people count
-		SingleOutputStreamOperator<String> uniquePersonCountStream = activityStream
-				.process(new UniquePersonProcessFunction(uniquePeopleUpdateInterval, windowLength))
-				.map(result -> String.format("%d;%d;PEOPLE;%d", result.f1, result.f0, result.f2));
+		SingleOutputStreamOperator<StatisticsOutput> uniquePersonCountStream = activityStream
+				.process(new UniquePersonProcessFunction(uniquePeopleUpdateInterval, windowLength));
 
 		this.outputStream = commentCountStream
 				.union(replyCountStream, uniquePersonCountStream);

@@ -1,5 +1,6 @@
 package ch.ethz.infk.dspa;
 
+import ch.ethz.infk.dspa.stream.connectors.KafkaProducerBuilder;
 import ch.ethz.infk.dspa.helper.Config;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -7,6 +8,8 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.flink.api.common.ExecutionConfig;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.windowing.time.Time;
 
@@ -36,27 +39,43 @@ public class App {
 			// null;
 
 			AbstractAnalyticsTask<?, ?> analyticsTask;
+			String outputTopic;
 
 			switch (analyticsType) {
 			case "activeposts":
 				analyticsTask = new ActivePostsAnalyticsTask();
+				outputTopic = "active-posts-out";
 				break;
 			case "recommendations":
 				analyticsTask = new RecommendationsAnalyticsTask();
+				outputTopic = "recommendations-out";
 				break;
 			case "anomalies":
 				analyticsTask = new AnomaliesAnalyticsTask();
+				outputTopic = "anomalies-out";
 				break;
 			default:
 				throw new IllegalArgumentException("INVALID_ANALYTICS_TYPE");
 			}
+
+			// TODO: add any necessary exec. config for producers
+			ExecutionConfig executionConfig = new ExecutionConfig();
+
+			SinkFunction<String> kafkaSink = new KafkaProducerBuilder<String>()
+					.withClass(String.class)
+					.withKafkaConnection(kafkaServer)
+					.withTopic(outputTopic)
+					.withExecutionConfig(executionConfig)
+					.build();
 
 			analyticsTask
 					.withKafkaServer(kafkaServer)
 					.withStaticFilePath(staticFilePath)
 					.withMaxDelay(Time.seconds(maxDelaySeconds))
 					.initialize()
-					.build();
+					.build()
+					.toStringStream()
+					.addSink(kafkaSink);
 
 			try {
 				analyticsTask.start();

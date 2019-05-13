@@ -1,13 +1,13 @@
 package ch.ethz.infk.dspa.statistics.ops;
 
+import ch.ethz.infk.dspa.statistics.dto.StatisticsOutput;
 import org.apache.flink.api.common.functions.AggregateFunction;
 
 import ch.ethz.infk.dspa.statistics.dto.PostActivity;
 import ch.ethz.infk.dspa.statistics.dto.PostActivity.ActivityType;
-import ch.ethz.infk.dspa.statistics.dto.PostActivityCount;
 
 public class TypeCountAggregateFunction
-		implements AggregateFunction<PostActivity, PostActivityCount, PostActivityCount> {
+		implements AggregateFunction<PostActivity, StatisticsOutput, StatisticsOutput> {
 
 	private static final long serialVersionUID = 1L;
 	private final ActivityType TYPE;
@@ -17,38 +17,46 @@ public class TypeCountAggregateFunction
 	}
 
 	@Override
-	public PostActivityCount createAccumulator() {
-		PostActivityCount accumulator = new PostActivityCount();
-		accumulator.setType(TYPE);
+	public StatisticsOutput createAccumulator() {
+		StatisticsOutput accumulator = new StatisticsOutput();
+
+		accumulator.setActivityType(TYPE);
+
+		if (TYPE == ActivityType.COMMENT) {
+			accumulator.setOutputType(StatisticsOutput.OutputType.COMMENT_COUNT);
+		} else if (TYPE == ActivityType.REPLY) {
+			accumulator.setOutputType(StatisticsOutput.OutputType.REPLY_COUNT);
+		}
+
 		return accumulator;
 	}
 
 	@Override
-	public PostActivityCount add(PostActivity activity, PostActivityCount accumulator) {
-
+	public StatisticsOutput add(PostActivity activity, StatisticsOutput accumulator) {
 		if (accumulator.getPostId() == null) {
 			accumulator.setPostId(activity.getPostId());
 		}
 
 		if (TYPE == activity.getType()) {
-			accumulator.incrementCount();
+			accumulator.incrementValue();
 		}
 
 		return accumulator;
 	}
 
 	@Override
-	public PostActivityCount getResult(PostActivityCount accumulator) {
+	public StatisticsOutput getResult(StatisticsOutput accumulator) {
 		return accumulator;
 	}
 
 	@Override
-	public PostActivityCount merge(PostActivityCount a, PostActivityCount b) {
-
+	public StatisticsOutput merge(StatisticsOutput a, StatisticsOutput b) {
 		Long postId = (a.getPostId() != null) ? a.getPostId() : b.getPostId();
 
-		PostActivityCount accumulator = new PostActivityCount(postId, TYPE);
-		accumulator.setCount(a.getCount() + b.getCount());
+		StatisticsOutput accumulator = new StatisticsOutput();
+		accumulator.setPostId(postId);
+		accumulator.setActivityType(TYPE);
+		accumulator.setValue(a.getValue() + b.getValue());
 
 		return accumulator;
 	}

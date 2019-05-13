@@ -10,7 +10,7 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 
-public class KafkaProducerBuilder<T extends SpecificRecord> {
+public class KafkaProducerBuilder<T> {
 
 	private String topic;
 	private Class<T> tClass;

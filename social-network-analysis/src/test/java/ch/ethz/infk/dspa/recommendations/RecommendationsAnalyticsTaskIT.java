@@ -61,6 +61,8 @@ public class RecommendationsAnalyticsTaskIT extends AbstractTestBase {
 				.build()
 				.withSink(new TestSink<>());
 
+		analyticsTask.toStringStream().print();
+
 		analyticsTask.start();
 
 		/*

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import ch.ethz.infk.dspa.statistics.dto.StatisticsOutput;
 import org.apache.flink.api.common.state.MapState;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
@@ -22,7 +23,7 @@ import com.google.common.collect.Streams;
 
 import ch.ethz.infk.dspa.statistics.dto.PostActivity;
 
-public class UniquePersonProcessFunction extends KeyedProcessFunction<Long, PostActivity, Tuple3<Long, Long, Integer>> {
+public class UniquePersonProcessFunction extends KeyedProcessFunction<Long, PostActivity, StatisticsOutput> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -47,7 +48,7 @@ public class UniquePersonProcessFunction extends KeyedProcessFunction<Long, Post
 	}
 
 	@Override
-	public void processElement(PostActivity value, Context ctx, Collector<Tuple3<Long, Long, Integer>> out)
+	public void processElement(PostActivity value, Context ctx, Collector<StatisticsOutput> out)
 			throws Exception {
 		// compute the start and end of the current one hour window interval
 		long intervalStart = TimeWindow.getWindowStartWithOffset(ctx.timestamp(), 0, this.updateInterval);
@@ -63,7 +64,7 @@ public class UniquePersonProcessFunction extends KeyedProcessFunction<Long, Post
 	}
 
 	@Override
-	public void onTimer(long timestamp, OnTimerContext ctx, Collector<Tuple3<Long, Long, Integer>> out)
+	public void onTimer(long timestamp, OnTimerContext ctx, Collector<StatisticsOutput> out)
 			throws Exception {
 		// compute the start of the 12-hour window
 		long windowStart = timestamp - this.windowSize;
@@ -90,7 +91,8 @@ public class UniquePersonProcessFunction extends KeyedProcessFunction<Long, Post
 				.collect(Collectors.toSet());
 
 		// output a new unique people result tuple
-		out.collect(Tuple3.of(ctx.getCurrentKey(), timestamp, globalSet.size()));
+		out.collect(new StatisticsOutput(timestamp, ctx.getCurrentKey(), (long) globalSet.size(),
+				StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT));
 
 		// register a timer such that updates are printed every "updateInterval"
 		// regardless of new events arriving

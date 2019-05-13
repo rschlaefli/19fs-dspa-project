@@ -1,5 +1,6 @@
 package ch.ethz.infk.dspa;
 
+import com.google.gson.Gson;
 import ch.ethz.infk.dspa.helper.Config;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.TimeCharacteristic;
@@ -170,6 +171,13 @@ public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TY
 	}
 
 	public abstract AbstractAnalyticsTask<OUT_STREAM, OUT_TYPE> build();
+
+	public DataStream<String> toStringStream() {
+		return this.outputStream.map(elem -> {
+			Gson gson = new Gson();
+			return gson.toJson(elem);
+		});
+	};
 
 	public AbstractAnalyticsTask<OUT_STREAM, OUT_TYPE> withSink(SinkFunction<OUT_TYPE> sinkFunction) {
 		this.outputStream.addSink(sinkFunction);
