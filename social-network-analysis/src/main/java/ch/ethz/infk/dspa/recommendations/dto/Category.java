@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 public class Category {
 
 	public enum CategoryType {
-		TAG, PLACE, FORUM, LANGUAGE, TAGCLASS
+		TAG, PLACE, FORUM, LANGUAGE, TAGCLASS, ORGANISATION
 	}
 
 	public static final String TAG = "tag_%d";
@@ -19,6 +19,8 @@ public class Category {
 	public static final Pattern LANGUAGE_PATTERN = Pattern.compile("^lan_(\\w+)");
 	public static final String TAGCLASS = "tagclass_%d";
 	public static final Pattern TAGCLASS_PATTERN = Pattern.compile("^tagclass_(\\d+)");
+	public static final String ORGANISATION = "org_%d";
+	public static final Pattern ORGANISATION_PATTERN = Pattern.compile("^org_(\\d+)");
 
 	@SuppressWarnings("unchecked")
 	public static <T> T getId(CategoryType category, String str) {
@@ -33,6 +35,8 @@ public class Category {
 			return (T) getTag(str);
 		case TAGCLASS:
 			return (T) getTagClass(str);
+		case ORGANISATION:
+			return (T) getOrganisation(str);
 		default:
 			throw new IllegalArgumentException("Unknown CategoryType");
 		}
@@ -50,6 +54,8 @@ public class Category {
 			return isTag(str);
 		case TAGCLASS:
 			return isTagClass(str);
+		case ORGANISATION:
+			return isOrganisation(str);
 		default:
 			return false;
 		}
@@ -121,6 +127,20 @@ public class Category {
 
 	public static Long getTagClass(String str) {
 		Matcher m = TAGCLASS_PATTERN.matcher(str);
+		m.matches();
+		return Long.parseLong(m.group(1));
+	}
+
+	public static String organisation(Long organisationId) {
+		return String.format(ORGANISATION, organisationId);
+	}
+
+	public static boolean isOrganisation(String str) {
+		return ORGANISATION_PATTERN.matcher(str).matches();
+	}
+
+	public static Long getOrganisation(String str) {
+		Matcher m = ORGANISATION_PATTERN.matcher(str);
 		m.matches();
 		return Long.parseLong(m.group(1));
 	}

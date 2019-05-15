@@ -1,11 +1,11 @@
 package ch.ethz.infk.dspa.recommendations.dto;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Objects;
 import org.apache.commons.lang3.StringUtils;
 
 import ch.ethz.infk.dspa.avro.Comment;
@@ -164,5 +164,31 @@ public class PersonActivity {
 				.map(Long.class::cast)
 				.findFirst().orElse(null);
 
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		PersonActivity that = (PersonActivity) o;
+		return type == that.type &&
+				Objects.equal(personId, that.personId) &&
+				Objects.equal(postId, that.postId) &&
+				Objects.equal(categoryMap, that.categoryMap);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(type, personId, postId, categoryMap);
+	}
+
+	@Override
+	public String toString() {
+		return "PersonActivity{" +
+				"type=" + type +
+				", personId=" + personId +
+				", postId=" + postId +
+				", categoryMap=" + categoryMap +
+				'}';
 	}
 }

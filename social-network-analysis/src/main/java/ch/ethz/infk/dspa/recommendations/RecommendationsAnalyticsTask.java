@@ -1,5 +1,6 @@
 package ch.ethz.infk.dspa.recommendations;
 
+import ch.ethz.infk.dspa.recommendations.ops.*;
 import org.apache.flink.streaming.api.datastream.BroadcastStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -11,12 +12,6 @@ import ch.ethz.infk.dspa.AbstractAnalyticsTask;
 import ch.ethz.infk.dspa.recommendations.dto.FriendsRecommendation;
 import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
 import ch.ethz.infk.dspa.recommendations.dto.PersonSimilarity;
-import ch.ethz.infk.dspa.recommendations.ops.CategoryEnrichmentProcessFunction;
-import ch.ethz.infk.dspa.recommendations.ops.FriendsFilterFunction;
-import ch.ethz.infk.dspa.recommendations.ops.PersonActivityBroadcastJoinProcessFunction;
-import ch.ethz.infk.dspa.recommendations.ops.PersonActivityReduceFunction;
-import ch.ethz.infk.dspa.recommendations.ops.PersonOutputSelectorProcessFunction;
-import ch.ethz.infk.dspa.recommendations.ops.TopKAggregateFunction;
 
 public class RecommendationsAnalyticsTask
 		extends AbstractAnalyticsTask<SingleOutputStreamOperator<FriendsRecommendation>, FriendsRecommendation> {
@@ -30,10 +25,21 @@ public class RecommendationsAnalyticsTask
 
 	@Override
 	public RecommendationsAnalyticsTask build() {
-		Time windowLength = Time.hours(this.config.getLong("tasks.recommendations.window.lengthInHours"));
-		Time windowSlide = Time.hours(this.config.getLong("tasks.recommendations.window.slideInHours"));
-		int selectionCount = this.config.getInt("tasks.recommendations.selectionCount");
-		int topKCount = this.config.getInt("tasks.recommendations.topKCount");
+		final String staticForumHasTag = this.getStaticFilePath() + "forum_hasTag_tag.csv";
+		final String staticPlaceIsPartOfPlace = this.getStaticFilePath() + "place_isPartOf_place.csv";
+		final String staticTagHasTypeTagClass = this.getStaticFilePath() + "tag_hasType_tagclass.csv";
+		final String staticTagClassIsSubClassOfTagClass = this.getStaticFilePath()
+				+ "tagclass_isSubclassOf_tagclass.csv";
+		final String staticPersonSpeaksLanguage = this.getStaticFilePath() + "person_speaks_language.csv";
+		final String staticPersonHasInterest = this.getStaticFilePath() + "person_hasInterest_tag.csv";
+		final String staticPersonIsLocatedIn = this.getStaticFilePath() + "person_isLocatedIn_place.csv";
+		final String staticPersonWorkAt = this.getStaticFilePath() + "person_workAt_organisation.csv";
+		final String staticPersonStudyAt = this.getStaticFilePath() + "person_studyAt_organisation.csv";
+		final String staticPersonKnowsPerson = this.getStaticFilePath() + "person_knows_person.csv";
+		final Time windowLength = Time.hours(this.config.getLong("tasks.recommendations.window.lengthInHours"));
+		final Time windowSlide = Time.hours(this.config.getLong("tasks.recommendations.window.slideInHours"));
+		final int selectionCount = this.config.getInt("tasks.recommendations.selectionCount");
+		final int topKCount = this.config.getInt("tasks.recommendations.topKCount");
 
 		DataStream<PersonActivity> postPersonActivityStream = this.postStream
 				.map(PersonActivity::of)
@@ -50,13 +56,13 @@ public class RecommendationsAnalyticsTask
 		SingleOutputStreamOperator<PersonActivity> personActivityStream = postPersonActivityStream
 				.union(commentPersonActivityStream, likePersonActivityStream)
 				.keyBy(PersonActivity::postId)
-				.process(new CategoryEnrichmentProcessFunction(this.getStaticFilePath() + "forum_hasTag_tag.csv",
-						this.getStaticFilePath() + "place_isPartOf_place.csv",
-						this.getStaticFilePath() + "tag_hasType_tagclass.csv",
-						this.getStaticFilePath() + "tagclass_isSubclassOf_tagclass.csv"))
+				.process(new CategoryEnrichmentProcessFunction(staticForumHasTag, staticPlaceIsPartOfPlace,
+						staticTagHasTypeTagClass, staticTagClassIsSubClassOfTagClass))
 				.keyBy(PersonActivity::personId)
 				.window(SlidingEventTimeWindows.of(windowLength, windowSlide))
 				.reduce(new PersonActivityReduceFunction())
+				.map(new PersonEnrichmentRichMapFunction(staticPersonSpeaksLanguage, staticPersonHasInterest,
+						staticPersonIsLocatedIn, staticPersonWorkAt, staticPersonStudyAt))
 				.process(new PersonOutputSelectorProcessFunction(selectionCount, windowSlide));
 
 		BroadcastStream<PersonActivity> selectedPersonActivityStream = personActivityStream
@@ -68,8 +74,7 @@ public class RecommendationsAnalyticsTask
 		this.outputStream = personActivityStream
 				.connect(selectedPersonActivityStream)
 				.process(new PersonActivityBroadcastJoinProcessFunction(selectionCount, windowSlide))
-				.filter(new FriendsFilterFunction(
-						this.getStaticFilePath() + "person_knows_person.csv"))
+				.filter(new FriendsFilterFunction(staticPersonKnowsPerson))
 				.keyBy(PersonSimilarity::person1Id)
 				.window(TumblingEventTimeWindows.of(windowSlide))
 				.aggregate(new TopKAggregateFunction(topKCount));
