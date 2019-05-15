@@ -81,7 +81,7 @@ public class PostTestDataGenerator extends AbstractTestDataGenerator<Post> {
 				.setPlaceId(placeId)
 				.build();
 
-		return TestDataPair.of(post, null);
+		return TestDataPair.of(post, creationDate);
 
 	}
 }

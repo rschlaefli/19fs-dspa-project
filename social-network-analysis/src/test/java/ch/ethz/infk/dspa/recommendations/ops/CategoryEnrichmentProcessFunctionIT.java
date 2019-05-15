@@ -1,11 +1,13 @@
 package ch.ethz.infk.dspa.recommendations.ops;
 
-import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
-import ch.ethz.infk.dspa.stream.helper.TestSink;
-import ch.ethz.infk.dspa.stream.testdata.PersonActivityTestDataGenerator;
-import com.google.common.base.Objects;
-import org.apache.flink.api.java.tuple.Tuple4;
-import org.apache.flink.configuration.Configuration;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -13,15 +15,16 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Stream;
+import com.google.common.base.Objects;
 
-import static org.junit.jupiter.api.Assertions.*;
+import ch.ethz.infk.dspa.recommendations.dto.Category.CategoryType;
+import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
+import ch.ethz.infk.dspa.stream.helper.TestSink;
+import ch.ethz.infk.dspa.stream.testdata.PersonActivityTestDataGenerator;
 
 public class CategoryEnrichmentProcessFunctionIT {
+
+	// TODO adjust test (include tagclass enrichment, maybe actually compare category map)
 
 	private StreamExecutionEnvironment env;
 	private DataStream<PersonActivity> personActivityStream;
@@ -43,7 +46,9 @@ public class CategoryEnrichmentProcessFunctionIT {
 
 		this.personActivityStream.keyBy(PersonActivity::postId).process(new CategoryEnrichmentProcessFunction(
 				"src/test/java/resources/recommendations/relations/forum_hasTag_tag.csv",
-				"src/test/java/resources/recommendations/relations/place_isPartOf_place.csv"))
+				"src/test/java/resources/recommendations/relations/place_isPartOf_place.csv",
+				"src/test/java/resources/recommendations/relations/tag_hasType_tagclass.csv",
+				"src/test/java/resources/recommendations/relations/tagclass_isSubclassOf_tagclass.csv"))
 				.addSink(new TestSink<>());
 
 		this.env.execute();
@@ -97,8 +102,8 @@ public class CategoryEnrichmentProcessFunctionIT {
 		ActivityTuple(PersonActivity personActivity) {
 			this.personId = personActivity.personId();
 			this.postId = personActivity.postId();
-			this.forumId = personActivity.extractIdFromKeySet("forum");
-			this.placeId = personActivity.extractIdFromKeySet("place");
+			this.forumId = personActivity.extractLongIdFromKeySet(CategoryType.FORUM);
+			this.placeId = personActivity.extractLongIdFromKeySet(CategoryType.PLACE);
 		}
 
 		ActivityTuple(Long personId, Long postId, Long forumId, Long placeId) {

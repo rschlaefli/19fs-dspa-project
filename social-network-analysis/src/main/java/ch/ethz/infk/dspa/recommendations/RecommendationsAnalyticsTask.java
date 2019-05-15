@@ -1,9 +1,5 @@
 package ch.ethz.infk.dspa.recommendations;
 
-import java.util.List;
-
-import ch.ethz.infk.dspa.helper.Config;
-import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.datastream.BroadcastStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -12,6 +8,7 @@ import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindo
 import org.apache.flink.streaming.api.windowing.time.Time;
 
 import ch.ethz.infk.dspa.AbstractAnalyticsTask;
+import ch.ethz.infk.dspa.recommendations.dto.FriendsRecommendation;
 import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
 import ch.ethz.infk.dspa.recommendations.dto.PersonSimilarity;
 import ch.ethz.infk.dspa.recommendations.ops.CategoryEnrichmentProcessFunction;
@@ -22,7 +19,7 @@ import ch.ethz.infk.dspa.recommendations.ops.PersonOutputSelectorProcessFunction
 import ch.ethz.infk.dspa.recommendations.ops.TopKAggregateFunction;
 
 public class RecommendationsAnalyticsTask
-		extends AbstractAnalyticsTask<SingleOutputStreamOperator<List<PersonSimilarity>>, List<PersonSimilarity>> {
+		extends AbstractAnalyticsTask<SingleOutputStreamOperator<FriendsRecommendation>, FriendsRecommendation> {
 
 	@Override
 	public RecommendationsAnalyticsTask initialize() throws Exception {
@@ -54,7 +51,9 @@ public class RecommendationsAnalyticsTask
 				.union(commentPersonActivityStream, likePersonActivityStream)
 				.keyBy(PersonActivity::postId)
 				.process(new CategoryEnrichmentProcessFunction(this.getStaticFilePath() + "forum_hasTag_tag.csv",
-						this.getStaticFilePath() + "place_isPartOf_place.csv"))
+						this.getStaticFilePath() + "place_isPartOf_place.csv",
+						this.getStaticFilePath() + "tag_hasType_tagclass.csv",
+						this.getStaticFilePath() + "tagclass_isSubclassOf_tagclass.csv"))
 				.keyBy(PersonActivity::personId)
 				.window(SlidingEventTimeWindows.of(windowLength, windowSlide))
 				.reduce(new PersonActivityReduceFunction())

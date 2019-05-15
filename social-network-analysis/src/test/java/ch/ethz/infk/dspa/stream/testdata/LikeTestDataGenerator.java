@@ -48,6 +48,6 @@ public class LikeTestDataGenerator extends AbstractTestDataGenerator<Like> {
 				.setCreationDate(creationDate)
 				.build();
 
-		return TestDataPair.of(like, null);
+		return TestDataPair.of(like, creationDate);
 	}
 }

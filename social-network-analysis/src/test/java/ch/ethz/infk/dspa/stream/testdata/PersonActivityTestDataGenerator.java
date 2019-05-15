@@ -1,6 +1,5 @@
 package ch.ethz.infk.dspa.stream.testdata;
 
-import java.time.ZonedDateTime;
 import java.util.HashMap;
 
 import org.apache.commons.lang3.StringUtils;
@@ -13,6 +12,7 @@ import org.joda.time.DateTime;
 import org.json.JSONObject;
 
 import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
+import ch.ethz.infk.dspa.recommendations.dto.PersonActivity.PersonActivityType;
 
 public class PersonActivityTestDataGenerator
 		extends AbstractTestDataGenerator<PersonActivity> {
@@ -40,6 +40,7 @@ public class PersonActivityTestDataGenerator
 		PersonActivity activity = new PersonActivity();
 		activity.setPersonId(1l);
 		activity.setPostId(2l);
+		activity.setType(PersonActivityType.POST);
 
 		HashMap<String, Integer> categoryMap = new HashMap<>();
 		categoryMap.put("c1", 1);
@@ -60,17 +61,23 @@ public class PersonActivityTestDataGenerator
 			postId = Long.parseLong(parts[1]);
 		}
 
-		DateTime creationDate = new DateTime(ZonedDateTime.parse(parts[2]).toInstant().toEpochMilli());
+		DateTime creationDate = parseDateTime(parts[2]);
+
+		PersonActivityType type = null;
+		if (StringUtils.isNotEmpty(parts[3])) {
+			type = PersonActivityType.valueOf(parts[3]);
+		}
 
 		HashMap<String, Integer> categoryMap = new HashMap<>();
-		if (parts.length > 3 && StringUtils.isNotEmpty(parts[3])) {
-			JSONObject jsonObj = new JSONObject(parts[3]);
+		if (parts.length > 4 && StringUtils.isNotEmpty(parts[4])) {
+			JSONObject jsonObj = new JSONObject(parts[4]);
 			jsonObj.toMap().entrySet().forEach(e -> categoryMap.put(e.getKey(), (Integer) e.getValue()));
 		}
 
 		PersonActivity activity = new PersonActivity();
 		activity.setPersonId(personId);
 		activity.setPostId(postId);
+		activity.setType(type);
 		activity.setCategoryMap(categoryMap);
 
 		return TestDataPair.of(activity, creationDate);

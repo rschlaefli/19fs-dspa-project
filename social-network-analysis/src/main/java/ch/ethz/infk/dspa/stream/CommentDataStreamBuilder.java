@@ -1,26 +1,21 @@
 package ch.ethz.infk.dspa.stream;
 
-import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.streaming.api.datastream.BroadcastStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
+import org.apache.flink.streaming.api.windowing.time.Time;
 
 import ch.ethz.infk.dspa.avro.Comment;
-import ch.ethz.infk.dspa.avro.CommentPostMapping;
 import ch.ethz.infk.dspa.stream.connectors.KafkaConsumerBuilder;
-import ch.ethz.infk.dspa.stream.connectors.KafkaProducerBuilder;
-import ch.ethz.infk.dspa.stream.ops.CommentPostIdEnrichmentProcessFunction;
+import ch.ethz.infk.dspa.stream.dto.CommentPostMapping;
+import ch.ethz.infk.dspa.stream.ops.CommentPostIdEnrichmentBroadcastProcessFunction;
 
 public class CommentDataStreamBuilder extends AbstractDataStreamBuilder<Comment> {
 
 	private boolean withPostId = false;
-
-	private DataStream<CommentPostMapping> commentPostMappingStream;
-	private SinkFunction<CommentPostMapping> commentPostMappingSink;
 
 	public CommentDataStreamBuilder(StreamExecutionEnvironment env) {
 		super(env);
@@ -29,16 +24,6 @@ public class CommentDataStreamBuilder extends AbstractDataStreamBuilder<Comment>
 	@Override
 	public CommentDataStreamBuilder withInputStream(DataStream<Comment> inputStream) {
 		super.withInputStream(inputStream);
-		return this;
-	}
-
-	public CommentDataStreamBuilder withCommentPostMappingStream(DataStream<CommentPostMapping> mappingStream) {
-		this.commentPostMappingStream = mappingStream;
-		return this;
-	}
-
-	public CommentDataStreamBuilder withCommentPostMappingSink(SinkFunction<CommentPostMapping> sink) {
-		this.commentPostMappingSink = sink;
 		return this;
 	}
 
@@ -73,56 +58,20 @@ public class CommentDataStreamBuilder extends AbstractDataStreamBuilder<Comment>
 
 		if (withPostId) {
 
-			if (commentPostMappingStream == null) {
-				// if not given, use default kafka source
-				ensureValidKafkaConfiguration();
+			// map comments to triple of id, parentCommentId, parentPostId and broadcast them
+			BroadcastStream<CommentPostMapping> broadcastedMappingStream = this.stream
+					.map(comment -> CommentPostMapping.of(comment.getId(), comment.getReplyToCommentId(),
+							comment.getReplyToPostId()))
+					.broadcast(CommentPostIdEnrichmentBroadcastProcessFunction.COMMENT_POST_MAPPING_DESCRIPTOR,
+							CommentPostIdEnrichmentBroadcastProcessFunction.BUFFER_DESCRIPTOR,
+							CommentPostIdEnrichmentBroadcastProcessFunction.POST_WINDOW_DESCRIPTOR);
 
-				SourceFunction<CommentPostMapping> source = new KafkaConsumerBuilder<CommentPostMapping>()
-						.withTopic("comment-post-mapping")
-						.withClass(CommentPostMapping.class)
-						.withKafkaConnection(getBootstrapServers(), getGroupId())
-						.build();
+			// connect mappings with comments and add postId to comments
+			this.stream = this.stream.keyBy(Comment::getId)
+					.connect(broadcastedMappingStream)
+					// TODO [nku] extract as param
+					.process(new CommentPostIdEnrichmentBroadcastProcessFunction(Time.hours(10000)));
 
-				commentPostMappingStream = env.addSource(source);
-			}
-
-			this.commentPostMappingStream = this.commentPostMappingStream.assignTimestampsAndWatermarks(
-					new BoundedOutOfOrdernessTimestampExtractor<CommentPostMapping>(getMaxOutOfOrderness()) {
-						private static final long serialVersionUID = 1L;
-
-						@Override
-						public long extractTimestamp(CommentPostMapping element) {
-							return element.getCommentCreationDate().getMillis();
-						}
-
-					});
-
-			if (commentPostMappingSink == null) {
-				// if not given, use default kafka source
-				ensureValidKafkaConfiguration();
-
-				// if not given, use default kafka sink
-				commentPostMappingSink = new KafkaProducerBuilder<CommentPostMapping>()
-						.withTopic("comment-post-mapping")
-						.withClass(CommentPostMapping.class)
-						.withKafkaConnection(getBootstrapServers())
-						.withExecutionConfig(env.getConfig())
-						.build();
-			}
-
-			// TODO [nku] maybe add watermarks and timestamps?
-
-			SingleOutputStreamOperator<Comment> enrichedCommentStream = this.stream.connect(commentPostMappingStream)
-					.keyBy(new CommentRoutingKeySelector(), CommentPostMapping::getCommentId,
-							TypeInformation.of(Long.class))
-					.process(new CommentPostIdEnrichmentProcessFunction())
-					.returns(Comment.class);
-
-			// write side output of mappings to sink
-			enrichedCommentStream.getSideOutput(CommentPostIdEnrichmentProcessFunction.MAPPING_TAG)
-					.addSink(commentPostMappingSink);
-
-			this.stream = enrichedCommentStream;
 		}
 
 		return this.stream;

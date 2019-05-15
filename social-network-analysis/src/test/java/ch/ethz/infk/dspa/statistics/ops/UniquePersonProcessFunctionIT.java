@@ -9,6 +9,7 @@ import java.util.List;
 
 import ch.ethz.infk.dspa.statistics.dto.StatisticsOutput;
 import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -26,7 +27,8 @@ public class UniquePersonProcessFunctionIT {
 
 	@BeforeEach
 	void setup() throws IOException {
-		this.env = StreamExecutionEnvironment.getExecutionEnvironment();
+		env = StreamExecutionEnvironment.getExecutionEnvironment();
+		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
 		this.postActivityStream = new PostActivityTestDataGenerator().generate(this.env,
 				"src/test/java/resources/statistics/streams/post_activity_stream.csv", Time.hours(1));

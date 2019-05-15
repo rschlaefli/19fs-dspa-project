@@ -9,19 +9,8 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.joda.time.DateTime;
 
 import ch.ethz.infk.dspa.avro.Comment;
-import ch.ethz.infk.dspa.stream.helper.SourceSink;
 
 public class CommentTestDataGenerator extends AbstractTestDataGenerator<Comment> {
-
-	public static SourceSink generateSourceSink(String file) throws Exception {
-		// all replies will produce a mapping
-		Long mappingCount = new CommentTestDataGenerator().generate(file).stream()
-				.filter(c -> c.getReplyToCommentId() != null).count();
-
-		// create a SourceSink that acts both as Sink and Source for the
-		// CommentPostMappings (instead of going via Kafka)
-		return new SourceSink(mappingCount);
-	}
 
 	@Override
 	public DataStream<Comment> addReturnType(SingleOutputStreamOperator<Comment> out) {
@@ -94,6 +83,6 @@ public class CommentTestDataGenerator extends AbstractTestDataGenerator<Comment>
 				.setPlaceId(placeId)
 				.build();
 
-		return TestDataPair.of(comment, null);
+		return TestDataPair.of(comment, creationDate);
 	}
 }

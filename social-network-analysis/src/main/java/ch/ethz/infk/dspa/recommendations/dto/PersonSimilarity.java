@@ -1,5 +1,9 @@
 package ch.ethz.infk.dspa.recommendations.dto;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+
 public class PersonSimilarity {
 
 	private Long person1Id;
@@ -74,6 +78,28 @@ public class PersonSimilarity {
 			return other.similarity == null;
 		} else
 			return similarity.equals(other.similarity);
+	}
+
+	public static PersonSimilarity dotProduct(PersonActivity activity1, PersonActivity activity2) {
+		HashMap<String, Integer> firstMap = activity1.categoryMap();
+		HashMap<String, Integer> secondMap = activity2.categoryMap();
+
+		Set<String> keys = new HashSet<>();
+		keys.addAll(firstMap.keySet());
+		keys.addAll(secondMap.keySet());
+
+		double sum = 0;
+
+		for (String key : keys) {
+			sum += firstMap.getOrDefault(key, 0) * secondMap.getOrDefault(key, 0);
+		}
+
+		return new PersonSimilarity()
+				.withPerson1Id(activity1.personId())
+				.withPerson2Id(activity2.personId())
+				.withSimilarity(sum); // TODO [nku] not sure if we should normalize: .withSimilarity(sum /
+										// keys.size())
+
 	}
 
 }

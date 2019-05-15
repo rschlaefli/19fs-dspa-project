@@ -3,8 +3,15 @@ package ch.ethz.infk.dspa.stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
+import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -12,8 +19,6 @@ import org.apache.flink.test.util.AbstractTestBase;
 import org.junit.jupiter.api.Test;
 
 import ch.ethz.infk.dspa.avro.Comment;
-import ch.ethz.infk.dspa.avro.CommentPostMapping;
-import ch.ethz.infk.dspa.stream.helper.SourceSink;
 import ch.ethz.infk.dspa.stream.helper.TestSink;
 import ch.ethz.infk.dspa.stream.testdata.CommentTestDataGenerator;
 
@@ -23,19 +28,17 @@ public class CommentStreamBuilderWithPostIdTest extends AbstractTestBase {
 	public void testCommentStreamBuilderWithPostId() throws Exception {
 
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+
 		String testFile = "src/test/java/resources/stream/comment_stream.csv";
 		Time maxOutOfOrderness = Time.hours(1);
 
-		SourceSink mappingSourceSink = CommentTestDataGenerator.generateSourceSink(testFile);
 		DataStream<Comment> commentStream = new CommentTestDataGenerator().generate(env, testFile, maxOutOfOrderness);
-		DataStream<CommentPostMapping> mappingStream = env.addSource(mappingSourceSink);
 
 		// build the enriched comment stream
 		DataStream<Comment> enrichedCommentStream = new CommentDataStreamBuilder(env)
 				.withInputStream(commentStream)
 				.withPostIdEnriched()
-				.withCommentPostMappingStream(mappingStream)
-				.withCommentPostMappingSink(mappingSourceSink)
 				.withMaxOutOfOrderness(maxOutOfOrderness)
 				.build();
 
@@ -43,16 +46,37 @@ public class CommentStreamBuilderWithPostIdTest extends AbstractTestBase {
 		enrichedCommentStream.addSink(new TestSink<Comment>());
 		env.execute();
 
-		List<Comment> results = TestSink.getResults(Comment.class);
+		Map<Long, List<Comment>> timestampedResults = TestSink.getResultsTimestamped(Comment.class);
+
+		List<Comment> results = timestampedResults.entrySet().stream().map(Entry::getValue).flatMap(List::stream)
+				.collect(Collectors.toList());
 
 		Map<Long, Long> map = getCommentToPostMapping(testFile);
 
 		assertEquals(map.size(), results.size(), "Event Count");
 
+		// check for correct mapping
 		for (Comment comment : results) {
 			Long commentId = comment.getId();
 			Long postId = comment.getReplyToPostId();
 			assertEquals(map.get(commentId), postId, "Comment " + commentId);
+		}
+
+		// check for correct timestamp
+		for (Entry<Long, List<Comment>> entry : timestampedResults.entrySet()) {
+			Long timestamp = entry.getKey();
+			for (Comment comment : entry.getValue()) {
+				Long commentId = comment.getId();
+				Long postId = comment.getReplyToPostId();
+
+				// check for correct mapping
+				assertEquals(map.get(commentId), postId, "Comment " + commentId);
+
+				// check for correct timestamp
+				assertEquals(new Long(comment.getCreationDate().getMillis()), timestamp,
+						"Timestamp of Comment changed");
+
+			}
 		}
 	}
 

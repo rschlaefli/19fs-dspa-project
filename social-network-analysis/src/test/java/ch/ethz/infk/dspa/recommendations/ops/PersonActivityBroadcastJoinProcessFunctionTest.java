@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.BroadcastStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -24,6 +25,8 @@ public class PersonActivityBroadcastJoinProcessFunctionTest extends AbstractTest
 	public void testPersonActivityBroadcastJoinProcessFunction() throws Exception {
 
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+
 		String testFile = "src/test/java/resources/recommendations/streams/person_activity_stream_reduced.csv";
 		Time maxOutOfOrderness = Time.hours(1);
 
