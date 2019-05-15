@@ -132,14 +132,14 @@ public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TY
 
 		if (this.commentStream == null) {
 			withCommentStream(new CommentDataStreamBuilder(this.env)
-					.withPostIdEnriched()
+					.withPostIdEnriched(Time.hours(config.getInt("stream.state.commentPostMappingExpirationInHours")))
 					.withKafkaConnection(this.bootstrapServers, this.groupId)
 					.withMaxOutOfOrderness(this.maxDelay)
 					.build());
 		} else {
 			withCommentStream(new CommentDataStreamBuilder(this.env)
 					.withInputStream(this.commentStream)
-					.withPostIdEnriched()
+					.withPostIdEnriched(Time.hours(config.getInt("stream.state.commentPostMappingExpirationInHours")))
 					.withMaxOutOfOrderness(this.maxDelay)
 					.build());
 		}
