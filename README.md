@@ -4,7 +4,7 @@
 
 - Add data files into the `data/` folder (1K)
 - Run the cleanup scripts using Python
-  - `python comment_stream_cleaning.py`
+  - `python stream_cleaning.py`
 - Download the flink version to use from the official mirror and store it in the project root
   - Default config: https://archive.apache.org/dist/flink/flink-1.8.0/flink-1.8.0-bin-scala_2.11.tgz
 - Override any of the docker build arguments if necessary
