@@ -1,13 +1,12 @@
 package ch.ethz.infk.dspa.anomalies;
 
-import ch.ethz.infk.dspa.helper.Config;
-import com.google.common.collect.ImmutableMap;
-import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.windowing.assigners.EventTimeSessionWindows;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
+
+import com.google.common.collect.ImmutableMap;
 
 import ch.ethz.infk.dspa.AbstractAnalyticsTask;
 import ch.ethz.infk.dspa.anomalies.dto.EventStatistics;
@@ -18,10 +17,9 @@ import ch.ethz.infk.dspa.anomalies.ops.EnsembleAggregationFunction;
 import ch.ethz.infk.dspa.anomalies.ops.EventStatisticsWindowProcessFunction;
 import ch.ethz.infk.dspa.anomalies.ops.OnlineAverageProcessFunction;
 import ch.ethz.infk.dspa.anomalies.ops.features.ContentsFeatureMapFunction;
+import ch.ethz.infk.dspa.anomalies.ops.features.NewUserInteractionFeatureProcessFunction;
 import ch.ethz.infk.dspa.anomalies.ops.features.TagCountFeatureMapFunction;
 import ch.ethz.infk.dspa.anomalies.ops.features.TimespanFeatureProcessFunction;
-
-import java.util.Map;
 
 public class AnomaliesAnalyticsTask
 		extends AbstractAnalyticsTask<SingleOutputStreamOperator<FraudulentUser>, FraudulentUser> {
@@ -52,6 +50,9 @@ public class AnomaliesAnalyticsTask
 	DataStream<Feature> composeFeatureStream() {
 		final int contentsShortUntilLength = this.config.getInt("tasks.anomalies.features.contents.short.maxLength");
 		final int contentsLongFromLength = this.config.getInt("tasks.anomalies.features.contents.long.minLength");
+		final Time newUserThreshold = Time.hours(this.config
+				.getInt("tasks.anomalies.features.newUserLikes.newUserThresholdInHours"));
+		final String staticPerson = this.getStaticFilePath() + "person.csv";
 
 		// map the input streams to separate features
 		DataStream<Feature> postFeatureStream = this.postStream
@@ -65,16 +66,20 @@ public class AnomaliesAnalyticsTask
 				.returns(Feature.class);
 
 		// compute features over the stream
-		DataStream<Feature> timespanFeatureStream = new TimespanFeatureProcessFunction()
-				.applyTo(postFeatureStream, commentFeatureStream, likeFeatureStream);
+		DataStream<Feature> timespanFeatureStream = new TimespanFeatureProcessFunction().applyTo(postFeatureStream,
+				commentFeatureStream, likeFeatureStream);
+
 		DataStream<Feature> contentsFeatureStream = new ContentsFeatureMapFunction(contentsShortUntilLength,
-				contentsLongFromLength)
-						.applyTo(postFeatureStream, commentFeatureStream);
-		DataStream<Feature> tagCountFeatureStream = TagCountFeatureMapFunction
-				.applyTo(postFeatureStream);
+				contentsLongFromLength).applyTo(postFeatureStream, commentFeatureStream);
+
+		DataStream<Feature> tagCountFeatureStream = new TagCountFeatureMapFunction().applyTo(postFeatureStream);
+
+		DataStream<Feature> newUserInteractionFeatureStream = new NewUserInteractionFeatureProcessFunction(
+				newUserThreshold, staticPerson).applyTo(likeFeatureStream);
 
 		// merge feature streams into a single one
-		return timespanFeatureStream.union(contentsFeatureStream, tagCountFeatureStream);
+		return timespanFeatureStream.union(contentsFeatureStream, tagCountFeatureStream,
+				newUserInteractionFeatureStream);
 	}
 
 	SingleOutputStreamOperator<FeatureStatistics> applyOnlineAveraging(DataStream<Feature> featureStream) {
@@ -99,6 +104,8 @@ public class AnomaliesAnalyticsTask
 						this.config.getDouble("tasks.anomalies.features.contents.long.threshold"))
 				.put(Feature.FeatureId.TAG_COUNT,
 						this.config.getDouble("tasks.anomalies.features.tagCount.threshold"))
+				.put(Feature.FeatureId.NEW_USER_LIKES,
+						this.config.getDouble("tasks.anomalies.features.newUserLikes.threshold"))
 				.build();
 
 		// analyze events based on all their computed feature statistics

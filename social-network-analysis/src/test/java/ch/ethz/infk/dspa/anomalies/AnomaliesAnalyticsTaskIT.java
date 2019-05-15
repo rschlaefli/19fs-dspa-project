@@ -2,9 +2,6 @@ package ch.ethz.infk.dspa.anomalies;
 
 import java.util.List;
 
-
-
-import ch.ethz.infk.dspa.helper.Config;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -18,6 +15,7 @@ import ch.ethz.infk.dspa.anomalies.dto.FraudulentUser;
 import ch.ethz.infk.dspa.avro.Comment;
 import ch.ethz.infk.dspa.avro.Like;
 import ch.ethz.infk.dspa.avro.Post;
+import ch.ethz.infk.dspa.helper.Config;
 import ch.ethz.infk.dspa.stream.helper.TestSink;
 import ch.ethz.infk.dspa.stream.testdata.CommentTestDataGenerator;
 import ch.ethz.infk.dspa.stream.testdata.LikeTestDataGenerator;
@@ -40,11 +38,11 @@ public class AnomaliesAnalyticsTaskIT extends AbstractTestBase {
 		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
 		postStream = new PostTestDataGenerator()
-				.generate(env, "src/test/java/resources/post_stream.csv", maxOutOfOrderness);
+				.generate(env, "src/test/java/resources/post_event_stream.csv", maxOutOfOrderness);
 		commentStream = new CommentTestDataGenerator()
-				.generate(env, "src/test/java/resources/comment_stream.csv", maxOutOfOrderness);
+				.generate(env, "src/test/java/resources/comment_event_stream.csv", maxOutOfOrderness);
 		likeStream = new LikeTestDataGenerator()
-				.generate(env, "src/test/java/resources/like_stream.csv", maxOutOfOrderness);
+				.generate(env, "src/test/java/resources/likes_event_stream.csv", maxOutOfOrderness);
 
 	}
 
@@ -53,6 +51,7 @@ public class AnomaliesAnalyticsTaskIT extends AbstractTestBase {
 		AnomaliesAnalyticsTask analyticsTask = (AnomaliesAnalyticsTask) new AnomaliesAnalyticsTask()
 				.withPropertiesConfiguration(config)
 				.withStreamingEnvironment(env)
+				.withStaticFilePath("src/test/java/resources/relations/")
 				.withMaxDelay(Time.seconds(600L))
 				.withInputStreams(postStream, commentStream, likeStream)
 				.initialize()

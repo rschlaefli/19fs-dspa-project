@@ -1,0 +1,10 @@
+id|firstName|lastName|gender|birthday|creationDate|locationIP|browserUsed
+1|fN1|lN1 (old)|female|1990-01-01|2012-02-05T00:59:59Z|100.0.0.0|Firefox
+2|fN2|lN2 (new)|female|1990-01-01|2012-02-05T10:00:00Z|100.0.0.0|Firefox
+3|fN3|lN3 (new)|female|1990-01-01|2012-02-05T11:00:00Z|100.0.0.0|Firefox
+4|fN4|lN4 (new)|female|1990-01-01|2012-02-06T01:00:00Z|100.0.0.0|Firefox
+5|fN5|lN5 (old)|female|1990-01-01|2012-01-01T00:00:00Z|100.0.0.0|Firefox
+6|fN6|lN6 (old)|female|1990-01-01|2012-01-15T00:00:00Z|100.0.0.0|Firefox
+7|fN7|lN7 (new)|female|1990-01-01|2012-02-06T02:00:00Z|100.0.0.0|Firefox
+8|fN8|lN8 (new)|female|1990-01-01|2012-02-06T01:00:00Z|100.0.0.0|Firefox
+9|fN9|lN9 (old)|female|1990-01-01|2012-01-26T00:00:00Z|100.0.0.0|Firefox
