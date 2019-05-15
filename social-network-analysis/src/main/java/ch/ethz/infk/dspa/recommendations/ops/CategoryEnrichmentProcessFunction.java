@@ -109,10 +109,9 @@ public class CategoryEnrichmentProcessFunction extends KeyedProcessFunction<Long
 	@Override
 	public void open(Configuration parameters) throws Exception {
 
-		this.forumTagRelation = buildForumTagRelation(this.forumTagsRelationFile);
-		this.countryContinentRelation = buildContinentMappingRelation(this.placeRelationFile);
-		this.tagClassRelation = buildTagClassRelation(this.tagHasTypeTagClassRelationFile,
-				this.tagclassIsSubclassOfTagClassRelationFile);
+		this.forumTagRelation = buildForumTagRelation();
+		this.countryContinentRelation = buildContinentMappingRelation();
+		this.tagClassRelation = buildTagClassRelation();
 
 		// TODO maybe add expiration?
 		this.inheritablePostCategoryMapState = getRuntimeContext()
@@ -241,7 +240,7 @@ public class CategoryEnrichmentProcessFunction extends KeyedProcessFunction<Long
 	 * Builds the forum tag relation from the given file. As keys it uses the forumId in the Category String format
 	 * (e.g. forum_1) and all tags in the value also have the Category String format (e.g. tag_10)
 	 */
-	public Map<String, List<String>> buildForumTagRelation(String forumTagsRelationFile) throws IOException {
+	public Map<String, List<String>> buildForumTagRelation() throws IOException {
 
 		Map<String, List<String>> forumTags = new HashMap<>();
 		StaticDataParser.parseCsvFile(forumTagsRelationFile, Arrays.asList("Forum.id", "Tag.id"))
@@ -263,8 +262,7 @@ public class CategoryEnrichmentProcessFunction extends KeyedProcessFunction<Long
 	 * Builds relation with a mapping between a tag (Category String format) and all related tagClasses and their parent
 	 * tagClasses
 	 */
-	public Map<String, List<String>> buildTagClassRelation(String tagHasTypeTagClassRelationFile,
-			String tagclassIsSubclassOfTagClassRelationFile) throws IOException {
+	public Map<String, List<String>> buildTagClassRelation() throws IOException {
 
 		Map<String, List<String>> tagClasses = new HashMap<>();
 		StaticDataParser
@@ -300,7 +298,7 @@ public class CategoryEnrichmentProcessFunction extends KeyedProcessFunction<Long
 	 * Builds the continent mapping relation from the given file. Both key and value use the Category String format
 	 * (e.g. place_1)
 	 */
-	public Map<String, String> buildContinentMappingRelation(String placeRelationFile) throws IOException {
+	public Map<String, String> buildContinentMappingRelation() throws IOException {
 		Map<String, String> countryContinentMapping = new HashMap<>();
 		StaticDataParser
 				.parseCsvFile(placeRelationFile, Arrays.asList("Place.id", "Place.id.2"))

@@ -31,7 +31,7 @@ public class TagCountFeatureMapFunction implements MapFunction<Feature, Feature>
 
 	}
 
-	public static DataStream<Feature> applyTo(DataStream<Feature> postInputStream) {
+	public DataStream<Feature> applyTo(DataStream<Feature> postInputStream) {
 		return postInputStream.map(new TagCountFeatureMapFunction());
 	}
 

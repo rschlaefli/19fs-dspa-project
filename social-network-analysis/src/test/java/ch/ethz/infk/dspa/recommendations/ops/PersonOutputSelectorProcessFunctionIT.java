@@ -11,6 +11,7 @@ import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.test.util.AbstractTestBase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +19,7 @@ import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
 import ch.ethz.infk.dspa.stream.helper.TestSink;
 import ch.ethz.infk.dspa.stream.testdata.PersonActivityTestDataGenerator;
 
-public class PersonOutputSelectorProcessFunctionIT {
+public class PersonOutputSelectorProcessFunctionIT extends AbstractTestBase {
 
 	private StreamExecutionEnvironment env;
 	private DataStream<PersonActivity> personActivityStream;

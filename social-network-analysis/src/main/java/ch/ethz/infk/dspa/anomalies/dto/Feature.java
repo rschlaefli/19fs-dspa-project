@@ -11,7 +11,8 @@ public class Feature {
 		CONTENTS_SHORT,
 		CONTENTS_MEDIUM,
 		CONTENTS_LONG,
-		TAG_COUNT
+		TAG_COUNT,
+		NEW_USER_LIKES
 	}
 
 	public enum EventType {
