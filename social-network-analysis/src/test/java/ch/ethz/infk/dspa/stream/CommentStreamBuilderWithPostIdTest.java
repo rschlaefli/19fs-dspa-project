@@ -16,6 +16,7 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.test.util.AbstractTestBase;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ch.ethz.infk.dspa.avro.Comment;
@@ -24,21 +25,30 @@ import ch.ethz.infk.dspa.stream.testdata.CommentTestDataGenerator;
 
 public class CommentStreamBuilderWithPostIdTest extends AbstractTestBase {
 
+	private StreamExecutionEnvironment env;
+	private Time maxOutOfOrderness;
+
+	@BeforeEach
+	public void setup() {
+		env = StreamExecutionEnvironment.getExecutionEnvironment();
+		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+
+		maxOutOfOrderness = Time.hours(1);
+
+		TestSink.reset();
+	}
+
 	@Test
 	public void testCommentStreamBuilderWithPostId() throws Exception {
 
-		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
-
 		String testFile = "src/test/java/resources/stream/comment_stream.csv";
-		Time maxOutOfOrderness = Time.hours(1);
 
 		DataStream<Comment> commentStream = new CommentTestDataGenerator().generate(env, testFile, maxOutOfOrderness);
 
 		// build the enriched comment stream
 		DataStream<Comment> enrichedCommentStream = new CommentDataStreamBuilder(env)
 				.withInputStream(commentStream)
-				.withPostIdEnriched()
+				.withPostIdEnriched(Time.hours(1000))
 				.withMaxOutOfOrderness(maxOutOfOrderness)
 				.build();
 

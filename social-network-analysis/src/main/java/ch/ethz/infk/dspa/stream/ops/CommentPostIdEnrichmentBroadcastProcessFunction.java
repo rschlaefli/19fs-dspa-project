@@ -1,6 +1,7 @@
 package ch.ethz.infk.dspa.stream.ops;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -36,13 +37,11 @@ public class CommentPostIdEnrichmentBroadcastProcessFunction
 			BasicTypeInfo.LONG_TYPE_INFO);
 
 	public static final MapStateDescriptor<Long, List<Long>> BUFFER_DESCRIPTOR = new MapStateDescriptor<>(
-			"commentstream-buffer", BasicTypeInfo.LONG_TYPE_INFO,
-			TypeInformation.of(new TypeHint<List<Long>>() {
+			"commentstream-buffer", BasicTypeInfo.LONG_TYPE_INFO, TypeInformation.of(new TypeHint<List<Long>>() {
 			}));
 
 	public static final MapStateDescriptor<Long, Set<Long>> POST_WINDOW_DESCRIPTOR = new MapStateDescriptor<>(
-			"commentstream-post--window", BasicTypeInfo.LONG_TYPE_INFO,
-			TypeInformation.of(new TypeHint<Set<Long>>() {
+			"commentstream-post--window", BasicTypeInfo.LONG_TYPE_INFO, TypeInformation.of(new TypeHint<Set<Long>>() {
 			}));
 
 	private ValueState<Comment> commentBuffer;
@@ -133,7 +132,7 @@ public class CommentPostIdEnrichmentBroadcastProcessFunction
 		Set<Long> expiredPostIds = postAccess.get(minWindow);
 		postAccess.remove(minWindow);
 
-		Set<Long> postIds2 = postAccess.get(nextWindow);
+		Set<Long> postIds2 = ObjectUtils.defaultIfNull(postAccess.get(nextWindow), Collections.emptySet());
 
 		// remove all post ids also appearing in consecutive window
 		expiredPostIds.removeAll(postIds2);

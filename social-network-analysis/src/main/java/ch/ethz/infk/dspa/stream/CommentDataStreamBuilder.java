@@ -16,6 +16,7 @@ import ch.ethz.infk.dspa.stream.ops.CommentPostIdEnrichmentBroadcastProcessFunct
 public class CommentDataStreamBuilder extends AbstractDataStreamBuilder<Comment> {
 
 	private boolean withPostId = false;
+	private Time mappingExpiration;
 
 	public CommentDataStreamBuilder(StreamExecutionEnvironment env) {
 		super(env);
@@ -27,7 +28,8 @@ public class CommentDataStreamBuilder extends AbstractDataStreamBuilder<Comment>
 		return this;
 	}
 
-	public CommentDataStreamBuilder withPostIdEnriched() {
+	public CommentDataStreamBuilder withPostIdEnriched(Time mappingExpiration) {
+		this.mappingExpiration = mappingExpiration;
 		this.withPostId = true;
 		return this;
 	}
@@ -69,8 +71,7 @@ public class CommentDataStreamBuilder extends AbstractDataStreamBuilder<Comment>
 			// connect mappings with comments and add postId to comments
 			this.stream = this.stream.keyBy(Comment::getId)
 					.connect(broadcastedMappingStream)
-					// TODO [nku] extract as param
-					.process(new CommentPostIdEnrichmentBroadcastProcessFunction(Time.hours(10000)));
+					.process(new CommentPostIdEnrichmentBroadcastProcessFunction(mappingExpiration));
 
 		}
 
