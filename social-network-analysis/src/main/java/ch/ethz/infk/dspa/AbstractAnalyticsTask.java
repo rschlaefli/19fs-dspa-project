@@ -1,7 +1,5 @@
 package ch.ethz.infk.dspa;
 
-import com.google.gson.Gson;
-import ch.ethz.infk.dspa.helper.Config;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -9,10 +7,12 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.windowing.time.Time;
 
+import com.google.gson.Gson;
+
 import ch.ethz.infk.dspa.avro.Comment;
-import ch.ethz.infk.dspa.avro.CommentPostMapping;
 import ch.ethz.infk.dspa.avro.Like;
 import ch.ethz.infk.dspa.avro.Post;
+import ch.ethz.infk.dspa.helper.Config;
 import ch.ethz.infk.dspa.stream.CommentDataStreamBuilder;
 import ch.ethz.infk.dspa.stream.LikeDataStreamBuilder;
 import ch.ethz.infk.dspa.stream.PostDataStreamBuilder;
@@ -22,8 +22,6 @@ public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TY
 	public Configuration config;
 	public DataStream<Post> postStream;
 	public DataStream<Comment> commentStream;
-	public DataStream<CommentPostMapping> commentMappingStream;
-	public SinkFunction<CommentPostMapping> commentMappingSink;
 	public DataStream<Like> likeStream;
 	public OUT_STREAM outputStream;
 	private Time maxDelay;
@@ -85,13 +83,6 @@ public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TY
 				.withLikeStream(likeStream);
 	}
 
-	public AbstractAnalyticsTask<OUT_STREAM, OUT_TYPE> withCommentPostMappingConfig(
-			DataStream<CommentPostMapping> commentMappingStream, SinkFunction<CommentPostMapping> commentMappingSink) {
-		this.commentMappingStream = commentMappingStream;
-		this.commentMappingSink = commentMappingSink;
-		return this;
-	}
-
 	public String getStaticFilePath() {
 		return this.staticFilePath;
 	}
@@ -139,7 +130,7 @@ public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TY
 					.build());
 		}
 
-		if (this.commentStream == null || this.commentMappingStream == null || this.commentMappingSink == null) {
+		if (this.commentStream == null) {
 			withCommentStream(new CommentDataStreamBuilder(this.env)
 					.withPostIdEnriched()
 					.withKafkaConnection(this.bootstrapServers, this.groupId)
@@ -148,8 +139,6 @@ public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TY
 		} else {
 			withCommentStream(new CommentDataStreamBuilder(this.env)
 					.withInputStream(this.commentStream)
-					.withCommentPostMappingStream(this.commentMappingStream)
-					.withCommentPostMappingSink(this.commentMappingSink)
 					.withPostIdEnriched()
 					.withMaxOutOfOrderness(this.maxDelay)
 					.build());

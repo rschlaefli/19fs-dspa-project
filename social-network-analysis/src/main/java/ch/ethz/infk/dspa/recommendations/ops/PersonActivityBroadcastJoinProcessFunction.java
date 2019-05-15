@@ -57,28 +57,6 @@ public class PersonActivityBroadcastJoinProcessFunction
 	// TODO [nku] possible optimization, output similarity only if not already
 	// output 10 higher similarities for p1
 
-	public PersonSimilarity getSimilarity(PersonActivity activity1, PersonActivity activity2) {
-
-		HashMap<String, Integer> firstMap = activity1.categoryMap();
-		HashMap<String, Integer> secondMap = activity2.categoryMap();
-
-		Set<String> keys = new HashSet<>();
-		keys.addAll(firstMap.keySet());
-		keys.addAll(secondMap.keySet());
-
-		double sum = 0;
-
-		for (String key : keys) {
-			sum += firstMap.getOrDefault(key, 0) * secondMap.getOrDefault(key, 0);
-		}
-
-		return new PersonSimilarity()
-				.withPerson1Id(activity1.personId())
-				.withPerson2Id(activity2.personId())
-				.withSimilarity(sum); // TODO [nku] not sure if we should normalize: .withSimilarity(sum /
-										// keys.size())
-	}
-
 	@Override
 	public void processBroadcastElement(PersonActivity activity, Context ctx, Collector<PersonSimilarity> out)
 			throws Exception {
@@ -101,7 +79,7 @@ public class PersonActivityBroadcastJoinProcessFunction
 
 		// join activity with
 		for (PersonActivity other : buffer.getOrDefault(windowStart, new ArrayList<>())) {
-			PersonSimilarity similarity = getSimilarity(activity, other);
+			PersonSimilarity similarity = PersonSimilarity.dotProduct(activity, other);
 			out.collect(similarity);
 		}
 
@@ -144,7 +122,7 @@ public class PersonActivityBroadcastJoinProcessFunction
 		}
 
 		for (PersonActivity activity : broadcastActivities) {
-			PersonSimilarity similarity = getSimilarity(activity, otherActivity);
+			PersonSimilarity similarity = PersonSimilarity.dotProduct(activity, otherActivity);
 			out.collect(similarity);
 		}
 

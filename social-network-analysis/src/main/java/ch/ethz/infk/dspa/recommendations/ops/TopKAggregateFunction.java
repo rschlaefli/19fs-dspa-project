@@ -1,6 +1,5 @@
 package ch.ethz.infk.dspa.recommendations.ops;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -8,10 +7,12 @@ import java.util.stream.Collectors;
 
 import org.apache.flink.api.common.functions.AggregateFunction;
 
+import ch.ethz.infk.dspa.recommendations.dto.FriendsRecommendation;
+import ch.ethz.infk.dspa.recommendations.dto.FriendsRecommendation.SimilarityTuple;
 import ch.ethz.infk.dspa.recommendations.dto.PersonSimilarity;
 
 public class TopKAggregateFunction
-		implements AggregateFunction<PersonSimilarity, PriorityQueue<PersonSimilarity>, List<PersonSimilarity>> {
+		implements AggregateFunction<PersonSimilarity, PriorityQueue<PersonSimilarity>, FriendsRecommendation> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -42,7 +43,10 @@ public class TopKAggregateFunction
 			accumulator.add(value);
 		} else {
 			PersonSimilarity head = accumulator.peek();
-			if (head.similarity() < value.similarity()) {
+
+			// TODO [nku] refactor
+			if (head.similarity() < value.similarity()
+					|| (head.similarity() == value.similarity() && head.person2Id() < value.person2Id())) {
 				accumulator.poll(); // remove head
 				accumulator.add(value); // add new larger
 			}
@@ -51,20 +55,36 @@ public class TopKAggregateFunction
 	}
 
 	@Override
-	public List<PersonSimilarity> getResult(PriorityQueue<PersonSimilarity> accumulator) {
-		List<PersonSimilarity> list = accumulator.stream().collect(Collectors.toList());
+	public FriendsRecommendation getResult(PriorityQueue<PersonSimilarity> accumulator) {
 
-		Comparator<PersonSimilarity> cmp = new Comparator<PersonSimilarity>() {
+		Long personId = accumulator.peek().person1Id();
+
+		// TODO [nku] refactor
+		Comparator<PersonSimilarity> comp = new Comparator<PersonSimilarity>() {
+
 			@Override
 			public int compare(PersonSimilarity o1, PersonSimilarity o2) {
-				return Double.compare(o1.similarity(), o2.similarity());
+				int c = o1.similarity().compareTo(o2.similarity());
+				if (c != 0) {
+					return c;
+				} else {
+					return o1.person2Id().compareTo(o2.person2Id());
+				}
 			}
+
 		};
 
-		// sort in descending order by similarity
-		Collections.sort(list, Collections.reverseOrder(cmp));
+		List<SimilarityTuple> topkSimilarities = accumulator.stream()
+				// .sorted(Comparator.comparingDouble(PersonSimilarity::similarity).reversed())
+				.sorted(comp.reversed())
+				.map(x -> new SimilarityTuple(x.person2Id(), x.similarity()))
+				.collect(Collectors.toList());
 
-		return list;
+		FriendsRecommendation recommendation = new FriendsRecommendation();
+		recommendation.setPersonId(personId);
+		recommendation.setSimilarities(topkSimilarities);
+
+		return recommendation;
 	}
 
 	@Override

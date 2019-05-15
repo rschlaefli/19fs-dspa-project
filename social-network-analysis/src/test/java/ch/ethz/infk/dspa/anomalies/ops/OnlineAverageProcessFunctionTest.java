@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -36,6 +37,8 @@ public class OnlineAverageProcessFunctionTest extends AbstractTestBase {
 
 		// build test data
 		env = StreamExecutionEnvironment.getExecutionEnvironment();
+		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+
 		String testFile = "src/test/java/resources/anomalies/streams/feature_event_stream.csv";
 		Time maxOutOfOrderness = Time.hours(1);
 
@@ -78,7 +81,7 @@ public class OnlineAverageProcessFunctionTest extends AbstractTestBase {
 
 		}
 
-		assertEquals(1, expectedResults.size(), "Additional Result Expected (end marker should still be there)");
+		assertEquals(0, expectedResults.size(), "Additional Result Expected");
 
 	}
 

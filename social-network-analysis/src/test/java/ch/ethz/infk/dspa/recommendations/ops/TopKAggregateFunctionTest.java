@@ -5,12 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.PriorityQueue;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
+import ch.ethz.infk.dspa.recommendations.dto.FriendsRecommendation;
+import ch.ethz.infk.dspa.recommendations.dto.FriendsRecommendation.SimilarityTuple;
 import ch.ethz.infk.dspa.recommendations.dto.PersonSimilarity;
 
 public class TopKAggregateFunctionTest {
@@ -35,14 +36,15 @@ public class TopKAggregateFunctionTest {
 					accumulator1);
 		}
 
-		List<PersonSimilarity> results1 = function.getResult(accumulator1);
+		FriendsRecommendation result1 = function.getResult(accumulator1);
 
 		Arrays.sort(sim1, Collections.reverseOrder()); // sort in descending order
 
 		// Check 1st Results
-		assertEquals(Integer.min(k, sim1.length), results1.size(), "Results1 wrong size");
+		assertEquals(Integer.min(k, sim1.length), result1.getSimilarities().size(), "Results1 wrong size");
 		for (int i = 0; i < Integer.min(k, sim1.length); i++) {
-			assertEquals(sim1[i], results1.get(i).similarity(), "Results1 expected other at index: " + i);
+			assertEquals(sim1[i], result1.getSimilarities().get(i).getSimilarity(),
+					"Results1 expected other at index: " + i);
 		}
 
 		// Build 2nd Accumulator
@@ -54,35 +56,37 @@ public class TopKAggregateFunctionTest {
 					accumulator2);
 		}
 
-		List<PersonSimilarity> results2 = function.getResult(accumulator2);
+		FriendsRecommendation results2 = function.getResult(accumulator2);
 
 		Arrays.sort(sim2, Collections.reverseOrder()); // sort in descending order
 
 		// Check 2nd Results
-		assertEquals(Integer.min(k, sim2.length), results2.size(), "Results2 wrong size");
+		assertEquals(Integer.min(k, sim2.length), results2.getSimilarities().size(), "Results2 wrong size");
 
 		for (int i = 0; i < Integer.min(k, sim2.length); i++) {
-			assertEquals(sim2[i], results2.get(i).similarity(), "Results2 expected other at index: " + i);
+			assertEquals(sim2[i], results2.getSimilarities().get(i).getSimilarity(),
+					"Results2 expected other at index: " + i);
 		}
 
 		// Build Combined Accumulator
 
 		PriorityQueue<PersonSimilarity> accumulator = function.merge(accumulator1, accumulator2);
-		List<PersonSimilarity> results = function.getResult(accumulator);
+		FriendsRecommendation results = function.getResult(accumulator);
 
 		Double[] sim = ArrayUtils.addAll(sim1, sim2);
 		Arrays.sort(sim, Collections.reverseOrder()); // sort in descending order
 
 		// Check Combined Results
-		assertEquals(Integer.min(k, sim2.length), results2.size(), "Results2 wrong size");
+		assertEquals(Integer.min(k, sim2.length), results2.getSimilarities().size(), "Results2 wrong size");
 		for (int i = 0; i < k; i++) {
-			assertEquals(sim[i], results.get(i).similarity(), "Results2 expected other at index: " + i);
+			assertEquals(sim[i], results.getSimilarities().get(i).getSimilarity(),
+					"Results2 expected other at index: " + i);
 		}
 
+		assertEquals(person1Id, results.getPersonId(), "Person1Id wrong");
 		// check that other fields are set
-		for (PersonSimilarity similarity : results) {
-			assertEquals(person1Id, similarity.person1Id(), "Person1Id wrong");
-			assertNotNull(similarity.person2Id(), "Person2Id not set");
+		for (SimilarityTuple similarity : results.getSimilarities()) {
+			assertNotNull(similarity.getPersonId(), "Person2Id not set");
 		}
 
 	}

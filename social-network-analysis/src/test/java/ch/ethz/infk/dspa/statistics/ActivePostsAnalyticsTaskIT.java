@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
 
-import ch.ethz.infk.dspa.helper.Config;
 import org.apache.commons.configuration2.Configuration;
+import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -14,10 +14,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ch.ethz.infk.dspa.avro.Comment;
-import ch.ethz.infk.dspa.avro.CommentPostMapping;
 import ch.ethz.infk.dspa.avro.Like;
 import ch.ethz.infk.dspa.avro.Post;
-import ch.ethz.infk.dspa.stream.helper.SourceSink;
+import ch.ethz.infk.dspa.helper.Config;
 import ch.ethz.infk.dspa.stream.helper.TestSink;
 import ch.ethz.infk.dspa.stream.testdata.CommentTestDataGenerator;
 import ch.ethz.infk.dspa.stream.testdata.LikeTestDataGenerator;
@@ -31,15 +30,13 @@ public class ActivePostsAnalyticsTaskIT extends AbstractTestBase {
 	private DataStream<Comment> commentStream;
 	private DataStream<Like> likeStream;
 
-	private SourceSink mappingSourceSink;
-	private DataStream<CommentPostMapping> mappingStream;
-
 	@BeforeEach
 	public void setup() throws Exception {
 		final Time maxOutOfOrderness = Time.hours(1);
 
 		config = Config.getConfig("src/main/java/ch/ethz/infk/dspa/config.properties");
 		env = StreamExecutionEnvironment.getExecutionEnvironment();
+		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
 		// TODO [rsc] these test data files are not good for this integration test since
 		// their event times don't suit each other --> create new test streams for this
@@ -52,10 +49,6 @@ public class ActivePostsAnalyticsTaskIT extends AbstractTestBase {
 		likeStream = new LikeTestDataGenerator()
 				.generate(env, "src/test/java/resources/like_stream.csv", maxOutOfOrderness);
 
-		mappingSourceSink = CommentTestDataGenerator
-				.generateSourceSink("src/test/java/resources/comment_stream.csv");
-		mappingStream = env.addSource(mappingSourceSink);
-
 		TestSink.reset();
 	}
 
@@ -66,7 +59,6 @@ public class ActivePostsAnalyticsTaskIT extends AbstractTestBase {
 				.withStreamingEnvironment(env)
 				.withMaxDelay(Time.seconds(600L))
 				.withInputStreams(postStream, commentStream, likeStream)
-				.withCommentPostMappingConfig(mappingStream, mappingSourceSink)
 				.initialize()
 				.build();
 		// .withSink(new TestSink<>());

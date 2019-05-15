@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.ExecutionConfig;
+import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -69,6 +70,11 @@ public abstract class AbstractTestDataGenerator<T> {
 	 */
 	public DataStream<T> generate(StreamExecutionEnvironment env, String file, Time maxOutOfOrderness)
 			throws IOException {
+
+		if (env.getStreamTimeCharacteristic() != TimeCharacteristic.EventTime) {
+			throw new IllegalArgumentException("Event Time must be set as TimeCharacteristic");
+		}
+
 		// set the auto watermark interval to prevent missing/minLong watermarks during test execution
 		ExecutionConfig executionConfig = env.getConfig();
 		executionConfig.setAutoWatermarkInterval(1);
