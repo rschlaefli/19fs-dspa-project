@@ -2,7 +2,6 @@ package ch.ethz.infk.dspa.anomalies;
 
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
-import org.apache.flink.streaming.api.windowing.assigners.EventTimeSessionWindows;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 
@@ -13,7 +12,7 @@ import ch.ethz.infk.dspa.anomalies.dto.EventStatistics;
 import ch.ethz.infk.dspa.anomalies.dto.Feature;
 import ch.ethz.infk.dspa.anomalies.dto.FeatureStatistics;
 import ch.ethz.infk.dspa.anomalies.dto.FraudulentUser;
-import ch.ethz.infk.dspa.anomalies.ops.EnsembleAggregationFunction;
+import ch.ethz.infk.dspa.anomalies.ops.EnsembleProcessFunction;
 import ch.ethz.infk.dspa.anomalies.ops.EventStatisticsWindowProcessFunction;
 import ch.ethz.infk.dspa.anomalies.ops.OnlineAverageProcessFunction;
 import ch.ethz.infk.dspa.anomalies.ops.features.ContentsFeatureMapFunction;
@@ -112,8 +111,7 @@ public class AnomaliesAnalyticsTask
 		// apply an ensemble decision over all of these statistics
 		return featureStatisticsStream
 				.keyBy(FeatureStatistics::getEventGUID)
-				.window(EventTimeSessionWindows.withGap(Time.minutes(15)))
-				.aggregate(new EnsembleAggregationFunction(thresholds));
+				.process(new EnsembleProcessFunction(thresholds));
 	}
 
 	SingleOutputStreamOperator<FraudulentUser> computeFraudulentUsers(
