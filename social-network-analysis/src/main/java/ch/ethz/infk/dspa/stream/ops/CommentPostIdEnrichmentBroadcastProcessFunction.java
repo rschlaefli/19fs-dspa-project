@@ -122,7 +122,6 @@ public class CommentPostIdEnrichmentBroadcastProcessFunction
 		return minWindow;
 	}
 
-	// TODO [nku] test the cleanup
 	private void cleanupCommentPostMapping(BroadcastState<Long, Long> commentPostMapping,
 			BroadcastState<Long, Set<Long>> postAccess, long minWindow)
 			throws Exception {

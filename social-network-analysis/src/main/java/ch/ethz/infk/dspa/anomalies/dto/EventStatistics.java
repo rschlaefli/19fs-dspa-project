@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
-import org.apache.flink.api.java.tuple.Tuple2;
 
 public class EventStatistics {
 	// store all votes of different features that correspond to an event
@@ -29,10 +28,7 @@ public class EventStatistics {
 	public EventStatistics addFeatureVote(FeatureStatistics featureStatistics) {
 		// if the feature to be added has already "voted", throw
 		if (this.votedFeatureIds.contains(featureStatistics.getFeatureId())) {
-			// TODO: we can only enable this once the rolling average has been implemented
-			// as currently it generates multiple
-			System.out.println(this.votedFeatureIds + "_" + featureStatistics.getFeatureId() + "_" + eventGUID);
-			// throw new IllegalArgumentException("DUPLICATE_FEATURE_VOTE " + featureStatistics.getFeatureId());
+			throw new IllegalArgumentException("DUPLICATE_FEATURE_VOTE " + featureStatistics.getFeatureId());
 		}
 
 		if (this.personId == null) {
@@ -64,8 +60,12 @@ public class EventStatistics {
 		return this.eventGUID;
 	}
 
-	public Tuple2<Set<Feature>, Set<Feature>> getFeatureVotes() {
-		return Tuple2.of(this.votesFraudulent, this.votesNonFraudulent);
+	public Set<Feature> getVotesNonFraudulent() {
+		return votesNonFraudulent;
+	}
+
+	public void setVotesNonFraudulent(Set<Feature> votesNonFraudulent) {
+		this.votesNonFraudulent = votesNonFraudulent;
 	}
 
 	public Set<Feature> getVotesFraudulent() {
@@ -79,11 +79,4 @@ public class EventStatistics {
 		return numFraudulent / numTotal >= isFraudulentThreshold;
 	}
 
-	// add all votes from a different EventStatistics to the internal state
-	public EventStatistics withVotesFrom(EventStatistics eventStatistics) {
-		Tuple2<Set<Feature>, Set<Feature>> incomingVotes = eventStatistics.getFeatureVotes();
-		this.votesFraudulent.addAll(incomingVotes.f0);
-		this.votesNonFraudulent.addAll(incomingVotes.f1);
-		return this;
-	}
 }
