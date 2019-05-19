@@ -48,12 +48,13 @@ public class EnsembleProcessFunctionTest extends AbstractTestBase {
 		featureStatsStream = testDataGenerator.generate(env, testFile, maxOutOfOrderness);
 
 		thresholds = new ImmutableMap.Builder<Feature.FeatureId, Double>()
-				.put(Feature.FeatureId.TIMESPAN, 1.0)
-				.put(Feature.FeatureId.CONTENTS_SHORT, 2.0)
-				.put(Feature.FeatureId.CONTENTS_MEDIUM, 1.0)
-				.put(Feature.FeatureId.CONTENTS_LONG, 1.0)
-				.put(Feature.FeatureId.TAG_COUNT, 1.0)
-				.put(Feature.FeatureId.NEW_USER_LIKES, 1.0)
+				.put(FeatureId.TIMESPAN, 1.0)
+				.put(FeatureId.CONTENTS_SHORT, 2.0)
+				.put(FeatureId.CONTENTS_MEDIUM, 1.0)
+				.put(FeatureId.CONTENTS_LONG, 1.0)
+				.put(FeatureId.TAG_COUNT, 1.0)
+				.put(FeatureId.NEW_USER_LIKES, 1.0)
+				.put(FeatureId.INTERACTIONS_RATIO, 2.0)
 				.build();
 	}
 
@@ -128,7 +129,7 @@ public class EnsembleProcessFunctionTest extends AbstractTestBase {
 
 	private void checkLikeResults(EventStatistics likeResult) {
 		Set<FeatureId> expectedFraudulentFeatures = new HashSet<>(
-				Arrays.asList(FeatureId.TIMESPAN));
+				Arrays.asList(FeatureId.TIMESPAN, FeatureId.INTERACTIONS_RATIO));
 		Set<FeatureId> expectedNonFraudulentFeatures = new HashSet<>(
 				Arrays.asList(FeatureId.NEW_USER_LIKES));
 

@@ -1,5 +1,6 @@
 package ch.ethz.infk.dspa.anomalies;
 
+import ch.ethz.infk.dspa.anomalies.ops.features.*;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
@@ -15,10 +16,6 @@ import ch.ethz.infk.dspa.anomalies.dto.FraudulentUser;
 import ch.ethz.infk.dspa.anomalies.ops.EnsembleProcessFunction;
 import ch.ethz.infk.dspa.anomalies.ops.EventStatisticsWindowProcessFunction;
 import ch.ethz.infk.dspa.anomalies.ops.OnlineAverageProcessFunction;
-import ch.ethz.infk.dspa.anomalies.ops.features.ContentsFeatureMapFunction;
-import ch.ethz.infk.dspa.anomalies.ops.features.NewUserInteractionFeatureProcessFunction;
-import ch.ethz.infk.dspa.anomalies.ops.features.TagCountFeatureMapFunction;
-import ch.ethz.infk.dspa.anomalies.ops.features.TimespanFeatureProcessFunction;
 
 public class AnomaliesAnalyticsTask
 		extends AbstractAnalyticsTask<SingleOutputStreamOperator<FraudulentUser>, FraudulentUser> {
@@ -76,9 +73,12 @@ public class AnomaliesAnalyticsTask
 		DataStream<Feature> newUserInteractionFeatureStream = new NewUserInteractionFeatureProcessFunction(
 				newUserThreshold, staticPerson).applyTo(likeFeatureStream);
 
+		DataStream<Feature> interactionsRatioFeatureStream = new InteractionsRatioFeatureProcessFunction()
+				.applyTo(commentFeatureStream, likeFeatureStream);
+
 		// merge feature streams into a single one
 		return timespanFeatureStream.union(contentsFeatureStream, tagCountFeatureStream,
-				newUserInteractionFeatureStream);
+				newUserInteractionFeatureStream, interactionsRatioFeatureStream);
 	}
 
 	SingleOutputStreamOperator<FeatureStatistics> applyOnlineAveraging(DataStream<Feature> featureStream) {
@@ -105,6 +105,8 @@ public class AnomaliesAnalyticsTask
 						this.config.getDouble("tasks.anomalies.features.tagCount.threshold"))
 				.put(Feature.FeatureId.NEW_USER_LIKES,
 						this.config.getDouble("tasks.anomalies.features.newUserLikes.threshold"))
+				.put(Feature.FeatureId.INTERACTIONS_RATIO,
+						this.config.getDouble("tasks.anomalies.features.interactionsRatio.threshold"))
 				.build();
 
 		// analyze events based on all their computed feature statistics
