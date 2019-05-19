@@ -1,4 +1,4 @@
-package ch.ethz.infk.dspa.anomalies.ops;
+package ch.ethz.infk.dspa.anomalies.ops.feature;
 
 import ch.ethz.infk.dspa.anomalies.dto.Feature;
 import ch.ethz.infk.dspa.anomalies.ops.features.ContentsFeatureMapFunction;

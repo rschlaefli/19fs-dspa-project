@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import ch.ethz.infk.dspa.anomalies.dto.Feature;
 import org.apache.flink.api.common.state.MapState;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.api.common.state.ValueState;
@@ -31,9 +32,10 @@ public class EnsembleProcessFunction extends KeyedProcessFunction<String, Featur
 
 	private final Set<FeatureId> mandatoryPostFeatures = new HashSet<>(
 			Arrays.asList(FeatureId.TIMESPAN, FeatureId.TAG_COUNT));
-	private final Set<FeatureId> mandatoryCommentFeatures = new HashSet<>(Arrays.asList(FeatureId.TIMESPAN));
+	private final Set<FeatureId> mandatoryCommentFeatures = new HashSet<>(
+			Arrays.asList(FeatureId.TIMESPAN));
 	private final Set<FeatureId> mandatoryLikeFeatures = new HashSet<>(
-			Arrays.asList(FeatureId.TIMESPAN, FeatureId.NEW_USER_LIKES));
+			Arrays.asList(FeatureId.TIMESPAN, FeatureId.NEW_USER_LIKES, FeatureId.INTERACTIONS_RATIO));
 
 	private final ImmutableMap<FeatureId, Double> thresholds;
 
@@ -111,24 +113,24 @@ public class EnsembleProcessFunction extends KeyedProcessFunction<String, Featur
 
 	private boolean containsOne(Set<FeatureId> expectedFeatures) {
 		// checks if featureStatsMap contains at least one of the expectedFeatures
-		return expectedFeatures.stream().filter(featureId -> {
+		return expectedFeatures.stream().anyMatch(featureId -> {
 			try {
 				return featureStatsMap.contains(featureId);
 			} catch (Exception e) {
 			}
 			return false;
-		}).findAny().isPresent();
+		});
 	}
 
 	private boolean containsAll(Set<FeatureId> expectedFeatures) {
 		// checks if featureStatsMap contains all of the expectedFeatures
-		return !expectedFeatures.stream().filter(featureId -> {
+		return expectedFeatures.stream().noneMatch(featureId -> {
 			try {
 				return !featureStatsMap.contains(featureId);
 			} catch (Exception e) {
 			}
 			return true;
-		}).findAny().isPresent();
+		});
 	}
 
 }

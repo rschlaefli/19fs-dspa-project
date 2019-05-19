@@ -5,10 +5,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import ch.ethz.infk.dspa.avro.Like;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.streaming.api.TimeCharacteristic;
@@ -43,6 +45,12 @@ public abstract class AbstractTestDataGenerator<T> {
 
 	public List<TestDataPair<T>> getTestData() {
 		return testData;
+	}
+
+	public List<T> getTestElementsSortedByTimestamp() {
+		return this.getTestData().stream()
+				.sorted(Comparator.comparingLong(pair -> pair.getTimestamp().getMillis())).map(TestDataPair::getElement)
+				.collect(Collectors.toList());
 	}
 
 	/**

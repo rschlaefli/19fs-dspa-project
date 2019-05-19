@@ -3,6 +3,7 @@ package ch.ethz.infk.dspa.anomalies.dto;
 import ch.ethz.infk.dspa.avro.Comment;
 import ch.ethz.infk.dspa.avro.Like;
 import ch.ethz.infk.dspa.avro.Post;
+import com.google.common.base.Objects;
 
 public class Feature {
 
@@ -12,7 +13,8 @@ public class Feature {
 		CONTENTS_MEDIUM,
 		CONTENTS_LONG,
 		TAG_COUNT,
-		NEW_USER_LIKES
+		NEW_USER_LIKES,
+		INTERACTIONS_RATIO
 	}
 
 	public enum EventType {
@@ -117,6 +119,22 @@ public class Feature {
 		throw new IllegalArgumentException("No event set in feature");
 	}
 
+	public Long getPostId() {
+		if (post != null) {
+			return post.getId();
+		}
+
+		if (comment != null) {
+			return comment.getReplyToPostId();
+		}
+
+		if (like != null) {
+			return like.getPostId();
+		}
+
+		throw new IllegalArgumentException("No event set in feature");
+	}
+
 	public String getEventId() {
 		if (post != null) {
 			return String.valueOf(post.getId());
@@ -150,4 +168,29 @@ public class Feature {
 		return getEventType() + "_" + getEventId();
 	}
 
+	@Override
+	public String toString() {
+		return "Feature{" +
+				"featureId=" + featureId +
+				", featureValue=" + featureValue +
+				", postId=" + getPostId() +
+				", eventId=" + getGUID() +
+				'}';
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Feature feature = (Feature) o;
+		return featureId == feature.featureId &&
+				Objects.equal(featureValue, feature.featureValue) &&
+				Objects.equal(getPostId(), feature.getPostId()) &&
+				Objects.equal(getGUID(), feature.getGUID());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(featureId, featureValue, getPostId(), getGUID());
+	}
 }
