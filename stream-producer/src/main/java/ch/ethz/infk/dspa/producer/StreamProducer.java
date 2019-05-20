@@ -155,7 +155,7 @@ public class StreamProducer {
 				switch (type) {
 				case LONG:
 					if (StringUtils.isEmpty(parts[i])) {
-						o = -1l;
+						o = null;
 					} else {
 						o = Long.parseLong(parts[i]);
 					}

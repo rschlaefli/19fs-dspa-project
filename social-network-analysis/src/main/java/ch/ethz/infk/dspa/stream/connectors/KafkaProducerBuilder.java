@@ -23,10 +23,6 @@ public class KafkaProducerBuilder<T> {
 			throw new IllegalArgumentException("All fields must be set");
 		}
 
-		// TODO Change to use avro for producer
-		// AvroDeserializationSchema<T> avroSchema =
-		// AvroDeserializationSchema.forSpecific(tClass);
-
 		Properties props = new Properties();
 		props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 

@@ -27,6 +27,11 @@ public class KafkaConsumerBuilder<T extends SpecificRecord> {
 		props.setProperty("group.id", groupId);
 
 		FlinkKafkaConsumer<T> kafkaConsumer = new FlinkKafkaConsumer<>(topic, avroSchema, props);
+
+		// TODO: we might not want to do this
+		// TODO: enable checkpointing of these offsets
+		kafkaConsumer.setStartFromEarliest();
+
 		return kafkaConsumer;
 	}
 
