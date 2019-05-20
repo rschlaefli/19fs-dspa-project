@@ -55,7 +55,7 @@ public class OnlineAverageProcessFunctionTest extends AbstractTestBase {
 
 		// build dataflow pipeline
 		featureStream
-				.keyBy(Feature::getFeatureId)
+				.keyBy(feature -> feature.getFeatureId().name())
 				.process(new OnlineAverageProcessFunction())
 				.returns(FeatureStatistics.class)
 				.addSink(new TestSink<FeatureStatistics>());

@@ -25,7 +25,7 @@ import ch.ethz.infk.dspa.helper.function.LongSumReduceFunction;
  * variance/stdDev
  */
 public class OnlineAverageProcessFunction
-		extends KeyedProcessFunction<Feature.FeatureId, Feature, FeatureStatistics> {
+		extends KeyedProcessFunction<String, Feature, FeatureStatistics> {
 
 	private static final long serialVersionUID = 1L;
 

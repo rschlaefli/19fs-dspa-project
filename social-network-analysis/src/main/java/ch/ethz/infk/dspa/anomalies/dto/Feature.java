@@ -191,6 +191,6 @@ public class Feature {
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(featureId, featureValue, getPostId(), getGUID());
+		return Objects.hashCode(featureId.name(), featureValue, getPostId(), getGUID());
 	}
 }

@@ -86,7 +86,7 @@ public class AnomaliesAnalyticsTask
 		// computed using the rolling mean operator over all features with the same feature id
 		// mapped to contain the anomaly decision of each separate feature
 		return featureStream
-				.keyBy(Feature::getFeatureId)
+				.keyBy(feature -> feature.getFeatureId().name())
 				.process(new OnlineAverageProcessFunction());
 	}
 
