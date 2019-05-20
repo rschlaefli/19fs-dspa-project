@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Task 1 - Active Posts" type="Application" factoryName="Application" singleton="false">
+    <option name="MAIN_CLASS_NAME" value="ch.ethz.infk.dspa.App" />
+    <module name="social-network-analysis" />
+    <option name="PROGRAM_PARAMETERS" value="-webui -analyticstype activeposts -configpath src/main/java/ch/ethz/infk/dspa/config.properties" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="ch.ethz.infk.dspa.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

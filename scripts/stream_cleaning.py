@@ -2,21 +2,21 @@ from tqdm import tqdm
 
 def main():
     print("Cleaning 1k User Streams:")
-    clean_streams(post_stream_path="./../data/1k-users-sorted/streams/post_event_stream.csv",
-        comment_stream_path="./../data/1k-users-sorted/streams/comment_event_stream.csv",
-        like_stream_path="./../data/1k-users-sorted/streams/likes_event_stream.csv",
-        post_stream_cleaned_path="./../data/1k-users-sorted/streams/post_event_stream_cleaned.csv",
-        comment_stream_cleaned_path="./../data/1k-users-sorted/streams/comment_event_stream_cleaned.csv",
-        like_stream_cleaned_path="./../data/1k-users-sorted/streams/likes_event_stream_cleaned.csv",
+    clean_streams(post_stream_path="./data/1k-users-sorted/streams/post_event_stream.csv",
+        comment_stream_path="./data/1k-users-sorted/streams/comment_event_stream.csv",
+        like_stream_path="./data/1k-users-sorted/streams/likes_event_stream.csv",
+        post_stream_cleaned_path="./data/1k-users-sorted/streams/post_event_stream_cleaned.csv",
+        comment_stream_cleaned_path="./data/1k-users-sorted/streams/comment_event_stream_cleaned.csv",
+        like_stream_cleaned_path="./data/1k-users-sorted/streams/likes_event_stream_cleaned.csv",
         n_posts=173402, n_comments=632043, n_likes=662891)
 
     print("\nCleaning 10k User Streams:")
-    clean_streams(post_stream_path="./../data/10k-users-sorted/streams/post_event_stream.csv",
-        comment_stream_path="./../data/10k-users-sorted/streams/comment_event_stream.csv",
-        like_stream_path="./../data/10k-users-sorted/streams/likes_event_stream.csv",
-        post_stream_cleaned_path="./../data/10k-users-sorted/streams/post_event_stream_cleaned.csv",
-        comment_stream_cleaned_path="./../data/10k-users-sorted/streams/comment_event_stream_cleaned.csv",
-        like_stream_cleaned_path="./../data/10k-users-sorted/streams/likes_event_stream_cleaned.csv",
+    clean_streams(post_stream_path="./data/10k-users-sorted/streams/post_event_stream.csv",
+        comment_stream_path="./data/10k-users-sorted/streams/comment_event_stream.csv",
+        like_stream_path="./data/10k-users-sorted/streams/likes_event_stream.csv",
+        post_stream_cleaned_path="./data/10k-users-sorted/streams/post_event_stream_cleaned.csv",
+        comment_stream_cleaned_path="./data/10k-users-sorted/streams/comment_event_stream_cleaned.csv",
+        like_stream_cleaned_path="./data/10k-users-sorted/streams/likes_event_stream_cleaned.csv",
         n_posts=5520842, n_comments=20096288, n_likes=21148771)
 
 def clean_streams(post_stream_path, comment_stream_path, like_stream_path, post_stream_cleaned_path, comment_stream_cleaned_path, like_stream_cleaned_path, n_posts, n_comments, n_likes):

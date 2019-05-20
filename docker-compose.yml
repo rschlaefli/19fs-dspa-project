@@ -12,7 +12,7 @@ services:
     ports:
       - 29092:29092
     environment:
-      KAFKA_BROKER_ID: -1
+      # KAFKA_BROKER_ID: -1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       ALLOW_PLAINTEXT_LISTENER: "yes"
       KAFKA_LISTENERS: PLAINTEXT://:9092, PLAINTEXT_HOST://:29092
@@ -21,15 +21,19 @@ services:
       KAFKA_NUM_NETWORK_THREADS: 3
       KAFKA_NUM_IO_THREADS: 3
       KAFKA_HEAP_OPTS: -Xmx2048m -Xms2048m
+    depends_on:
+      - zookeeper
 
-  kafka_web:
+  kafka-web:
     build: web
     ports:
       - 8080:8080
     volumes:
       - web-data:/app/data
+    depends_on:
+      - kafka
 
-  consumer_statistics:
+  cluster-statistics:
     build:
       context: .
       dockerfile: social-network-analysis/Dockerfile
@@ -40,16 +44,35 @@ services:
         "job-cluster",
         "-j",
         "ch.ethz.infk.dspa.App",
-        "-kafka",
+        "-Djobmanager.rpc.address=cluster-statistics",
+        "-Dparallelism.default=2",
+        "-kafkaserver",
         "kafka:9092",
         "-analyticstype",
         "activeposts",
+        "-configpath",
+        "/opt/config.properties",
+        "-staticpath",
+        "/opt/tables/",
         "-maxdelaysec",
         "600",
       ]
-    # volumes..
+    volumes:
+      - ./social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
+      - ./data/1k-users-sorted/tables/:/opt/tables:ro
 
-  consumer_recommendations:
+  task-statistics:
+    build:
+      context: .
+      dockerfile: social-network-analysis/Dockerfile
+    command: ["task-manager", "-Djobmanager.rpc.address=cluster-statistics"]
+    volumes:
+      - ./social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
+      - ./data/1k-users-sorted/tables/:/opt/tables:ro
+    depends_on:
+      - cluster-statistics
+
+  cluster-recommendations:
     build:
       context: .
       dockerfile: social-network-analysis/Dockerfile
@@ -60,15 +83,36 @@ services:
         "job-cluster",
         "-j",
         "ch.ethz.infk.dspa.App",
-        "-kafka",
+        "-Djobmanager.rpc.address=cluster-recommendations",
+        "-Dparallelism.default=2",
+        "-kafkaserver",
         "kafka:9092",
         "-analyticstype",
         "recommendations",
+        "-configpath",
+        "/opt/config.properties",
+        "-staticpath",
+        "/opt/tables/",
         "-maxdelaysec",
         "600",
       ]
+    volumes:
+      - ./social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
+      - ./data/1k-users-sorted/tables/:/opt/tables:ro
 
-  consumer_anomalies:
+  task-recommendations:
+    build:
+      context: .
+      dockerfile: social-network-analysis/Dockerfile
+    command:
+      ["task-manager", "-Djobmanager.rpc.address=cluster-recommendations"]
+    volumes:
+      - ./social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
+      - ./data/1k-users-sorted/tables/:/opt/tables:ro
+    depends_on:
+      - cluster-recommendations
+
+  cluster-anomalies:
     build:
       context: .
       dockerfile: social-network-analysis/Dockerfile
@@ -79,27 +123,45 @@ services:
         "job-cluster",
         "-j",
         "ch.ethz.infk.dspa.App",
-        "-kafka",
+        "-Djobmanager.rpc.address=cluster-anomalies",
+        "-Dparallelism.default=2",
+        "-kafkaserver",
         "kafka:9092",
         "-analyticstype",
         "anomalies",
+        "-configpath",
+        "/opt/config.properties",
+        "-staticpath",
+        "/opt/tables/",
         "-maxdelaysec",
         "600",
       ]
+    volumes:
+      - ./social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
+      - ./data/1k-users-sorted/tables/:/opt/tables:ro
 
-  producer_post:
+  task-anomalies:
+    build:
+      context: .
+      dockerfile: social-network-analysis/Dockerfile
+    command: ["task-manager", "-Djobmanager.rpc.address=cluster-anomalies"]
+    volumes:
+      - ./social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
+      - ./data/1k-users-sorted/tables/:/opt/tables:ro
+    depends_on:
+      - cluster-anomalies
+
+  producer-post:
     build:
       context: .
       dockerfile: stream-producer/Dockerfile
-    volumes:
-      - ./data:/data:ro
     command:
       [
         "java",
         "-jar",
         "/opt/producer.jar",
         "-file",
-        "/data/1k-users-sorted/streams/post_event_stream.csv",
+        "/data/1k-users-sorted/streams/post_event_stream_cleaned.csv",
         "-schema",
         "/data/schema/avro/post.avsc",
         "-topic",
@@ -107,7 +169,7 @@ services:
         "-kafkaserver",
         "kafka:9092",
         "-speedup",
-        "60",
+        "20",
         "-rdelay",
         "5",
         "-sdelay",
@@ -115,30 +177,30 @@ services:
         "-seed",
         "1",
         "-worker",
-        "2",
+        "1",
       ]
+    volumes:
+      - ./data:/data:ro
 
-  producer_like:
+  producer-like:
     build:
       context: .
       dockerfile: stream-producer/Dockerfile
-    volumes:
-      - ./data:/data:ro
     command:
       [
         "java",
         "-jar",
         "/opt/producer.jar",
         "-file",
-        "/data/1k-users-sorted/streams/likes_event_stream.csv",
+        "/data/1k-users-sorted/streams/likes_event_stream_cleaned.csv",
         "-schema",
         "/data/schema/avro/like.avsc",
         "-topic",
-        "post",
+        "like",
         "-kafkaserver",
         "kafka:9092",
         "-speedup",
-        "60",
+        "20",
         "-rdelay",
         "5",
         "-sdelay",
@@ -146,15 +208,15 @@ services:
         "-seed",
         "2",
         "-worker",
-        "2",
+        "1",
       ]
+    volumes:
+      - ./data:/data:ro
 
-  producer_comment:
+  producer-comment:
     build:
       context: .
       dockerfile: stream-producer/Dockerfile
-    volumes:
-      - ./data:/data:ro
     command:
       [
         "java",
@@ -165,11 +227,11 @@ services:
         "-schema",
         "/data/schema/avro/comment.avsc",
         "-topic",
-        "post",
+        "comment",
         "-kafkaserver",
         "kafka:9092",
         "-speedup",
-        "60",
+        "20",
         "-rdelay",
         "5",
         "-sdelay",
@@ -177,8 +239,10 @@ services:
         "-seed",
         "3",
         "-worker",
-        "2",
+        "1",
       ]
+    volumes:
+      - ./data:/data:ro
 
 volumes:
   web-data:

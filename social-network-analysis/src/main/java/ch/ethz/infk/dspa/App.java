@@ -9,6 +9,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.flink.api.common.ExecutionConfig;
+import org.apache.flink.configuration.ConfigConstants;
+import org.apache.flink.configuration.RestOptions;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -19,10 +22,6 @@ import ch.ethz.infk.dspa.statistics.ActivePostsAnalyticsTask;
 
 public class App {
 	public static void main(String[] args) throws Exception {
-		Configuration config = Config.getConfig();
-		final String kafkaServer = config.getString("kafka.server");
-		final String staticFilePath = config.getString("files.staticPath");
-
 		try {
 			Options options = buildOptions();
 
@@ -31,8 +30,17 @@ public class App {
 
 			// parse command line arguments
 			final String analyticsType = cmd.getOptionValue("analyticstype");
+			final String configPath = cmd.getOptionValue("configpath");
+			final Boolean withWebUi = cmd.hasOption("webui");
+
+			// read file based configuration
+			final Configuration config = Config.getConfig(configPath);
+
+			// read command line arguments with file based defaults
 			final long maxDelaySeconds = Long
-					.parseLong(cmd.getOptionValue("maxdelaysec", config.getString("defaults.maxDelayInSeconds")));
+					.parseLong(cmd.getOptionValue("maxdelaysec", config.getString("stream.maxDelayInSeconds")));
+			final String kafkaServer = cmd.getOptionValue("kafkaserver", config.getString("kafka.server"));
+			final String staticFilePath = cmd.getOptionValue("staticpath", config.getString("files.staticPath"));
 
 			// TODO [nku]: make use of the seed
 			// Long seed = cmd.getOptionValue("seed") != null ? Long.parseLong(cmd.getOptionValue("seed")) :
@@ -68,7 +76,20 @@ public class App {
 					.withExecutionConfig(executionConfig)
 					.build();
 
+			StreamExecutionEnvironment env;
+			if (withWebUi) {
+				org.apache.flink.configuration.Configuration conf = new org.apache.flink.configuration.Configuration();
+				conf.setBoolean(ConfigConstants.LOCAL_START_WEBSERVER, true);
+				conf.setInteger(RestOptions.PORT, 8082);
+				env = StreamExecutionEnvironment.createLocalEnvironment(Runtime.getRuntime().availableProcessors(),
+						conf);
+			} else {
+				env = StreamExecutionEnvironment.getExecutionEnvironment();
+			}
+
 			analyticsTask
+					.withStreamingEnvironment(env)
+					.withPropertiesConfiguration(config)
 					.withKafkaServer(kafkaServer)
 					.withStaticFilePath(staticFilePath)
 					.withMaxDelay(Time.seconds(maxDelaySeconds))
@@ -101,10 +122,36 @@ public class App {
 						.build());
 
 		options.addOption(
+				Option.builder("kafkaserver")
+						.hasArg()
+						.type(String.class)
+						.desc("kafka server")
+						.build());
+
+		options.addOption(
 				Option.builder("maxdelaysec")
 						.hasArg()
 						.type(Long.class)
 						.desc("maximum delay in seconds")
+						.build());
+
+		options.addOption(
+				Option.builder("configpath")
+						.hasArg()
+						.type(String.class)
+						.desc("config file path")
+						.build());
+
+		options.addOption(
+				Option.builder("staticpath")
+						.hasArg()
+						.type(String.class)
+						.desc("static file path")
+						.build());
+
+		options.addOption(
+				Option.builder("webui")
+						.desc("start local web ui")
 						.build());
 
 		return options;

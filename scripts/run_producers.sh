@@ -1,3 +1,3 @@
 #!/bin/sh
 
-docker-compose up --build producer_post producer_like producer_comment
+docker-compose up --build producer-post producer-like producer-comment
