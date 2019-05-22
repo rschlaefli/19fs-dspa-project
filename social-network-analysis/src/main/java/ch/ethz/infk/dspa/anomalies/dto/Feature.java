@@ -1,20 +1,31 @@
 package ch.ethz.infk.dspa.anomalies.dto;
 
+import com.google.common.base.Objects;
+
 import ch.ethz.infk.dspa.avro.Comment;
 import ch.ethz.infk.dspa.avro.Like;
 import ch.ethz.infk.dspa.avro.Post;
-import com.google.common.base.Objects;
 
 public class Feature {
 
 	public enum FeatureId {
-		TIMESPAN,
-		CONTENTS_SHORT,
-		CONTENTS_MEDIUM,
-		CONTENTS_LONG,
-		TAG_COUNT,
-		NEW_USER_LIKES,
-		INTERACTIONS_RATIO
+		TIMESPAN(0),
+		CONTENTS_SHORT(1),
+		CONTENTS_MEDIUM(2),
+		CONTENTS_LONG(3),
+		TAG_COUNT(4),
+		NEW_USER_LIKES(5),
+		INTERACTIONS_RATIO(6);
+
+		private final int id;
+
+		FeatureId(int id) {
+			this.id = id;
+		}
+
+		public int getId() {
+			return this.id;
+		}
 	}
 
 	public enum EventType {

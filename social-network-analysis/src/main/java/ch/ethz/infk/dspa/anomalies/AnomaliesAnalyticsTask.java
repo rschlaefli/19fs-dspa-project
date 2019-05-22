@@ -1,6 +1,5 @@
 package ch.ethz.infk.dspa.anomalies;
 
-import ch.ethz.infk.dspa.anomalies.ops.features.*;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
@@ -16,6 +15,11 @@ import ch.ethz.infk.dspa.anomalies.dto.FraudulentUser;
 import ch.ethz.infk.dspa.anomalies.ops.EnsembleProcessFunction;
 import ch.ethz.infk.dspa.anomalies.ops.EventStatisticsWindowProcessFunction;
 import ch.ethz.infk.dspa.anomalies.ops.OnlineAverageProcessFunction;
+import ch.ethz.infk.dspa.anomalies.ops.features.ContentsFeatureMapFunction;
+import ch.ethz.infk.dspa.anomalies.ops.features.InteractionsRatioFeatureProcessFunction;
+import ch.ethz.infk.dspa.anomalies.ops.features.NewUserInteractionFeatureProcessFunction;
+import ch.ethz.infk.dspa.anomalies.ops.features.TagCountFeatureMapFunction;
+import ch.ethz.infk.dspa.anomalies.ops.features.TimespanFeatureProcessFunction;
 
 public class AnomaliesAnalyticsTask
 		extends AbstractAnalyticsTask<SingleOutputStreamOperator<FraudulentUser>, FraudulentUser> {
@@ -86,7 +90,7 @@ public class AnomaliesAnalyticsTask
 		// computed using the rolling mean operator over all features with the same feature id
 		// mapped to contain the anomaly decision of each separate feature
 		return featureStream
-				.keyBy(feature -> feature.getFeatureId().name())
+				.keyBy(feature -> feature.getFeatureId().getId())
 				.process(new OnlineAverageProcessFunction());
 	}
 
@@ -136,5 +140,10 @@ public class AnomaliesAnalyticsTask
 	@Override
 	public void start() throws Exception {
 		super.start("Unusual Activities");
+	}
+
+	@Override
+	protected Time getTumblingOutputWindow() {
+		return Time.hours(this.config.getLong("tasks.anomalies.fraudulentUsers.updateIntervalInHours"));
 	}
 }

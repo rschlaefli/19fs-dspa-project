@@ -16,7 +16,7 @@ public class TopKAggregateFunction
 
 	private static final long serialVersionUID = 1L;
 
-	private final int k; // TODO [nku] need to checkpoint?
+	private final int k;
 
 	public TopKAggregateFunction(int k) {
 		this.k = k;
@@ -57,7 +57,9 @@ public class TopKAggregateFunction
 	@Override
 	public FriendsRecommendation getResult(PriorityQueue<PersonSimilarity> accumulator) {
 
-		Long personId = accumulator.peek().person1Id();
+		PersonSimilarity similarity = accumulator.peek();
+		Long personId = similarity.person1Id();
+		boolean onlyStatic = similarity.person1OnlyStatic();
 
 		// TODO [nku] refactor
 		Comparator<PersonSimilarity> comp = new Comparator<PersonSimilarity>() {
@@ -83,6 +85,7 @@ public class TopKAggregateFunction
 		FriendsRecommendation recommendation = new FriendsRecommendation();
 		recommendation.setPersonId(personId);
 		recommendation.setSimilarities(topkSimilarities);
+		recommendation.setInactive(onlyStatic);
 
 		return recommendation;
 	}

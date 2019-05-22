@@ -127,4 +127,9 @@ public class RecommendationsAnalyticsTask
 	public void start() throws Exception {
 		super.start("Friends Recommendations");
 	}
+
+	@Override
+	protected Time getTumblingOutputWindow() {
+		return Time.hours(this.config.getLong("tasks.recommendations.window.slideInHours"));
+	}
 }

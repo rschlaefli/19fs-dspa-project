@@ -3,6 +3,7 @@ package ch.ethz.infk.dspa.recommendations;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -120,7 +121,11 @@ public class RecommendationsAnalyticsTaskIT extends AbstractTestBase {
 	// @Test
 	public void testRecommendationsConsumer() throws Exception {
 
+		Set<Long> recommendationPersonIds = new HashSet<>(
+				Arrays.asList(507L, 732L, 576L, 868L, 789L, 833L, 842L, 676L, 929L, 305L));
+
 		RecommendationsAnalyticsTask analyticsTask = (RecommendationsAnalyticsTask) new RecommendationsAnalyticsTask()
+				.withRecommendationPersonIds(recommendationPersonIds)
 				.withPropertiesConfiguration(config)
 				.withStreamingEnvironment(env)
 				.withStaticFilePath(staticFilePath)

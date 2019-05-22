@@ -4,10 +4,14 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
+import org.apache.flink.util.Collector;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 
 import ch.ethz.infk.dspa.avro.Comment;
 import ch.ethz.infk.dspa.avro.Like;
@@ -161,12 +165,31 @@ public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TY
 
 	public abstract AbstractAnalyticsTask<OUT_STREAM, OUT_TYPE> build() throws Exception;
 
+	protected abstract Time getTumblingOutputWindow();
+
 	public DataStream<String> toStringStream() {
-		return this.outputStream.map(elem -> {
-			Gson gson = new Gson();
-			return gson.toJson(elem);
-		});
+		return this.outputStream.process(new OutputFormatProcessFunction<OUT_TYPE>(getTumblingOutputWindow()));
 	};
+
+	public static class OutputFormatProcessFunction<OUT_TYPE> extends ProcessFunction<OUT_TYPE, String> {
+
+		private static final long serialVersionUID = 1L;
+		private long windowSize;
+
+		public OutputFormatProcessFunction(Time windowSize) {
+			this.windowSize = windowSize.toMilliseconds();
+		}
+
+		@Override
+		public void processElement(OUT_TYPE elem, Context ctx, Collector<String> out) throws Exception {
+			long windowEnd = TimeWindow.getWindowStartWithOffset(ctx.timestamp(), 0, windowSize) + windowSize - 1;
+			Gson gson = new Gson();
+			JsonElement jsonElement = gson.toJsonTree(elem);
+			jsonElement.getAsJsonObject().addProperty("timestamp", windowEnd);
+			out.collect(gson.toJson(jsonElement));
+		}
+
+	}
 
 	public AbstractAnalyticsTask<OUT_STREAM, OUT_TYPE> withSink(SinkFunction<OUT_TYPE> sinkFunction) {
 		this.outputStream.addSink(sinkFunction);

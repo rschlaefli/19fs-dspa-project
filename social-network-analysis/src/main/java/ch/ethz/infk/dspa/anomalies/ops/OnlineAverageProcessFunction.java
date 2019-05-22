@@ -21,11 +21,10 @@ import ch.ethz.infk.dspa.helper.function.DoubleSumReduceFunction;
 import ch.ethz.infk.dspa.helper.function.LongSumReduceFunction;
 
 /**
- * ProcessFunction implementing Welford's online algorithm to keep an online mean and
- * variance/stdDev
+ * ProcessFunction implementing Welford's online algorithm to keep an online mean and variance/stdDev
  */
 public class OnlineAverageProcessFunction
-		extends KeyedProcessFunction<String, Feature, FeatureStatistics> {
+		extends KeyedProcessFunction<Integer, Feature, FeatureStatistics> {
 
 	private static final long serialVersionUID = 1L;
 

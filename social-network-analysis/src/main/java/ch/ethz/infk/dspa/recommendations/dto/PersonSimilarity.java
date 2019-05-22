@@ -9,6 +9,7 @@ public class PersonSimilarity {
 	private Long person1Id;
 	private Long person2Id;
 	private Double similarity;
+	private boolean person1OnlyStatic;
 
 	public PersonSimilarity() {
 
@@ -31,6 +32,10 @@ public class PersonSimilarity {
 		return similarity;
 	}
 
+	public boolean person1OnlyStatic() {
+		return person1OnlyStatic;
+	}
+
 	public PersonSimilarity withPerson1Id(Long id) {
 		this.person1Id = id;
 		return this;
@@ -46,10 +51,15 @@ public class PersonSimilarity {
 		return this;
 	}
 
+	public PersonSimilarity withPerson1OnlyStatic(boolean onlyStatic) {
+		this.person1OnlyStatic = onlyStatic;
+		return this;
+	}
+
 	@Override
 	public String toString() {
 		return "PersonSimilarity [person1Id=" + person1Id + ", person2Id=" + person2Id + ", similarity=" + similarity
-				+ "]";
+				+ ", person1OnlyStatic=" + person1OnlyStatic + "]";
 	}
 
 	@Override
@@ -57,6 +67,7 @@ public class PersonSimilarity {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((person1Id == null) ? 0 : person1Id.hashCode());
+		result = prime * result + (person1OnlyStatic ? 1231 : 1237);
 		result = prime * result + ((person2Id == null) ? 0 : person2Id.hashCode());
 		result = prime * result + ((similarity == null) ? 0 : similarity.hashCode());
 		return result;
@@ -71,13 +82,14 @@ public class PersonSimilarity {
 		if (person1Id == null) {
 			if (other.person1Id != null) return false;
 		} else if (!person1Id.equals(other.person1Id)) return false;
+		if (person1OnlyStatic != other.person1OnlyStatic) return false;
 		if (person2Id == null) {
 			if (other.person2Id != null) return false;
 		} else if (!person2Id.equals(other.person2Id)) return false;
 		if (similarity == null) {
-			return other.similarity == null;
-		} else
-			return similarity.equals(other.similarity);
+			if (other.similarity != null) return false;
+		} else if (!similarity.equals(other.similarity)) return false;
+		return true;
 	}
 
 	public static PersonSimilarity dotProduct(PersonActivity activity1, PersonActivity activity2) {
@@ -96,6 +108,7 @@ public class PersonSimilarity {
 
 		return new PersonSimilarity()
 				.withPerson1Id(activity1.personId())
+				.withPerson1OnlyStatic(activity1.onlyStatic())
 				.withPerson2Id(activity2.personId())
 				.withSimilarity(sum);
 	}
