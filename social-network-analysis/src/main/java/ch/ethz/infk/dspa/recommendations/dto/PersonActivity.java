@@ -1,12 +1,14 @@
 package ch.ethz.infk.dspa.recommendations.dto;
 
-import java.util.*;
-import java.util.function.Function;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Objects;
 import org.apache.commons.lang3.StringUtils;
+
+import com.google.common.base.Objects;
 
 import ch.ethz.infk.dspa.avro.Comment;
 import ch.ethz.infk.dspa.avro.Like;
@@ -16,14 +18,14 @@ import ch.ethz.infk.dspa.recommendations.dto.Category.CategoryType;
 public class PersonActivity {
 
 	public enum PersonActivityType {
-		POST, COMMENT, LIKE
+		POST, COMMENT, LIKE, STATIC
 	}
 
 	private PersonActivityType type;
 	private Long personId;
 	private Long postId;
 
-	private HashMap<String, Integer> categoryMap;
+	private Map<String, Integer> categoryMap;
 
 	public PersonActivity() {
 		this.categoryMap = new HashMap<String, Integer>();
@@ -34,6 +36,15 @@ public class PersonActivity {
 		this.personId = personId;
 		this.postId = postId;
 		this.type = type;
+	}
+
+	public static PersonActivity ofStatic(Long personId, Map<String, Integer> map) {
+		PersonActivity activity = new PersonActivity();
+		activity.setPersonId(personId);
+		activity.setType(PersonActivityType.STATIC);
+		activity.setCategoryMap(map);
+		return activity;
+
 	}
 
 	public static PersonActivity of(Post post) {
@@ -107,7 +118,7 @@ public class PersonActivity {
 		return this.postId;
 	}
 
-	public HashMap<String, Integer> categoryMap() {
+	public Map<String, Integer> categoryMap() {
 		return this.categoryMap;
 	}
 
@@ -143,7 +154,7 @@ public class PersonActivity {
 		other.forEach((category, count) -> this.categoryMap.merge(category, count, Integer::sum));
 	}
 
-	public void setCategoryMap(HashMap<String, Integer> categoryMap) {
+	public void setCategoryMap(Map<String, Integer> categoryMap) {
 		this.categoryMap = categoryMap;
 	}
 
