@@ -159,7 +159,7 @@ public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TY
 		return this;
 	}
 
-	public abstract AbstractAnalyticsTask<OUT_STREAM, OUT_TYPE> build();
+	public abstract AbstractAnalyticsTask<OUT_STREAM, OUT_TYPE> build() throws Exception;
 
 	public DataStream<String> toStringStream() {
 		return this.outputStream.map(elem -> {

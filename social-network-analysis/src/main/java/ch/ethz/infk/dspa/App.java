@@ -1,24 +1,28 @@
 package ch.ethz.infk.dspa;
 
-import ch.ethz.infk.dspa.stream.connectors.KafkaProducerBuilder;
-import ch.ethz.infk.dspa.helper.Config;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
-import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.windowing.time.Time;
 
 import ch.ethz.infk.dspa.anomalies.AnomaliesAnalyticsTask;
+import ch.ethz.infk.dspa.helper.Config;
 import ch.ethz.infk.dspa.recommendations.RecommendationsAnalyticsTask;
 import ch.ethz.infk.dspa.statistics.ActivePostsAnalyticsTask;
+import ch.ethz.infk.dspa.stream.connectors.KafkaProducerBuilder;
 
 public class App {
 	public static void main(String[] args) throws Exception {
@@ -55,7 +59,18 @@ public class App {
 				outputTopic = "active-posts-out";
 				break;
 			case "recommendations":
-				analyticsTask = new RecommendationsAnalyticsTask();
+				String[] personIdArgs = cmd.getOptionValues("personIds");
+				if (personIdArgs != null) {
+					// convert to longs
+					final Set<Long> recommendationPersonIds = Arrays.asList(personIdArgs).stream()
+							.map(pId -> Long.parseLong(pId)).collect(Collectors.toSet());
+					// set personIds in RecommendationsAnalyticsTask
+					analyticsTask = new RecommendationsAnalyticsTask()
+							.withRecommendationPersonIds(recommendationPersonIds);
+				} else {
+					analyticsTask = new RecommendationsAnalyticsTask();
+				}
+
 				outputTopic = "recommendations-out";
 				break;
 			case "anomalies":
@@ -134,7 +149,6 @@ public class App {
 						.type(Long.class)
 						.desc("maximum delay in seconds")
 						.build());
-
 		options.addOption(
 				Option.builder("configpath")
 						.hasArg()
@@ -153,6 +167,12 @@ public class App {
 				Option.builder("webui")
 						.desc("start local web ui")
 						.build());
+
+		options.addOption(
+				Option.builder("personIds")
+						.hasArgs()
+						.type(Long.class)
+						.desc("for recommendations: personIds for which to generate recommendations").build());
 
 		return options;
 	}

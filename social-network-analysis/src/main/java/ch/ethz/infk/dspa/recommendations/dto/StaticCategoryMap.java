@@ -1,14 +1,16 @@
 package ch.ethz.infk.dspa.recommendations.dto;
 
-import ch.ethz.infk.dspa.helper.StaticDataParser;
-import ch.ethz.infk.dspa.helper.tuple.NTuple2;
-import ch.ethz.infk.dspa.helper.tuple.NTuple3;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import ch.ethz.infk.dspa.helper.StaticDataParser;
+import ch.ethz.infk.dspa.helper.tuple.NTuple2;
+import ch.ethz.infk.dspa.helper.tuple.NTuple3;
 
 public class StaticCategoryMap {
 
@@ -20,6 +22,12 @@ public class StaticCategoryMap {
 
 	public Map<Long, Map<String, Integer>> getCategoryMap() {
 		return this.categoryMap;
+	}
+
+	public List<PersonActivity> getPersonActivities() {
+		return getCategoryMap().entrySet().stream()
+				.map(e -> PersonActivity.ofStatic(e.getKey(), e.getValue()))
+				.collect(Collectors.toList());
 	}
 
 	public StaticCategoryMap withPersonSpeaksRelation(String filePath) throws IOException {

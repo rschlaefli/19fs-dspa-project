@@ -32,6 +32,7 @@ import ch.ethz.infk.dspa.recommendations.dto.FriendsRecommendation;
 import ch.ethz.infk.dspa.recommendations.dto.FriendsRecommendation.SimilarityTuple;
 import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
 import ch.ethz.infk.dspa.recommendations.dto.PersonSimilarity;
+import ch.ethz.infk.dspa.recommendations.dto.StaticCategoryMap;
 import ch.ethz.infk.dspa.recommendations.ops.CategoryEnrichmentProcessFunction;
 import ch.ethz.infk.dspa.stream.helper.TestSink;
 import ch.ethz.infk.dspa.stream.testdata.AbstractTestDataGenerator.TestDataPair;
@@ -62,6 +63,12 @@ public class RecommendationsAnalyticsTaskIT extends AbstractTestBase {
 	private String knowsRelationFile = staticFilePath + "person_knows_person.csv";
 
 	private Map<Long, Map<String, Integer>> inheritedCategoryMap = new HashMap<>();
+	private Map<Long, Map<String, Integer>> staticPersonCategories;
+	private String personInterestRelationFile = staticFilePath + "person_hasInterest_tag.csv";
+	private String personLocationRelationFile = staticFilePath + "person_isLocatedIn_place.csv";
+	private String personSpeaksRelationFile = staticFilePath + "person_speaks_language.csv";
+	private String personStudyRelationFile = staticFilePath + "person_studyAt_organisation.csv";
+	private String personWorkplaceRelationFile = staticFilePath + "person_workAt_organisation.csv";
 
 	@BeforeEach
 	public void setup() throws Exception {
@@ -100,6 +107,14 @@ public class RecommendationsAnalyticsTaskIT extends AbstractTestBase {
 					+ Math.max(person1, person2);
 		}).collect(Collectors.toSet());
 
+		StaticCategoryMap staticCategoryMap = new StaticCategoryMap()
+				.withPersonInterestRelation(personInterestRelationFile)
+				.withPersonLocationRelation(personLocationRelationFile)
+				.withPersonSpeaksRelation(personSpeaksRelationFile)
+				.withPersonStudyWorkAtRelations(personStudyRelationFile, personWorkplaceRelationFile);
+
+		this.staticPersonCategories = staticCategoryMap.getCategoryMap();
+
 	}
 
 	// @Test
@@ -132,6 +147,13 @@ public class RecommendationsAnalyticsTaskIT extends AbstractTestBase {
 		// sort the windows
 		Collections.sort(expectedResults, Comparator.comparingLong(ResultWindow::getWindowStart));
 		Collections.sort(results, Comparator.comparingLong(ResultWindow::getWindowStart));
+
+		List<Long> expectedWindows = expectedResults.stream().map(x -> x.windowStart).collect(Collectors.toList());
+		List<Long> actualWindows = results.stream().map(x -> x.windowStart).collect(Collectors.toList());
+		System.out.println("Expected Windows: ");
+		System.out.println(expectedWindows);
+		System.out.println("Actual Windows: ");
+		System.out.println(actualWindows);
 
 		for (int i = 0; i < results.size(); i++) {
 			// check correctness of window
@@ -378,7 +400,8 @@ public class RecommendationsAnalyticsTaskIT extends AbstractTestBase {
 
 			activities.stream().forEach(a -> reducedActivity.mergeCategoryMap(a.categoryMap()));
 
-			// TODO [nku] merge reducedActivity with static here
+			Map<String, Integer> staticPersonCategoryMap = this.staticPersonCategories.get(personId);
+			reducedActivity.mergeCategoryMap(staticPersonCategoryMap);
 
 			reducedPersonActivities.add(reducedActivity);
 		}

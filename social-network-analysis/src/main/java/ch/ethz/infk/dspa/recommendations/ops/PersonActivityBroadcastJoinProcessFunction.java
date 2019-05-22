@@ -54,9 +54,6 @@ public class PersonActivityBroadcastJoinProcessFunction
 
 	}
 
-	// TODO [nku] possible optimization, output similarity only if not already
-	// output 10 higher similarities for p1
-
 	@Override
 	public void processBroadcastElement(PersonActivity activity, Context ctx, Collector<PersonSimilarity> out)
 			throws Exception {
