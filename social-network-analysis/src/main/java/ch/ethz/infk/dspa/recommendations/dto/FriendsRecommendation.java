@@ -8,6 +8,9 @@ public class FriendsRecommendation {
 
 	private List<SimilarityTuple> similarities;
 
+	// for this recommendation the person did not have any events
+	private boolean inactive;
+
 	public Long getPersonId() {
 		return personId;
 	}
@@ -22,6 +25,14 @@ public class FriendsRecommendation {
 
 	public void setSimilarities(List<SimilarityTuple> similarities) {
 		this.similarities = similarities;
+	}
+
+	public boolean isInactive() {
+		return inactive;
+	}
+
+	public void setInactive(boolean inactive) {
+		this.inactive = inactive;
 	}
 
 	public static class SimilarityTuple {

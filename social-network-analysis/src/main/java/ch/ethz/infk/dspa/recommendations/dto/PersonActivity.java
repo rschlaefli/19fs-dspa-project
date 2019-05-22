@@ -122,6 +122,10 @@ public class PersonActivity {
 		return this.categoryMap;
 	}
 
+	public boolean onlyStatic() {
+		return type != null && type == PersonActivityType.STATIC;
+	}
+
 	public void setPersonId(Long personId) {
 		this.personId = personId;
 	}
