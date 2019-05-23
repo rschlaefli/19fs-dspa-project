@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import ch.ethz.infk.dspa.avro.Like;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.streaming.api.TimeCharacteristic;
@@ -92,9 +91,6 @@ public abstract class AbstractTestDataGenerator<T> {
 		SingleOutputStreamOperator<T> out = stream
 				.assignTimestampsAndWatermarks(getTimestampsAndWatermarkAssigner(maxOutOfOrderness))
 				.map(x -> {
-					// TODO Uncomment for debugging, this allows that watermarks can be better
-					// observed with the DebugProcessFunction if no window was applied
-					// TimeUnit.MILLISECONDS.sleep(100);
 					return x.element;
 				});
 		return addReturnType(out);

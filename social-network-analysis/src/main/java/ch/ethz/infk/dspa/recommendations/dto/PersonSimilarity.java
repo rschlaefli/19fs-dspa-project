@@ -11,6 +11,9 @@ public class PersonSimilarity {
 	private Double similarity;
 	private boolean person1OnlyStatic;
 
+	private Map<String, Integer> categoryMap1;
+	private Map<String, Integer> categoryMap2;
+
 	public PersonSimilarity() {
 
 	}
@@ -36,6 +39,22 @@ public class PersonSimilarity {
 		return person1OnlyStatic;
 	}
 
+	public Map<String, Integer> getCategoryMap1() {
+		return categoryMap1;
+	}
+
+	public void setCategoryMap1(Map<String, Integer> categoryMap1) {
+		this.categoryMap1 = categoryMap1;
+	}
+
+	public Map<String, Integer> getCategoryMap2() {
+		return categoryMap2;
+	}
+
+	public void setCategoryMap2(Map<String, Integer> categoryMap2) {
+		this.categoryMap2 = categoryMap2;
+	}
+
 	public PersonSimilarity withPerson1Id(Long id) {
 		this.person1Id = id;
 		return this;
@@ -59,7 +78,8 @@ public class PersonSimilarity {
 	@Override
 	public String toString() {
 		return "PersonSimilarity [person1Id=" + person1Id + ", person2Id=" + person2Id + ", similarity=" + similarity
-				+ ", person1OnlyStatic=" + person1OnlyStatic + "]";
+				+ ", person1OnlyStatic=" + person1OnlyStatic + ", categoryMap1=" + categoryMap1 + ", categoryMap2="
+				+ categoryMap2 + "]";
 	}
 
 	@Override
@@ -93,8 +113,8 @@ public class PersonSimilarity {
 	}
 
 	public static PersonSimilarity dotProduct(PersonActivity activity1, PersonActivity activity2) {
-		Map<String, Integer> firstMap = activity1.categoryMap();
-		Map<String, Integer> secondMap = activity2.categoryMap();
+		Map<String, Integer> firstMap = activity1.getCategoryMap();
+		Map<String, Integer> secondMap = activity2.getCategoryMap();
 
 		Set<String> keys = new HashSet<>();
 		keys.addAll(firstMap.keySet());
@@ -107,9 +127,9 @@ public class PersonSimilarity {
 		}
 
 		return new PersonSimilarity()
-				.withPerson1Id(activity1.personId())
+				.withPerson1Id(activity1.getPersonId())
 				.withPerson1OnlyStatic(activity1.onlyStatic())
-				.withPerson2Id(activity2.personId())
+				.withPerson2Id(activity2.getPersonId())
 				.withSimilarity(sum);
 	}
 

@@ -2,9 +2,6 @@ package ch.ethz.infk.dspa.recommendations.ops;
 
 import java.util.List;
 
-import org.apache.flink.api.common.state.MapState;
-import org.apache.flink.api.common.state.MapStateDescriptor;
-import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.api.java.tuple.Tuple0;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
@@ -28,8 +25,6 @@ public class StaticPersonActivityOutputProcessFunction extends KeyedProcessFunct
 
 	private List<PersonActivity> staticPersonActivities;
 
-	private MapState<Long, Long> windows;
-
 	public StaticPersonActivityOutputProcessFunction(Time windowSize, String personSpeaksRelationFile,
 			String personInterestRelationFile,
 			String personLocationRelationFile, String personWorkplaceRelationFile, String personStudyRelationFile) {
@@ -46,17 +41,11 @@ public class StaticPersonActivityOutputProcessFunction extends KeyedProcessFunct
 		long windowStart = TimeWindow.getWindowStartWithOffset(ctx.timestamp(), 0, this.windowSize);
 		long windowEnd = windowStart + this.windowSize - 1;
 
-		if (!windows.contains(windowEnd)) {
-			windows.put(windowEnd, 0L);
-			ctx.timerService().registerEventTimeTimer(windowEnd);
-		}
-
-		// TODO [nku] maybe if first output at prev window
+		ctx.timerService().registerEventTimeTimer(windowEnd);
 	}
 
 	@Override
 	public void onTimer(long timestamp, OnTimerContext ctx, Collector<PersonActivity> out) throws Exception {
-		windows.remove(timestamp);
 		// on timer output all the static person activities at the end of the window
 		for (PersonActivity staticPersonActivity : staticPersonActivities) {
 			out.collect(staticPersonActivity);
@@ -74,12 +63,6 @@ public class StaticPersonActivityOutputProcessFunction extends KeyedProcessFunct
 
 		this.staticPersonActivities = staticCategoryMap.getPersonActivities();
 
-		MapStateDescriptor<Long, Long> descriptor = new MapStateDescriptor<>(
-				"recommendations-staticpersonactivity-windows",
-				BasicTypeInfo.LONG_TYPE_INFO,
-				BasicTypeInfo.LONG_TYPE_INFO);
-
-		this.windows = getRuntimeContext().getMapState(descriptor);
 	}
 
 }

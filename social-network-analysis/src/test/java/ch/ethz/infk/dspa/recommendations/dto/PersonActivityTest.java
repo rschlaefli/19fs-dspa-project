@@ -20,11 +20,11 @@ public class PersonActivityTest {
 		Comment comment = new CommentTestDataGenerator().generateElement();
 		PersonActivity personActivity = PersonActivity.of(comment);
 
-		assertEquals(comment.getReplyToPostId(), personActivity.postId(), "post id");
-		assertEquals(comment.getPersonId(), personActivity.personId(), "person id");
+		assertEquals(comment.getReplyToPostId(), personActivity.getPostId(), "post id");
+		assertEquals(comment.getPersonId(), personActivity.getPersonId(), "person id");
 
 		// Check Category Map
-		Map<String, Integer> categoryMap = personActivity.categoryMap();
+		Map<String, Integer> categoryMap = personActivity.getCategoryMap();
 		assertEquals(1, categoryMap.size(), "category map size");
 		assertEquals(1, (int) categoryMap.get(Category.place((comment.getPlaceId()))), "category place");
 	}
@@ -34,11 +34,11 @@ public class PersonActivityTest {
 		Like like = new LikeTestDataGenerator().generateElement();
 		PersonActivity personActivity = PersonActivity.of(like);
 
-		assertEquals(like.getPostId(), personActivity.postId(), "post id");
-		assertEquals(like.getPersonId(), personActivity.personId(), "person id");
+		assertEquals(like.getPostId(), personActivity.getPostId(), "post id");
+		assertEquals(like.getPersonId(), personActivity.getPersonId(), "person id");
 
 		// Check Category Map
-		Map<String, Integer> categoryMap = personActivity.categoryMap();
+		Map<String, Integer> categoryMap = personActivity.getCategoryMap();
 		assertEquals(0, categoryMap.size(), "category map size");
 	}
 
@@ -47,11 +47,11 @@ public class PersonActivityTest {
 		Post post = new PostTestDataGenerator().generateElement();
 		PersonActivity personActivity = PersonActivity.of(post);
 
-		assertEquals(post.getId(), personActivity.postId(), "post id");
-		assertEquals(post.getPersonId(), personActivity.personId(), "person id");
+		assertEquals(post.getId(), personActivity.getPostId(), "post id");
+		assertEquals(post.getPersonId(), personActivity.getPersonId(), "person id");
 
 		// Check Category Map
-		Map<String, Integer> categoryMap = personActivity.categoryMap();
+		Map<String, Integer> categoryMap = personActivity.getCategoryMap();
 		assertEquals(4, categoryMap.size(), "category map size");
 		assertEquals(1, (int) categoryMap.get(Category.forum(post.getForumId())), "category forum");
 		assertEquals(1, (int) categoryMap.get(Category.language(post.getLanguage())), "category language");

@@ -109,9 +109,9 @@ public class CategoryEnrichmentProcessFunction extends KeyedProcessFunction<Long
 	@Override
 	public void open(Configuration parameters) throws Exception {
 
-		this.forumTagRelation = buildForumTagRelation();
-		this.countryContinentRelation = buildContinentMappingRelation();
-		this.tagClassRelation = buildTagClassRelation();
+		buildForumTagRelation();
+		buildContinentMappingRelation();
+		buildTagClassRelation();
 
 		// TODO maybe add expiration?
 		this.inheritablePostCategoryMapState = getRuntimeContext()
@@ -133,29 +133,56 @@ public class CategoryEnrichmentProcessFunction extends KeyedProcessFunction<Long
 
 		switch (activity.getType()) {
 		case POST:
+
+			// init a map with all current categories
+			Map<String, Integer> mapPostActivity = new HashMap<>();
+			mapPostActivity.putAll(activity.getCategoryMap());
+
 			// enrich tags from forum
-			activity.mergeCategoryMap(getForumTagsEnrichment(activity));
+			Map<String, Integer> forumTags = getForumTagsEnrichment(activity);
+			forumTags.forEach((key, value) -> mapPostActivity.merge(key, value, Integer::sum));
 
 			// enrich tagClasses from tags (including forum tags)
-			activity.mergeCategoryMap(getTagClassesEnrichment(activity));
+			Map<String, Integer> tagClasses = getTagClassesEnrichment(activity);
+			tagClasses.forEach((key, value) -> mapPostActivity.merge(key, value, Integer::sum));
 
 			// enrich continents from places
-			activity.mergeCategoryMap(getContinentEnrichment(activity));
+			Map<String, Integer> continents = getContinentEnrichment(activity);
+			continents.forEach((key, value) -> mapPostActivity.merge(key, value, Integer::sum));
+
+			// update category map
+			activity.setCategoryMap(mapPostActivity);
 
 			return activity;
 
 		case COMMENT:
+
+			// init a map with all current categories
+			Map<String, Integer> mapCommentActivity = new HashMap<>();
+			mapCommentActivity.putAll(activity.getCategoryMap());
+
 			// enrich continents from places
-			activity.mergeCategoryMap(getContinentEnrichment(activity));
+			Map<String, Integer> commentContinents = getContinentEnrichment(activity);
+			commentContinents.forEach((key, value) -> mapCommentActivity.merge(key, value, Integer::sum));
 
 			// add the inherited categories from the post
-			activity.mergeCategoryMap(inheritedCategoriesFromPost);
+			inheritedCategoriesFromPost.forEach((key, value) -> mapCommentActivity.merge(key, value, Integer::sum));
+
+			// update category map
+			activity.setCategoryMap(mapCommentActivity);
 
 			return activity;
 
 		case LIKE:
+			// init a map with all current categories
+			Map<String, Integer> mapLikeActivity = new HashMap<>();
+			mapLikeActivity.putAll(activity.getCategoryMap());
+
 			// add the inherited categories from the post
-			activity.mergeCategoryMap(inheritedCategoriesFromPost);
+			inheritedCategoriesFromPost.forEach((key, value) -> mapLikeActivity.merge(key, value, Integer::sum));
+
+			// update category map
+			activity.setCategoryMap(mapLikeActivity);
 
 			return activity;
 
@@ -240,7 +267,7 @@ public class CategoryEnrichmentProcessFunction extends KeyedProcessFunction<Long
 	 * Builds the forum tag relation from the given file. As keys it uses the forumId in the Category String format
 	 * (e.g. forum_1) and all tags in the value also have the Category String format (e.g. tag_10)
 	 */
-	public Map<String, List<String>> buildForumTagRelation() throws IOException {
+	public void buildForumTagRelation() throws IOException {
 
 		Map<String, List<String>> forumTags = new HashMap<>();
 		StaticDataParser.parseCsvFile(forumTagsRelationFile, Arrays.asList("Forum.id", "Tag.id"))
@@ -255,14 +282,14 @@ public class CategoryEnrichmentProcessFunction extends KeyedProcessFunction<Long
 					forumTags.put(forum, tags);
 				});
 
-		return forumTags;
+		this.forumTagRelation = forumTags;
 	}
 
 	/**
 	 * Builds relation with a mapping between a tag (Category String format) and all related tagClasses and their parent
 	 * tagClasses
 	 */
-	public Map<String, List<String>> buildTagClassRelation() throws IOException {
+	public void buildTagClassRelation() throws IOException {
 
 		Map<String, List<String>> tagClasses = new HashMap<>();
 		StaticDataParser
@@ -291,14 +318,14 @@ public class CategoryEnrichmentProcessFunction extends KeyedProcessFunction<Long
 					tagTagClassMapping.put(tag, classes);
 				});
 
-		return tagTagClassMapping;
+		this.tagClassRelation = tagTagClassMapping;
 	}
 
 	/**
 	 * Builds the continent mapping relation from the given file. Both key and value use the Category String format
 	 * (e.g. place_1)
 	 */
-	public Map<String, String> buildContinentMappingRelation() throws IOException {
+	public void buildContinentMappingRelation() throws IOException {
 		Map<String, String> countryContinentMapping = new HashMap<>();
 		StaticDataParser
 				.parseCsvFile(placeRelationFile, Arrays.asList("Place.id", "Place.id.2"))
@@ -311,6 +338,6 @@ public class CategoryEnrichmentProcessFunction extends KeyedProcessFunction<Long
 					countryContinentMapping.put(countryId, continentId);
 				});
 
-		return countryContinentMapping;
+		this.countryContinentRelation = countryContinentMapping;
 	}
 }

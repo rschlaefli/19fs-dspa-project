@@ -1,104 +1,75 @@
 package ch.ethz.infk.dspa.recommendations;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows;
+import org.apache.flink.streaming.api.windowing.assigners.WindowAssigner;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
-import org.apache.flink.test.util.AbstractTestBase;
-import org.junit.jupiter.api.BeforeEach;
 
+import ch.ethz.infk.dspa.AbstractAnalyticsTaskIT;
+import ch.ethz.infk.dspa.ResultWindow;
 import ch.ethz.infk.dspa.avro.Comment;
 import ch.ethz.infk.dspa.avro.Like;
 import ch.ethz.infk.dspa.avro.Post;
-import ch.ethz.infk.dspa.helper.Config;
 import ch.ethz.infk.dspa.helper.StaticDataParser;
 import ch.ethz.infk.dspa.recommendations.dto.FriendsRecommendation;
 import ch.ethz.infk.dspa.recommendations.dto.FriendsRecommendation.SimilarityTuple;
 import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
+import ch.ethz.infk.dspa.recommendations.dto.PersonActivity.PersonActivityType;
 import ch.ethz.infk.dspa.recommendations.dto.PersonSimilarity;
+import ch.ethz.infk.dspa.recommendations.dto.PersonSimilarityComparator;
 import ch.ethz.infk.dspa.recommendations.dto.StaticCategoryMap;
 import ch.ethz.infk.dspa.recommendations.ops.CategoryEnrichmentProcessFunction;
 import ch.ethz.infk.dspa.stream.helper.TestSink;
-import ch.ethz.infk.dspa.stream.testdata.AbstractTestDataGenerator.TestDataPair;
-import ch.ethz.infk.dspa.stream.testdata.CommentTestDataGenerator;
-import ch.ethz.infk.dspa.stream.testdata.LikeTestDataGenerator;
-import ch.ethz.infk.dspa.stream.testdata.PostTestDataGenerator;
 
-public class RecommendationsAnalyticsTaskIT extends AbstractTestBase {
+public class RecommendationsAnalyticsTaskIT extends AbstractAnalyticsTaskIT<FriendsRecommendation> {
 
-	private Configuration config;
-	private StreamExecutionEnvironment env;
-	private DataStream<Post> postStream;
-	private DataStream<Comment> commentStream;
-	private DataStream<Like> likeStream;
-
-	private List<Post> posts;
-	private List<Comment> comments;
-	private List<Like> likes;
+	private Set<Long> recommendationPersonIds;
+	private boolean outputCategoryMap;
 
 	private CategoryEnrichmentProcessFunction enrichment;
-	private String staticFilePath = "src/test/java/resources/relations/";
-	private String forumTagsRelationFile = staticFilePath + "forum_hasTag_tag.csv";
-	private String placeRelationFile = staticFilePath + "place_isPartOf_place";
-	private String tagHasTypeTagClassRelationFile = staticFilePath + "tag_hasType_tagclass.csv";
-	private String tagclassIsSubclassOfTagClassRelationFile = staticFilePath + "tagclass_isSubclassOf_tagclass.csv";
+	private String forumTagsRelationFile = getStaticFilePath() + "forum_hasTag_tag.csv";
+	private String placeRelationFile = getStaticFilePath() + "place_isPartOf_place.csv";
+	private String tagHasTypeTagClassRelationFile = getStaticFilePath() + "tag_hasType_tagclass.csv";
+	private String tagclassIsSubclassOfTagClassRelationFile = getStaticFilePath()
+			+ "tagclass_isSubclassOf_tagclass.csv";
 
 	private Set<String> knowsRelation;
-	private String knowsRelationFile = staticFilePath + "person_knows_person.csv";
+	private String knowsRelationFile = getStaticFilePath() + "person_knows_person.csv";
 
 	private Map<Long, Map<String, Integer>> inheritedCategoryMap = new HashMap<>();
-	private Map<Long, Map<String, Integer>> staticPersonCategories;
-	private String personInterestRelationFile = staticFilePath + "person_hasInterest_tag.csv";
-	private String personLocationRelationFile = staticFilePath + "person_isLocatedIn_place.csv";
-	private String personSpeaksRelationFile = staticFilePath + "person_speaks_language.csv";
-	private String personStudyRelationFile = staticFilePath + "person_studyAt_organisation.csv";
-	private String personWorkplaceRelationFile = staticFilePath + "person_workAt_organisation.csv";
+	private List<PersonActivity> staticPersonActivities;
+	private String personInterestRelationFile = getStaticFilePath() + "person_hasInterest_tag.csv";
+	private String personLocationRelationFile = getStaticFilePath() + "person_isLocatedIn_place.csv";
+	private String personSpeaksRelationFile = getStaticFilePath() + "person_speaks_language.csv";
+	private String personStudyRelationFile = getStaticFilePath() + "person_studyAt_organisation.csv";
+	private String personWorkplaceRelationFile = getStaticFilePath() + "person_workAt_organisation.csv";
 
-	@BeforeEach
-	public void setup() throws Exception {
-		final Time maxOutOfOrderness = Time.hours(1);
+	@Override
+	public void beforeEachTaskSpecific(List<Post> allPosts, List<Comment> allComments, List<Like> allLikes)
+			throws Exception {
 
-		config = Config.getConfig("src/main/java/ch/ethz/infk/dspa/config.properties");
-		env = StreamExecutionEnvironment.getExecutionEnvironment();
-		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+		outputCategoryMap = getConfig().getBoolean("tasks.recommendations.outputCategoryMap");
 
-		PostTestDataGenerator postGenerator = new PostTestDataGenerator();
-		postStream = postGenerator
-				.generate(env, "src/test/java/resources/post_event_stream.csv", maxOutOfOrderness);
-		posts = postGenerator.getTestData().stream().map(TestDataPair::getElement)
-				.sorted(Comparator.comparing(Post::getCreationDate)).collect(Collectors.toList());
-
-		CommentTestDataGenerator commentGenerator = new CommentTestDataGenerator();
-		commentStream = commentGenerator
-				.generate(env, "src/test/java/resources/comment_event_stream.csv", maxOutOfOrderness);
-		comments = commentGenerator.getTestData().stream().map(TestDataPair::getElement)
-				.sorted(Comparator.comparing(Comment::getCreationDate)).collect(Collectors.toList());
-
-		LikeTestDataGenerator likeGenerator = new LikeTestDataGenerator();
-		likeStream = likeGenerator
-				.generate(env, "src/test/java/resources/likes_event_stream.csv", maxOutOfOrderness);
-		likes = likeGenerator.getTestData().stream().map(TestDataPair::getElement)
-				.sorted(Comparator.comparing(Like::getCreationDate)).collect(Collectors.toList());
+		recommendationPersonIds = new HashSet<>(
+				Arrays.asList(507L, 732L, 576L, 868L, 789L, 833L, 842L, 676L, 929L, 305L));
 
 		enrichment = new CategoryEnrichmentProcessFunction(forumTagsRelationFile,
 				placeRelationFile, tagHasTypeTagClassRelationFile, tagclassIsSubclassOfTagClassRelationFile);
+		enrichment.buildForumTagRelation();
+		enrichment.buildContinentMappingRelation();
+		enrichment.buildTagClassRelation();
 
 		knowsRelation = StaticDataParser.parseCsvFile(this.knowsRelationFile).map(tuple -> {
 			Long person1 = Long.valueOf(tuple.getField(0));
@@ -114,257 +85,114 @@ public class RecommendationsAnalyticsTaskIT extends AbstractTestBase {
 				.withPersonSpeaksRelation(personSpeaksRelationFile)
 				.withPersonStudyWorkAtRelations(personStudyRelationFile, personWorkplaceRelationFile);
 
-		this.staticPersonCategories = staticCategoryMap.getCategoryMap();
+		this.staticPersonActivities = staticCategoryMap.getPersonActivities();
+
+		// build inheritedCategoryMap
+		this.inheritedCategoryMap = new HashMap<>();
+		for (Post post : allPosts) {
+			Map<String, Integer> inheritableCategories = enrichment.extractInheritableCategories(
+					enrichment.enrichPersonActivity(PersonActivity.of(post), new HashMap<>()));
+			this.inheritedCategoryMap.put(post.getId(), inheritableCategories);
+		}
 
 	}
 
-	// @Test
-	public void testRecommendationsConsumer() throws Exception {
+	@Override
+	public List<ResultWindow<FriendsRecommendation>> produceActualResults(DataStream<Post> posts,
+			DataStream<Comment> comments, DataStream<Like> likes) throws Exception {
 
 		Set<Long> recommendationPersonIds = new HashSet<>(
 				Arrays.asList(507L, 732L, 576L, 868L, 789L, 833L, 842L, 676L, 929L, 305L));
 
 		RecommendationsAnalyticsTask analyticsTask = (RecommendationsAnalyticsTask) new RecommendationsAnalyticsTask()
 				.withRecommendationPersonIds(recommendationPersonIds)
-				.withPropertiesConfiguration(config)
-				.withStreamingEnvironment(env)
-				.withStaticFilePath(staticFilePath)
-				.withMaxDelay(Time.seconds(600L))
-				.withInputStreams(postStream, commentStream, likeStream)
+				.withPropertiesConfiguration(getConfig())
+				.withStreamingEnvironment(getEnv())
+				.withStaticFilePath(getStaticFilePath())
+				.withMaxDelay(getMaxOutOfOrderness())
+				.withInputStreams(posts, comments, likes)
 				.initialize()
 				.build()
 				.withSink(new TestSink<>());
 
-		analyticsTask.toStringStream().print();
-
 		analyticsTask.start();
 
-		// Map<windowStartTimestamp, Map<personId, FriendsRecommendation>>
-		List<ResultWindow> expectedResults = buildExpectedResults(posts, comments, likes);
+		return TestSink.getResultsInResultWindow(FriendsRecommendation.class,
+				SlidingEventTimeWindows.of(Time.hours(4), Time.hours(1)));
 
-		System.out.println(expectedResults);
+	}
 
-		// Map<event timestamp, List<JsonStr>>
-		Map<Long, List<FriendsRecommendation>> rawResults = TestSink
-				.getResultsInTumblingWindow(FriendsRecommendation.class, Time.hours(1));
-		List<ResultWindow> results = processRawResults(rawResults);
+	@Override
+	public List<FriendsRecommendation> buildExpectedResultsOfWindow(WindowAssigner<Object, TimeWindow> assigner,
+			TimeWindow timeWindow, List<Post> posts, List<Comment> comments, List<Like> likes) throws Exception {
 
-		// sort the windows
-		Collections.sort(expectedResults, Comparator.comparingLong(ResultWindow::getWindowStart));
-		Collections.sort(results, Comparator.comparingLong(ResultWindow::getWindowStart));
+		// build person activities from events in window
+		List<PersonActivity> personActivities = getStreamPersonActivities(posts, comments, likes);
 
-		List<Long> expectedWindows = expectedResults.stream().map(x -> x.windowStart).collect(Collectors.toList());
-		List<Long> actualWindows = results.stream().map(x -> x.windowStart).collect(Collectors.toList());
-		System.out.println("Expected Windows: ");
-		System.out.println(expectedWindows);
-		System.out.println("Actual Windows: ");
-		System.out.println(actualWindows);
+		// combine them with the static person activities
+		personActivities.addAll(this.staticPersonActivities);
 
-		for (int i = 0; i < results.size(); i++) {
-			// check correctness of window
-			ResultWindow expectedResult = expectedResults.get(i);
-			ResultWindow result = results.get(i);
+		// reduce them by personId
+		List<PersonActivity> reducedPersonActivities = reducePersonActivities(personActivities);
 
-			// check the correctness of the recommendation of each person
-			for (Entry<Long, FriendsRecommendation> entry : result.recommendations.entrySet()) {
-				long personId = entry.getKey();
-				FriendsRecommendation recommendation = entry.getValue();
-				FriendsRecommendation expRecommendation = expectedResult.getRecommendations().get(personId);
+		// filter persons for which recommendations should be made
+		List<PersonActivity> selectedPersonActivities = reducedPersonActivities.stream()
+				.filter(x -> this.recommendationPersonIds.contains(x.getPersonId()))
+				.collect(Collectors.toList());
 
-				String msg = String.format("Result window %d: Recommendation of Person %d does not match expected",
-						entry.getKey(), personId);
-				System.out.println(recommendation);
-				assertEquals(expRecommendation, recommendation, msg);
+		List<FriendsRecommendation> recommendations = new ArrayList<>();
+
+		// calculate all similarities between selected and all other expect same and friends
+		for (PersonActivity p1 : selectedPersonActivities) {
+
+			List<PersonSimilarity> personSimilarities = new ArrayList<>();
+			for (PersonActivity p2 : reducedPersonActivities) {
+
+				String knowsQuery = Math.min(p1.getPersonId(), p2.getPersonId()) + "_"
+						+ Math.max(p1.getPersonId(), p2.getPersonId());
+
+				// ignore similarity between same person and filter out friends
+				if (p1.getPersonId() != p2.getPersonId() && !knowsRelation.contains(knowsQuery)) {
+					PersonSimilarity similarity = PersonSimilarity.dotProduct(p1, p2);
+
+					if (outputCategoryMap) {
+						similarity.setCategoryMap1(p1.getCategoryMap());
+						similarity.setCategoryMap2(p2.getCategoryMap());
+					}
+
+					personSimilarities.add(similarity);
+				}
 			}
-		}
 
-	}
+			// select 5 largest similarities
+			List<SimilarityTuple> top5Similarities = personSimilarities.stream()
+					.sorted(new PersonSimilarityComparator().reversed())
+					.limit(5).map(x -> new SimilarityTuple(x.person2Id(), x.similarity(), x.getCategoryMap2()))
+					.collect(Collectors.toList());
 
-	public static class ResultWindow {
-		private long windowStart;
-		private Map<Long, FriendsRecommendation> recommendations;
-
-		public long getWindowStart() {
-			return windowStart;
-		}
-
-		public void setWindowStart(long windowStart) {
-			this.windowStart = windowStart;
-		}
-
-		public Map<Long, FriendsRecommendation> getRecommendations() {
-			return recommendations;
-		}
-
-		public void setRecommendations(Map<Long, FriendsRecommendation> recommendations) {
-			this.recommendations = recommendations;
-		}
-
-		@Override
-		public String toString() {
-			return "ResultWindow [windowStart=" + windowStart + ", recommendations=" + recommendations + "]";
-		}
-
-	}
-
-	/**
-	 * Converts the rawResults (Map<windowStart, List<JsonString>) from the test sink into a List of Result Windows
-	 */
-	private List<ResultWindow> processRawResults(Map<Long, List<FriendsRecommendation>> rawResults) {
-
-		List<ResultWindow> windows = new ArrayList<>();
-
-		for (Entry<Long, List<FriendsRecommendation>> entry : rawResults.entrySet()) {
-
-			Long windowStart = entry.getKey();
-			List<FriendsRecommendation> jsonRecommendations = entry.getValue();
-
-			Map<Long, FriendsRecommendation> recommendationMap = jsonRecommendations.stream()
-					// collect as map keyed with the person for which the recommendations are
-					.collect(Collectors.toMap(FriendsRecommendation::getPersonId, Function.identity()));
-
-			ResultWindow window = new ResultWindow();
-			window.setWindowStart(windowStart);
-			window.setRecommendations(recommendationMap);
-
-			windows.add(window);
-		}
-
-		return windows;
-	}
-
-	/**
-	 * Takes as input the 3 event "streams", first builds windows with them, then each event in a window is transformed
-	 * to a PersonActivity then all PersonActivity of a window are reduced by personId then PersonSimilarity between all
-	 * pair of PersonActivity is calculated and finally the results are stored in a result window
-	 * 
-	 * @throws Exception
-	 */
-	private List<ResultWindow> buildExpectedResults(List<Post> posts, List<Comment> comments,
-			List<Like> likes) throws Exception {
-
-		List<ResultWindow> expectedResults = new ArrayList<>();
-
-		for (Post post : posts) {
-			PersonActivity postPersonActivity = PersonActivity.of(post);
-
-			// enrich post and extract categories which are inherited by comments and likes of the post
-			postPersonActivity = enrichment.enrichPersonActivity(postPersonActivity, new HashMap<>());
-			Map<String, Integer> categories = enrichment.extractInheritableCategories(postPersonActivity);
-			inheritedCategoryMap.put(post.getId(), categories);
-		}
-
-		// add comment to post mapping
-		Map<Long, Long> commentToPostIdMap = new HashMap<>();
-		for (Comment comment : comments) {
-
-			Long postId = comment.getReplyToPostId();
-			if (postId == null) {
-				postId = commentToPostIdMap.get(comment.getReplyToCommentId());
-
+			// create friends recommendation
+			FriendsRecommendation recommendation = new FriendsRecommendation();
+			recommendation.setPersonId(p1.getPersonId());
+			recommendation.setSimilarities(top5Similarities);
+			recommendation.setInactive(p1.onlyStatic());
+			if (outputCategoryMap) {
+				recommendation.setCategoryMap(p1.getCategoryMap());
 			}
-			assert (postId != null);
-			commentToPostIdMap.put(comment.getId(), postId);
-			comment.setReplyToPostId(postId);
+			recommendations.add(recommendation);
 		}
 
-		long length = Time.hours(4).toMilliseconds();
-		long slide = Time.hours(1).toMilliseconds();
-
-		// with a window length of 4h and a slide of 1h, every event is part of (4/1) = 4 windows
-		int numberOfWindowsPerEvent = (int) (length / slide);
-
-		// assign events to windows (key=windowStart, value=list of all events in this window)
-		Map<Long, List<Post>> postWindows = assignPostsToWindows(posts, slide, numberOfWindowsPerEvent);
-		Map<Long, List<Comment>> commentWindows = assignCommentsToWindows(comments, slide, numberOfWindowsPerEvent);
-		Map<Long, List<Like>> likeWindows = assignLikesToWindows(likes, slide, numberOfWindowsPerEvent);
-
-		// merge all window starts
-		Set<Long> windowStarts = new HashSet<>();
-		windowStarts.addAll(postWindows.keySet());
-		windowStarts.addAll(commentWindows.keySet());
-		windowStarts.addAll(likeWindows.keySet());
-
-		// sort window starts
-		List<Long> sortedWindowStarts = new ArrayList<>(windowStarts);
-		Collections.sort(sortedWindowStarts);
-
-		// go through every window and calc expected result
-		for (Long windowStart : sortedWindowStarts) {
-			List<Post> postsInWindow = postWindows.getOrDefault(windowStart, Collections.emptyList());
-			List<Comment> commentsInWindow = commentWindows.getOrDefault(windowStart, Collections.emptyList());
-			List<Like> likesInWindow = likeWindows.getOrDefault(windowStart, Collections.emptyList());
-
-			// from events in window build person activities in window
-			List<PersonActivity> personActivitiesInWindow = buildPersonActivities(postsInWindow, commentsInWindow,
-					likesInWindow);
-
-			// from person activities in window build person similarities in window
-			Map<Long, FriendsRecommendation> personSimilaritiesInWindow = calcPersonSimilarities(
-					personActivitiesInWindow);
-
-			// create result window and add to expected results
-			ResultWindow window = new ResultWindow();
-			window.setWindowStart(windowStart);
-			window.setRecommendations(personSimilaritiesInWindow);
-			expectedResults.add(window);
-
-		}
-
-		return expectedResults;
-
+		return recommendations;
 	}
 
-	private Map<Long, List<Like>> assignLikesToWindows(List<Like> likes, long slide, int numberOfWindowsPerEvent) {
-		Map<Long, List<Like>> likeWindows = new HashMap<>();
-		for (Like like : likes) {
-			long baseWindowStart = TimeWindow.getWindowStartWithOffset(like.getCreationDate().getMillis(), 0, slide);
-			for (int i = 0; i < numberOfWindowsPerEvent; i++) {
-				long windowStart = baseWindowStart + i * slide;
-				List<Like> windowLikes = likeWindows.getOrDefault(windowStart, new ArrayList<Like>());
-				windowLikes.add(like);
-				likeWindows.put(windowStart, windowLikes);
-			}
-		}
-		return likeWindows;
-	}
-
-	private Map<Long, List<Comment>> assignCommentsToWindows(List<Comment> comments, long slide,
-			int numberOfWindowsPerEvent) {
-		Map<Long, List<Comment>> commentWindows = new HashMap<>();
-		for (Comment comment : comments) {
-			long baseWindowStart = TimeWindow.getWindowStartWithOffset(comment.getCreationDate().getMillis(), 0, slide);
-			for (int i = 0; i < numberOfWindowsPerEvent; i++) {
-				long windowStart = baseWindowStart + i * slide;
-				List<Comment> windowComments = commentWindows.getOrDefault(windowStart, new ArrayList<Comment>());
-				windowComments.add(comment);
-				commentWindows.put(windowStart, windowComments);
-			}
-		}
-		return commentWindows;
-	}
-
-	private Map<Long, List<Post>> assignPostsToWindows(List<Post> posts, long slide, int numberOfWindowsPerEvent) {
-		Map<Long, List<Post>> postWindows = new HashMap<>();
-		for (Post post : posts) {
-			long baseWindowStart = TimeWindow.getWindowStartWithOffset(post.getCreationDate().getMillis(), 0, slide);
-			for (int i = 0; i < numberOfWindowsPerEvent; i++) {
-				long windowStart = baseWindowStart + i * slide;
-				List<Post> windowPosts = postWindows.getOrDefault(windowStart, new ArrayList<Post>());
-				windowPosts.add(post);
-				postWindows.put(windowStart, windowPosts);
-			}
-		}
-		return postWindows;
-	}
-
-	private List<PersonActivity> buildPersonActivities(List<Post> postStream, List<Comment> commentStream,
-			List<Like> likeStream) throws Exception {
+	private List<PersonActivity> getStreamPersonActivities(List<Post> posts, List<Comment> comments,
+			List<Like> likes)
+			throws Exception {
 
 		// map events to PersonActivity
 		List<PersonActivity> personActivities = new ArrayList<>();
 
-		for (Post post : postStream) {
+		for (Post post : posts) {
+
 			PersonActivity postPersonActivity = PersonActivity.of(post);
 
 			// enrich post and extract categories which are inherited by comments and likes of the post
@@ -373,15 +201,16 @@ public class RecommendationsAnalyticsTaskIT extends AbstractTestBase {
 			personActivities.add(postPersonActivity);
 		}
 
-		for (Comment comment : commentStream) {
+		for (Comment comment : comments) {
 			PersonActivity commentPersonActivity = PersonActivity.of(comment);
 			// enrich comment
+			assert (comment.getReplyToPostId() != null);
 			commentPersonActivity = enrichment.enrichPersonActivity(commentPersonActivity,
 					inheritedCategoryMap.get(comment.getReplyToPostId()));
 			personActivities.add(commentPersonActivity);
 
 		}
-		for (Like like : likeStream) {
+		for (Like like : likes) {
 			PersonActivity likePersonActivity = PersonActivity.of(like);
 
 			// enrich like
@@ -390,10 +219,13 @@ public class RecommendationsAnalyticsTaskIT extends AbstractTestBase {
 
 			personActivities.add(likePersonActivity);
 		}
+		return personActivities;
+	}
 
+	private List<PersonActivity> reducePersonActivities(List<PersonActivity> personActivities) {
 		// reduce PersonActivity by personId
 		Map<Long, List<PersonActivity>> activitiesPerPerson = personActivities.stream()
-				.collect(Collectors.groupingBy(PersonActivity::personId));
+				.collect(Collectors.groupingBy(PersonActivity::getPersonId));
 
 		List<PersonActivity> reducedPersonActivities = new ArrayList<>();
 		for (Entry<Long, List<PersonActivity>> e : activitiesPerPerson.entrySet()) {
@@ -403,10 +235,17 @@ public class RecommendationsAnalyticsTaskIT extends AbstractTestBase {
 			PersonActivity reducedActivity = new PersonActivity();
 			reducedActivity.setPersonId(personId);
 
-			activities.stream().forEach(a -> reducedActivity.mergeCategoryMap(a.categoryMap()));
+			Map<String, Integer> categoryMap = new HashMap<>();
+			for (PersonActivity personActivity : activities) {
+				personActivity.getCategoryMap()
+						.forEach((category, count) -> categoryMap.merge(category, count, Integer::sum));
+			}
+			reducedActivity.setCategoryMap(categoryMap);
 
-			Map<String, Integer> staticPersonCategoryMap = this.staticPersonCategories.get(personId);
-			reducedActivity.mergeCategoryMap(staticPersonCategoryMap);
+			boolean onlyStatic = activities.stream().noneMatch(x -> x.getType() != PersonActivityType.STATIC);
+			if (onlyStatic) {
+				reducedActivity.setType(PersonActivityType.STATIC);
+			}
 
 			reducedPersonActivities.add(reducedActivity);
 		}
@@ -414,58 +253,14 @@ public class RecommendationsAnalyticsTaskIT extends AbstractTestBase {
 		return reducedPersonActivities;
 	}
 
-	private Map<Long, FriendsRecommendation> calcPersonSimilarities(List<PersonActivity> personActivities) {
+	@Override
+	public List<WindowAssigner<Object, TimeWindow>> getWindowAssigners() {
+		return Collections.singletonList(SlidingEventTimeWindows.of(Time.hours(4), Time.hours(1)));
+	}
 
-		Map<Long, FriendsRecommendation> similarityMap = new HashMap<>();
-		for (int i = 0; i < personActivities.size(); i++) {
-			PersonActivity p1 = personActivities.get(i);
-			List<PersonSimilarity> personSimilarities = new ArrayList<>();
-
-			for (int j = 0; j < personActivities.size(); j++) {
-				PersonActivity p2 = personActivities.get(j);
-				String knowsQuery = Math.min(p1.personId(), p2.personId()) + "_"
-						+ Math.max(p1.personId(), p2.personId());
-
-				if (i != j && !knowsRelation.contains(knowsQuery)) {
-					// ignore similarity between same person
-					// filter out friends
-
-					PersonSimilarity similarity = PersonSimilarity.dotProduct(p1, p2);
-
-					personSimilarities.add(similarity);
-				}
-			}
-
-			Comparator<PersonSimilarity> comp = new Comparator<PersonSimilarity>() {
-
-				@Override
-				public int compare(PersonSimilarity o1, PersonSimilarity o2) {
-					int c = o1.similarity().compareTo(o2.similarity());
-					if (c != 0) {
-						return c;
-					} else {
-						return o1.person2Id().compareTo(o2.person2Id());
-					}
-				}
-
-			};
-
-			List<SimilarityTuple> top5Similarities = personSimilarities.stream()
-					// .sorted(Comparator.comparingDouble(PersonSimilarity::similarity).reversed())
-					.sorted(comp.reversed())
-					.limit(5)
-					.map(x -> new SimilarityTuple(x.person2Id(), x.similarity()))
-					.collect(Collectors.toList());
-
-			// create Friends recommendation
-			FriendsRecommendation recommmendation = new FriendsRecommendation();
-			recommmendation.setPersonId(p1.personId());
-			recommmendation.setSimilarities(top5Similarities);
-
-			similarityMap.put(recommmendation.getPersonId(), recommmendation);
-		}
-
-		return similarityMap;
+	@Override
+	public Time getMaxOutOfOrderness() {
+		return Time.hours(1);
 	}
 
 }

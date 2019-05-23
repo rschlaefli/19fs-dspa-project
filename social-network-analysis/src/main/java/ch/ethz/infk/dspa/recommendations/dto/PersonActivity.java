@@ -1,14 +1,16 @@
 package ch.ethz.infk.dspa.recommendations.dto;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableMap;
 
 import ch.ethz.infk.dspa.avro.Comment;
 import ch.ethz.infk.dspa.avro.Like;
@@ -24,21 +26,21 @@ public class PersonActivity {
 	private PersonActivityType type;
 	private Long personId;
 	private Long postId;
-
 	private Map<String, Integer> categoryMap;
 
 	public PersonActivity() {
-		this.categoryMap = new HashMap<String, Integer>();
+		this.categoryMap = new HashMap<>();
 	}
 
 	public PersonActivity(Long personId, Long postId, PersonActivityType type) {
-		this();
 		this.personId = personId;
 		this.postId = postId;
 		this.type = type;
+		this.categoryMap = new HashMap<>();
 	}
 
 	public static PersonActivity ofStatic(Long personId, Map<String, Integer> map) {
+
 		PersonActivity activity = new PersonActivity();
 		activity.setPersonId(personId);
 		activity.setType(PersonActivityType.STATIC);
@@ -48,53 +50,62 @@ public class PersonActivity {
 	}
 
 	public static PersonActivity of(Post post) {
-		PersonActivity activity = new PersonActivity();
-		activity.setPostId(post.getId());
-		activity.setPersonId(post.getPersonId());
-		activity.setType(PersonActivityType.POST);
 
-		// TODO [nku] check if want to keep creationTime in PersonActivity
+		Map<String, Integer> map = new HashMap<>();
 
-		// set categories of post
-		List<Long> tags = post.getTags();
-		if (tags != null) {
-			tags.forEach(tagId -> activity.countCategory(Category.tag(tagId)));
+		List<Long> tags = ObjectUtils.defaultIfNull(post.getTags(), Collections.emptyList());
+		for (Long tag : tags) {
+			String category = Category.tag(tag);
+			Integer count = map.getOrDefault(category, 0);
+			map.put(category, count + 1);
 		}
 
 		Long forumId = post.getForumId();
 		if (forumId != null) {
-			activity.countCategory(Category.forum(forumId));
+			String category = Category.forum(forumId);
+			Integer count = map.getOrDefault(category, 0);
+			map.put(category, count + 1);
 		}
 
 		Long placeId = post.getPlaceId();
 		if (placeId != null) {
-			activity.countCategory(Category.place(placeId));
+			String category = Category.place(placeId);
+			Integer count = map.getOrDefault(category, 0);
+			map.put(category, count + 1);
 		}
 
 		String language = post.getLanguage();
 		if (StringUtils.isNotEmpty(language)) {
-			activity.countCategory(Category.language(language));
+			String category = Category.language(language);
+			Integer count = map.getOrDefault(category, 0);
+			map.put(category, count + 1);
 		}
 
-		// TODO potentially add content topic extraction
+		PersonActivity activity = new PersonActivity();
+		activity.setPostId(post.getId());
+		activity.setPersonId(post.getPersonId());
+		activity.setType(PersonActivityType.POST);
+		activity.setCategoryMap(map);
 
 		return activity;
 	}
 
 	public static PersonActivity of(Comment comment) {
+
+		Map<String, Integer> map = new HashMap<>();
+
+		Long placeId = comment.getPlaceId();
+		if (placeId != null) {
+			String category = Category.place(placeId);
+			Integer count = map.getOrDefault(category, 0);
+			map.put(category, count + 1);
+		}
+
 		PersonActivity activity = new PersonActivity();
 		activity.setPostId(comment.getReplyToPostId());
 		activity.setPersonId(comment.getPersonId());
 		activity.setType(PersonActivityType.COMMENT);
-
-		// TODO [nku] check if want to keep creationTime in PersonActivity
-
-		Long placeId = comment.getPlaceId();
-		if (placeId != null) {
-			activity.countCategory(Category.place(placeId));
-		}
-
-		// TODO potentially add content topic extraction
+		activity.setCategoryMap(map);
 
 		return activity;
 	}
@@ -105,21 +116,15 @@ public class PersonActivity {
 		activity.setPersonId(like.getPersonId());
 		activity.setType(PersonActivityType.LIKE);
 
-		// TODO [nku] check if want to keep creationTime in PersonActivity
-
 		return activity;
 	}
 
-	public Long personId() {
+	public Long getPersonId() {
 		return this.personId;
 	}
 
-	public Long postId() {
+	public Long getPostId() {
 		return this.postId;
-	}
-
-	public Map<String, Integer> categoryMap() {
-		return this.categoryMap;
 	}
 
 	public boolean onlyStatic() {
@@ -142,20 +147,8 @@ public class PersonActivity {
 		this.type = type;
 	}
 
-	public void countCategory(String category) {
-		this.categoryMap.merge(category, 1, Integer::sum);
-	}
-
-	public void putCategory(String category, Integer count) {
-		this.categoryMap.put(category, count);
-	}
-
-	public int count(String category) {
-		return this.categoryMap.getOrDefault(category, 0);
-	}
-
-	public void mergeCategoryMap(Map<String, Integer> other) {
-		other.forEach((category, count) -> this.categoryMap.merge(category, count, Integer::sum));
+	public ImmutableMap<String, Integer> getCategoryMap() {
+		return ImmutableMap.copyOf(this.categoryMap);
 	}
 
 	public void setCategoryMap(Map<String, Integer> categoryMap) {
@@ -182,28 +175,39 @@ public class PersonActivity {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		PersonActivity that = (PersonActivity) o;
-		return type == that.type &&
-				Objects.equal(personId, that.personId) &&
-				Objects.equal(postId, that.postId) &&
-				Objects.equal(categoryMap, that.categoryMap);
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((categoryMap == null) ? 0 : categoryMap.hashCode());
+		result = prime * result + ((personId == null) ? 0 : personId.hashCode());
+		result = prime * result + ((postId == null) ? 0 : postId.hashCode());
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
+		return result;
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hashCode(type, personId, postId, categoryMap);
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		PersonActivity other = (PersonActivity) obj;
+		if (categoryMap == null) {
+			if (other.categoryMap != null) return false;
+		} else if (!categoryMap.equals(other.categoryMap)) return false;
+		if (personId == null) {
+			if (other.personId != null) return false;
+		} else if (!personId.equals(other.personId)) return false;
+		if (postId == null) {
+			if (other.postId != null) return false;
+		} else if (!postId.equals(other.postId)) return false;
+		if (type != other.type) return false;
+		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "PersonActivity{" +
-				"type=" + type +
-				", personId=" + personId +
-				", postId=" + postId +
-				", categoryMap=" + categoryMap +
-				'}';
+		return "PersonActivity [type=" + type + ", personId=" + personId + ", postId=" + postId + ", categoryMap="
+				+ categoryMap + "]";
 	}
+
 }

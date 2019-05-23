@@ -20,8 +20,8 @@ import ch.ethz.infk.dspa.recommendations.dto.PersonActivity;
 import ch.ethz.infk.dspa.recommendations.dto.PersonSimilarity;
 import ch.ethz.infk.dspa.recommendations.ops.CategoryEnrichmentProcessFunction;
 import ch.ethz.infk.dspa.recommendations.ops.FriendsFilterFunction;
+import ch.ethz.infk.dspa.recommendations.ops.PersonActivityAggregateFunction;
 import ch.ethz.infk.dspa.recommendations.ops.PersonActivityBroadcastJoinProcessFunction;
-import ch.ethz.infk.dspa.recommendations.ops.PersonActivityReduceFunction;
 import ch.ethz.infk.dspa.recommendations.ops.StaticPersonActivityOutputProcessFunction;
 import ch.ethz.infk.dspa.recommendations.ops.TopKAggregateFunction;
 import ch.ethz.infk.dspa.recommendations.ops.WindowActivateProcessFunction;
@@ -61,6 +61,7 @@ public class RecommendationsAnalyticsTask
 		final Time windowSlide = Time.hours(this.config.getLong("tasks.recommendations.window.slideInHours"));
 		final int selectionCount = this.config.getInt("tasks.recommendations.selectionCount");
 		final int topKCount = this.config.getInt("tasks.recommendations.topKCount");
+		final boolean outputCategoryMap = this.config.getBoolean("tasks.recommendations.outputCategoryMap");
 
 		if (this.recommendationPersonIds == null) {
 			// if no personIds given, select selectionCount randomly from the static relation file
@@ -88,33 +89,38 @@ public class RecommendationsAnalyticsTask
 		DataStream<PersonActivity> unionPersonActivityStream = postPersonActivityStream
 				.union(commentPersonActivityStream, likePersonActivityStream);
 
-		// stream with static person activities of all people (output every window length)
-		DataStream<PersonActivity> staticPersonActivityStream = unionPersonActivityStream.process(
-				new WindowActivateProcessFunction(windowLength))
-				.keyBy(x -> 0L) // send all to same
-				.process(new StaticPersonActivityOutputProcessFunction(windowLength, staticPersonSpeaksLanguage,
+		SingleOutputStreamOperator<PersonActivity> personActivityStream = unionPersonActivityStream
+				.keyBy(PersonActivity::getPostId)
+				.process(new CategoryEnrichmentProcessFunction(staticForumHasTag, staticPlaceIsPartOfPlace,
+						staticTagHasTypeTagClass, staticTagClassIsSubClassOfTagClass))
+				.keyBy(PersonActivity::getPersonId)
+				.window(SlidingEventTimeWindows.of(windowLength, windowSlide))
+				.aggregate(new PersonActivityAggregateFunction());
+
+		DataStream<PersonActivity> staticPersonActivityStream = personActivityStream
+				.process(new WindowActivateProcessFunction(windowSlide))
+				.keyBy(x -> 0L)
+				.process(new StaticPersonActivityOutputProcessFunction(windowSlide,
+						staticPersonSpeaksLanguage,
 						staticPersonHasInterest,
 						staticPersonIsLocatedIn,
 						staticPersonWorkAt,
 						staticPersonStudyAt))
 				.setParallelism(1);
 
-		SingleOutputStreamOperator<PersonActivity> personActivityStream = unionPersonActivityStream
-				.keyBy(PersonActivity::postId)
-				.process(new CategoryEnrichmentProcessFunction(staticForumHasTag, staticPlaceIsPartOfPlace,
-						staticTagHasTypeTagClass, staticTagClassIsSubClassOfTagClass))
+		personActivityStream = personActivityStream
 				.union(staticPersonActivityStream)
-				.keyBy(PersonActivity::personId)
-				.window(SlidingEventTimeWindows.of(windowLength, windowSlide))
-				.reduce(new PersonActivityReduceFunction());
+				.keyBy(PersonActivity::getPersonId)
+				.window(TumblingEventTimeWindows.of(windowSlide))
+				.aggregate(new PersonActivityAggregateFunction());
 
 		BroadcastStream<PersonActivity> selectedPersonActivityStream = personActivityStream
-				.filter(personActivity -> recommendationPersonIds.contains(personActivity.personId()))
+				.filter(personActivity -> recommendationPersonIds.contains(personActivity.getPersonId()))
 				.broadcast(PersonActivityBroadcastJoinProcessFunction.SELECTED_PERSON_STATE_DESCRIPTOR);
 
 		this.outputStream = personActivityStream
 				.connect(selectedPersonActivityStream)
-				.process(new PersonActivityBroadcastJoinProcessFunction(selectionCount, windowSlide))
+				.process(new PersonActivityBroadcastJoinProcessFunction(selectionCount, windowSlide, outputCategoryMap))
 				.filter(new FriendsFilterFunction(staticPersonKnowsPerson))
 				.keyBy(PersonSimilarity::person1Id)
 				.window(TumblingEventTimeWindows.of(windowSlide))
