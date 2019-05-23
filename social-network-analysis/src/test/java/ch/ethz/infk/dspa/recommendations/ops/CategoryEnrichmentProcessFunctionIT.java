@@ -44,7 +44,7 @@ public class CategoryEnrichmentProcessFunctionIT {
 	@Test
 	void testCategoryEnrichmentProcessFunction() throws Exception {
 
-		this.personActivityStream.keyBy(PersonActivity::postId).process(new CategoryEnrichmentProcessFunction(
+		this.personActivityStream.keyBy(PersonActivity::getPostId).process(new CategoryEnrichmentProcessFunction(
 				"src/test/java/resources/recommendations/relations/forum_hasTag_tag.csv",
 				"src/test/java/resources/recommendations/relations/place_isPartOf_place.csv",
 				"src/test/java/resources/recommendations/relations/tag_hasType_tagclass.csv",
@@ -100,8 +100,8 @@ public class CategoryEnrichmentProcessFunctionIT {
 		Long placeId;
 
 		ActivityTuple(PersonActivity personActivity) {
-			this.personId = personActivity.personId();
-			this.postId = personActivity.postId();
+			this.personId = personActivity.getPersonId();
+			this.postId = personActivity.getPostId();
 			this.forumId = personActivity.extractLongIdFromKeySet(CategoryType.FORUM);
 			this.placeId = personActivity.extractLongIdFromKeySet(CategoryType.PLACE);
 		}

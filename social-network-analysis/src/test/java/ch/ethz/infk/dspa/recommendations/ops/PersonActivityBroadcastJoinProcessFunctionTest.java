@@ -35,12 +35,12 @@ public class PersonActivityBroadcastJoinProcessFunctionTest extends AbstractTest
 
 		BroadcastStream<PersonActivity> selectedBroadcastStream = new PersonActivityTestDataGenerator()
 				.generate(env, testFile, maxOutOfOrderness)
-				.filter(activity -> activity.personId() == 1 || activity.personId() == 2)
+				.filter(activity -> activity.getPersonId() == 1 || activity.getPersonId() == 2)
 				.broadcast(PersonActivityBroadcastJoinProcessFunction.SELECTED_PERSON_STATE_DESCRIPTOR);
 
 		activityStream
 				.connect(selectedBroadcastStream)
-				.process(new PersonActivityBroadcastJoinProcessFunction(10, Time.hours(1)))
+				.process(new PersonActivityBroadcastJoinProcessFunction(10, Time.hours(1), false))
 				.returns(new TypeHint<PersonSimilarity>() {
 				})
 				.addSink(new TestSink<PersonSimilarity>());

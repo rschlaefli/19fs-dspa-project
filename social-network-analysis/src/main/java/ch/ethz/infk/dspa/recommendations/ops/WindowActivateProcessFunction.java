@@ -33,15 +33,17 @@ public class WindowActivateProcessFunction extends ProcessFunction<PersonActivit
 
 	@Override
 	public void processElement(PersonActivity in, Context ctx, Collector<Tuple0> out) throws Exception {
-		long window = TimeWindow.getWindowStartWithOffset(ctx.timestamp(), 0, windowSize);
 
-		if (!windows.contains(window)) {
-			windows.add(window);
+		long windowStart = TimeWindow.getWindowStartWithOffset(ctx.timestamp(), 0, this.windowSize);
+		long windowEnd = windowStart + this.windowSize - 1;
+
+		if (!windows.contains(windowEnd)) {
+			windows.add(windowEnd);
 			out.collect(new Tuple0());
 		}
 
 		// remove expired windows (for which no more new events can arrive)
-		windows.removeIf(x -> x + windowSize < ctx.timerService().currentWatermark());
+		windows.removeIf(x -> x < ctx.timerService().currentWatermark());
 	}
 
 	@Override

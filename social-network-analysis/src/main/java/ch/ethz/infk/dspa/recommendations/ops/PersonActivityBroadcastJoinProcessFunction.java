@@ -41,16 +41,19 @@ public class PersonActivityBroadcastJoinProcessFunction
 	private int broadcastElementCount;
 	private long windowSize;
 	private long windowOffset;
+	private boolean outputCategoryMap;
 
 	private HashMap<Long, List<PersonActivity>> buffer;
 	private ListState<Entry<Long, List<PersonActivity>>> checkpointedBufferState;
 
-	public PersonActivityBroadcastJoinProcessFunction(int broadcastElementCount, Time windowSize) {
+	public PersonActivityBroadcastJoinProcessFunction(int broadcastElementCount, Time windowSize,
+			boolean outputCategoryMap) {
 		super();
 
 		this.broadcastElementCount = broadcastElementCount;
 		this.windowSize = windowSize.toMilliseconds();
 		this.windowOffset = 0;
+		this.outputCategoryMap = outputCategoryMap;
 
 	}
 
@@ -68,8 +71,6 @@ public class PersonActivityBroadcastJoinProcessFunction
 			list = new ArrayList<>(broadcastElementCount);
 		}
 
-		// TODO [nku] check if more than broadcastElementCount elements arrived for same
-		// window, if yes -> throw exception
 		list.add(activity);
 		boolean isComplete = list.size() == broadcastElementCount;
 		state.put(windowStart, list);
@@ -77,6 +78,12 @@ public class PersonActivityBroadcastJoinProcessFunction
 		// join activity with
 		for (PersonActivity other : buffer.getOrDefault(windowStart, new ArrayList<>())) {
 			PersonSimilarity similarity = PersonSimilarity.dotProduct(activity, other);
+
+			if (outputCategoryMap) {
+				similarity.setCategoryMap1(new HashMap<>(activity.getCategoryMap()));
+				similarity.setCategoryMap2(new HashMap<>(other.getCategoryMap()));
+			}
+
 			out.collect(similarity);
 		}
 
@@ -97,7 +104,6 @@ public class PersonActivityBroadcastJoinProcessFunction
 		}
 
 		for (Long key : expiredKeys) {
-			// TODO [nku] check if buffer still has elements, if yes, throw exception
 			state.remove(key);
 		}
 
@@ -120,6 +126,10 @@ public class PersonActivityBroadcastJoinProcessFunction
 
 		for (PersonActivity activity : broadcastActivities) {
 			PersonSimilarity similarity = PersonSimilarity.dotProduct(activity, otherActivity);
+			if (outputCategoryMap) {
+				similarity.setCategoryMap1(new HashMap<>(activity.getCategoryMap()));
+				similarity.setCategoryMap2(new HashMap<>(otherActivity.getCategoryMap()));
+			}
 			out.collect(similarity);
 		}
 

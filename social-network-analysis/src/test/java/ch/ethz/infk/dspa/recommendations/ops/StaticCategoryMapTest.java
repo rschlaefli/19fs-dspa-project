@@ -57,7 +57,7 @@ public class StaticCategoryMapTest {
 		PersonActivity expectedActivity = new PersonActivity(0L, null, PersonActivityType.STATIC);
 		expectedActivity.setCategoryMap(staticCategoryMap.getCategoryMap().get(0L));
 
-		PersonActivity actualActivity = activities.stream().filter(a -> a.personId() == 0).findAny().get();
+		PersonActivity actualActivity = activities.stream().filter(a -> a.getPersonId() == 0).findAny().get();
 
 		assertEquals(expectedActivity, actualActivity, "unexpected conversion to person activity");
 

@@ -7,6 +7,7 @@ public class DebugProcessFunction<T> extends ProcessFunction<T, T> {
 
 	private static final long serialVersionUID = 1L;
 	private boolean printElement;
+	private String msg;
 
 	public DebugProcessFunction() {
 		this.printElement = false;
@@ -14,6 +15,10 @@ public class DebugProcessFunction<T> extends ProcessFunction<T, T> {
 
 	public DebugProcessFunction(boolean printElement) {
 		this.printElement = printElement;
+	}
+
+	public DebugProcessFunction(String msg) {
+		this.msg = msg;
 	}
 
 	@Override

@@ -46,10 +46,6 @@ public class App {
 			final String kafkaServer = cmd.getOptionValue("kafkaserver", config.getString("kafka.server"));
 			final String staticFilePath = cmd.getOptionValue("staticpath", config.getString("files.staticPath"));
 
-			// TODO [nku]: make use of the seed
-			// Long seed = cmd.getOptionValue("seed") != null ? Long.parseLong(cmd.getOptionValue("seed")) :
-			// null;
-
 			AbstractAnalyticsTask<?, ?> analyticsTask;
 			String outputTopic;
 
