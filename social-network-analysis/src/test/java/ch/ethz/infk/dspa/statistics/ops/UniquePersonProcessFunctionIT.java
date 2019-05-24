@@ -1,21 +1,26 @@
 package ch.ethz.infk.dspa.statistics.ops;
 
-import java.io.IOException;
-import java.util.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import ch.ethz.infk.dspa.statistics.dto.StatisticsOutput;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import ch.ethz.infk.dspa.statistics.dto.PostActivity;
+import ch.ethz.infk.dspa.statistics.dto.StatisticsOutput;
 import ch.ethz.infk.dspa.stream.helper.TestSink;
 import ch.ethz.infk.dspa.stream.testdata.PostActivityTestDataGenerator;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 public class UniquePersonProcessFunctionIT {
 
@@ -69,174 +74,174 @@ public class UniquePersonProcessFunctionIT {
 	private Map<Long, List<StatisticsOutput>> buildExpectedResults() {
 		Map<Long, List<StatisticsOutput>> expectedResults = new HashMap<>();
 
+		// 2012-06-15 07:00:00
+		expectedResults.put(1339743600000L, Arrays.asList(
+				new StatisticsOutput(0L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+
 		// 2012-06-15 08:00:00
 		expectedResults.put(1339747200000L, Arrays.asList(
-				new StatisticsOutput(1339747200000L, 0L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-15 09:00:00
 		expectedResults.put(1339750800000L, Arrays.asList(
-				new StatisticsOutput(1339750800000L, 0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-15 10:00:00
 		expectedResults.put(1339754400000L, Arrays.asList(
-				new StatisticsOutput(1339754400000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-15 11:00:00
 		expectedResults.put(1339758000000L, Arrays.asList(
-				new StatisticsOutput(1339758000000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339758000000L, 1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-15 12:00:00
 		expectedResults.put(1339761600000L, Arrays.asList(
-				new StatisticsOutput(1339761600000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339761600000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-15 13:00:00
 		expectedResults.put(1339765200000L, Arrays.asList(
-				new StatisticsOutput(1339765200000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339765200000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339765200000L, 2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-15 14:00:00
 		expectedResults.put(1339768800000L, Arrays.asList(
-				new StatisticsOutput(1339768800000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339768800000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339768800000L, 2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-15 15:00:00
 		expectedResults.put(1339772400000L, Arrays.asList(
-				new StatisticsOutput(1339772400000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339772400000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339772400000L, 2L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-15 16:00:00
 		expectedResults.put(1339776000000L, Arrays.asList(
-				new StatisticsOutput(1339776000000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339776000000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339776000000L, 2L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-15 17:00:00
 		expectedResults.put(1339779600000L, Arrays.asList(
-				new StatisticsOutput(1339779600000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339779600000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339779600000L, 2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-15 18:00:00
 		expectedResults.put(1339783200000L, Arrays.asList(
-				new StatisticsOutput(1339783200000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339783200000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339783200000L, 2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339783200000L, 3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-15 19:00:00
 		expectedResults.put(1339786800000L, Arrays.asList(
-				new StatisticsOutput(1339786800000L, 0L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339786800000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339786800000L, 2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339786800000L, 3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339786800000L, 4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-15 20:00:00
 		expectedResults.put(1339790400000L, Arrays.asList(
-				new StatisticsOutput(1339790400000L, 0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339790400000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339790400000L, 2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339790400000L, 3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339790400000L, 4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-15 21:00:00
 		expectedResults.put(1339794000000L, Arrays.asList(
-				new StatisticsOutput(1339794000000L, 0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339794000000L, 1L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339794000000L, 2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339794000000L, 3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339794000000L, 4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 4L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-15 22:00:00
 		expectedResults.put(1339797600000L, Arrays.asList(
-				new StatisticsOutput(1339797600000L, 0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339797600000L, 1L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339797600000L, 2L, 4L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339797600000L, 3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339797600000L, 4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 4L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-15 23:00:00
 		expectedResults.put(1339801200000L, Arrays.asList(
-				new StatisticsOutput(1339801200000L, 0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339801200000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339801200000L, 2L, 4L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339801200000L, 3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339801200000L, 4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 4L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-16 00:00:00
 		expectedResults.put(1339804800000L, Arrays.asList(
-				new StatisticsOutput(1339804800000L, 0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339804800000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339804800000L, 2L, 4L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339804800000L, 3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339804800000L, 4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-16 01:00:00
 		expectedResults.put(1339808400000L, Arrays.asList(
-				new StatisticsOutput(1339808400000L, 0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339808400000L, 1L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339808400000L, 2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339808400000L, 3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339808400000L, 4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-16 02:00:00
 		expectedResults.put(1339812000000L, Arrays.asList(
-				new StatisticsOutput(1339812000000L, 0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339812000000L, 1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339812000000L, 2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339812000000L, 3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339812000000L, 4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-16 03:00:00
 		expectedResults.put(1339815600000L, Arrays.asList(
-				new StatisticsOutput(1339815600000L, 0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339815600000L, 1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339815600000L, 2L, 3L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339815600000L, 3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339815600000L, 4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-16 04:00:00
 		expectedResults.put(1339819200000L, Arrays.asList(
-				new StatisticsOutput(1339819200000L, 0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339819200000L, 1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339819200000L, 2L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339819200000L, 3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339819200000L, 4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-16 05:00:00
 		expectedResults.put(1339822800000L, Arrays.asList(
-				new StatisticsOutput(1339822800000L, 0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339822800000L, 1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339822800000L, 2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339822800000L, 3L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339822800000L, 4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-16 06:00:00
 		expectedResults.put(1339826400000L, Arrays.asList(
-				new StatisticsOutput(1339826400000L, 0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339826400000L, 1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339826400000L, 2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339826400000L, 4L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-16 07:00:00
 		expectedResults.put(1339830000000L, Arrays.asList(
-				new StatisticsOutput(1339830000000L, 0L, 2L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339830000000L, 1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339830000000L, 2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
+				new StatisticsOutput(2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		// 2012-06-16 08:00:00
 		expectedResults.put(1339833600000L, Arrays.asList(
-				new StatisticsOutput(1339833600000L, 1L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT),
-				new StatisticsOutput(1339833600000L, 2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
-
-		// 2012-06-16 09:00:00
-		expectedResults.put(1339837200000L, Arrays.asList(
-				new StatisticsOutput(1339837200000L, 2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
+				new StatisticsOutput(2L, 1L, StatisticsOutput.OutputType.UNIQUE_PERSON_COUNT)));
 
 		return expectedResults;
 	}

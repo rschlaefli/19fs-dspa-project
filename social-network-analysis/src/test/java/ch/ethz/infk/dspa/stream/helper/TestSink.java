@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
@@ -50,7 +51,7 @@ public class TestSink<IN> implements SinkFunction<IN> {
 	 * @return
 	 */
 	public static <T> List<ResultWindow<T>> getResultsInResultWindow(Class<T> type,
-			SlidingEventTimeWindows slidingWindow) {
+			SlidingEventTimeWindows slidingWindow, Predicate<T> predicate) {
 		Map<Long, List<T>> timestampedResultMap = getResultsTimestamped(type);
 
 		// assign timestamped events to windows
@@ -60,11 +61,7 @@ public class TestSink<IN> implements SinkFunction<IN> {
 
 		for (Entry<Long, List<T>> entry : timestampedResultMap.entrySet()) {
 			Long timestamp = entry.getKey();
-			List<T> results = entry.getValue();
-
-			if (results.size() != 10) {
-				System.out.println("here");
-			}
+			List<T> results = entry.getValue().stream().filter(predicate).collect(Collectors.toList());
 
 			Collection<TimeWindow> timeWindows = assigner.assignWindows(null, timestamp, null);
 			assert (timeWindows.size() == 1); // is assigned to tumbling window => can only assigned to one
@@ -85,10 +82,6 @@ public class TestSink<IN> implements SinkFunction<IN> {
 			TimeWindow slidingTimeWindow = new TimeWindow(timeWindow.getEnd() - slidingWindow.getSize(),
 					timeWindow.getEnd());
 			List<T> results = entry.getValue();
-
-			if (results.size() != 10) {
-				System.out.println("here");
-			}
 
 			ResultWindow<T> resultWindow = ResultWindow.of(slidingTimeWindow);
 			resultWindow.setResults(results);
