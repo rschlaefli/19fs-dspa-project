@@ -55,6 +55,7 @@ public class StreamProducer {
 	private long speedup;
 	private Duration maxSchedulingDelay;
 	private Duration maxRandomDelay;
+	private LocalDateTime baseDateTime;
 
 	private Random rand;
 
@@ -67,7 +68,6 @@ public class StreamProducer {
 
 			String line;
 
-			LocalDateTime baseReferenceDateTime = getBaseReferenceDateTime();
 			LocalDateTime baseStartDateTime = LocalDateTime.now();
 
 			long id = 0;
@@ -85,7 +85,7 @@ public class StreamProducer {
 				// calculate delay
 				Duration randomDelay = Duration.ofMillis(rand.nextInt((int) maxRandomDelay.toMillis()));
 
-				LocalDateTime schedulingDateTime = getSchedulingDateTime(baseReferenceDateTime, creationDateTime,
+				LocalDateTime schedulingDateTime = getSchedulingDateTime(baseDateTime, creationDateTime,
 						baseStartDateTime, randomDelay, speedup);
 
 				// if task is far in the future, delay scheduling
@@ -105,14 +105,13 @@ public class StreamProducer {
 			}
 
 		} catch (InterruptedException | IOException e) {
-			// TODO [nku] add error handling
+			e.printStackTrace();
 		}
 		try {
 			scheduledExecutorService.shutdown();
 			scheduledExecutorService.awaitTermination(maxSchedulingDelay.getSeconds(), TimeUnit.SECONDS);
 
 		} catch (InterruptedException e) {
-			// TODO [nku] add error handling
 			e.printStackTrace();
 		}
 		producer.flush();
@@ -139,8 +138,6 @@ public class StreamProducer {
 
 			Type type = fieldSchema.getType();
 			LogicalType logicalType = fieldSchema.getLogicalType();
-
-			// TODO [nku] refactor code
 
 			if (type == Type.UNION) {
 				List<Schema> x = fieldSchema.getTypes();
@@ -185,23 +182,10 @@ public class StreamProducer {
 		return record;
 	}
 
-	private LocalDateTime getCreationDate(String line) {
+	private static LocalDateTime getCreationDate(String line) {
 		String creationDateStr = line.split("\\|")[2];
 		LocalDateTime creationDate = ZonedDateTime.parse(creationDateStr).toLocalDateTime();
 		return creationDate;
-	}
-
-	private LocalDateTime getBaseReferenceDateTime() {
-		LocalDateTime baseDate = null;
-		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-			reader.readLine(); // skip header
-			String line = reader.readLine();
-			baseDate = getCreationDate(line);
-
-		} catch (IOException e) {
-			// TODO [nku] implement error handling
-		}
-		return baseDate;
 	}
 
 	private byte[] serialize(GenericRecord record) {
@@ -215,7 +199,6 @@ public class StreamProducer {
 			out.close();
 
 		} catch (IOException e) {
-			// TODO [nku] add error handling
 			e.printStackTrace();
 		}
 
@@ -237,6 +220,8 @@ public class StreamProducer {
 		private Duration maxRandomDelay;
 
 		private Long seed;
+
+		private LocalDateTime baseDateTime;
 
 		public Builder withMaxRandomDelay(Duration maxRandomDelay) {
 			this.maxRandomDelay = maxRandomDelay;
@@ -283,6 +268,11 @@ public class StreamProducer {
 			return this;
 		}
 
+		public Builder withStartBase(String baseDateTime) {
+			this.baseDateTime = ZonedDateTime.parse(baseDateTime).toLocalDateTime();
+			return this;
+		}
+
 		public StreamProducer build() {
 
 			StreamProducer streamProducer = new StreamProducer();
@@ -305,7 +295,6 @@ public class StreamProducer {
 				});
 
 			} catch (IOException e) {
-				// TODO [nku] implement error handling
 				e.printStackTrace();
 			}
 
@@ -343,7 +332,25 @@ public class StreamProducer {
 			}
 			streamProducer.maxSchedulingDelay = this.maxSchedulingDelay;
 
+			if (this.baseDateTime == null) {
+				this.baseDateTime = getBaseReferenceDateTime();
+			}
+			streamProducer.baseDateTime = this.baseDateTime;
+
 			return streamProducer;
+		}
+
+		private LocalDateTime getBaseReferenceDateTime() {
+			LocalDateTime baseDate = null;
+			try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+				reader.readLine(); // skip header
+				String line = reader.readLine();
+				baseDate = getCreationDate(line);
+
+			} catch (IOException e) {
+				// TODO [nku] implement error handling
+			}
+			return baseDate;
 		}
 
 	}

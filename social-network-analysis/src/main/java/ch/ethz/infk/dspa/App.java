@@ -116,7 +116,6 @@ public class App {
 			}
 
 		} catch (ParseException e) {
-			// TODO [nku] parse
 			e.printStackTrace();
 		}
 	}
