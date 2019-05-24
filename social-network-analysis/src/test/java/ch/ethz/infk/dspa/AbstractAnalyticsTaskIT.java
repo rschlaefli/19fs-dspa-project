@@ -65,21 +65,27 @@ public abstract class AbstractAnalyticsTaskIT<OUT_TYPE> extends AbstractTestBase
 		PostTestDataGenerator postGenerator = new PostTestDataGenerator();
 		postStream = postGenerator
 				.generate(env, "src/test/java/resources/post_event_stream.csv", getMaxOutOfOrderness());
-		posts = postGenerator.getTestData().stream().map(TestDataPair::getElement)
-				.sorted(Comparator.comparing(Post::getCreationDate)).collect(Collectors.toList());
+		posts = postGenerator.getTestData().stream()
+				.map(TestDataPair::getElement)
+				.sorted(Comparator.comparing(Post::getCreationDate))
+				.collect(Collectors.toList());
 
 		CommentTestDataGenerator commentGenerator = new CommentTestDataGenerator();
 		commentStream = commentGenerator
 				.generate(env, "src/test/java/resources/comment_event_stream.csv", getMaxOutOfOrderness());
-		comments = commentGenerator.getTestData().stream().map(TestDataPair::getElement)
-				.sorted(Comparator.comparing(Comment::getCreationDate)).collect(Collectors.toList());
+		comments = commentGenerator.getTestData().stream()
+				.map(TestDataPair::getElement)
+				.sorted(Comparator.comparing(Comment::getCreationDate))
+				.collect(Collectors.toList());
 		comments = addCommentPostMapping(comments);
 
 		LikeTestDataGenerator likeGenerator = new LikeTestDataGenerator();
 		likeStream = likeGenerator
 				.generate(env, "src/test/java/resources/likes_event_stream.csv", getMaxOutOfOrderness());
-		likes = likeGenerator.getTestData().stream().map(TestDataPair::getElement)
-				.sorted(Comparator.comparing(Like::getCreationDate)).collect(Collectors.toList());
+		likes = likeGenerator.getTestData().stream()
+				.map(TestDataPair::getElement)
+				.sorted(Comparator.comparing(Like::getCreationDate))
+				.collect(Collectors.toList());
 
 		beforeEachTaskSpecific(posts, comments, likes);
 
@@ -92,10 +98,10 @@ public abstract class AbstractAnalyticsTaskIT<OUT_TYPE> extends AbstractTestBase
 		List<WindowAssigner<Object, TimeWindow>> assigners = getWindowAssigners();
 
 		// 3.1 Calculate Expected Results
-		List<ResultWindow<OUT_TYPE>> expectedWindows = new ArrayList<>();
+		List<ResultWindow<OUT_TYPE>> allExpectedWindows = new ArrayList<>();
 		for (WindowAssigner<Object, TimeWindow> assigner : assigners) {
 
-			expectedWindows.addAll(assignToWindows(posts, comments, likes, assigner));
+			List<ResultWindow<OUT_TYPE>> expectedWindows = assignToWindows(posts, comments, likes, assigner);
 
 			for (ResultWindow<OUT_TYPE> expectedWindow : expectedWindows) {
 				List<OUT_TYPE> expectedResults = buildExpectedResultsOfWindow(assigner, expectedWindow,
@@ -104,14 +110,15 @@ public abstract class AbstractAnalyticsTaskIT<OUT_TYPE> extends AbstractTestBase
 						expectedWindow.getLikes());
 				expectedWindow.setResults(expectedResults);
 			}
+			allExpectedWindows.addAll(expectedWindows);
 
 		}
 
 		// 3.2 Merge Expected Results
-		Map<TimeWindow, List<ResultWindow<OUT_TYPE>>> map = expectedWindows.stream()
+		Map<TimeWindow, List<ResultWindow<OUT_TYPE>>> map = allExpectedWindows.stream()
 				.collect(Collectors.groupingBy(x -> new TimeWindow(x.getStart(), x.getEnd()), Collectors.toList()));
 		// clear old list
-		expectedWindows = new ArrayList<>();
+		allExpectedWindows = new ArrayList<>();
 		for (Entry<TimeWindow, List<ResultWindow<OUT_TYPE>>> entry : map.entrySet()) {
 
 			ResultWindow<OUT_TYPE> mergedResultWindow = ResultWindow.of(entry.getKey());
@@ -128,11 +135,11 @@ public abstract class AbstractAnalyticsTaskIT<OUT_TYPE> extends AbstractTestBase
 					.collect(Collectors.toList());
 			mergedResultWindow.setResults(mergedResults);
 
-			expectedWindows.add(mergedResultWindow);
+			allExpectedWindows.add(mergedResultWindow);
 		}
 
 		// sort by start of window
-		expectedWindows = expectedWindows.stream()
+		allExpectedWindows = allExpectedWindows.stream()
 				.sorted(Comparator.comparing(ResultWindow::getStart))
 				.collect(Collectors.toList());
 
@@ -140,9 +147,9 @@ public abstract class AbstractAnalyticsTaskIT<OUT_TYPE> extends AbstractTestBase
 		List<ResultWindow<OUT_TYPE>> actualWindows = produceActualResults(postStream, commentStream, likeStream);
 
 		// 5th Check Results
-		checkTimeWindows(expectedWindows, actualWindows);
+		checkTimeWindows(allExpectedWindows, actualWindows);
 
-		checkWindowContents(expectedWindows, actualWindows);
+		checkWindowContents(allExpectedWindows, actualWindows);
 
 	}
 
@@ -174,17 +181,28 @@ public abstract class AbstractAnalyticsTaskIT<OUT_TYPE> extends AbstractTestBase
 	}
 
 	/**
-	 * Expects that the windows are identical and in the same order. Additionally requires a proper equals
-	 * implementation of the OUT_TYPE. Then it checks if also the contents matches.
+	 * Expects that the windows are identical and in the same order. Additionally requires a proper
+	 * equals implementation of the OUT_TYPE. Then it checks if also the contents matches.
 	 * 
 	 * @param expectedWindows
 	 * @param actualWindows
 	 */
 	private void checkWindowContents(List<ResultWindow<OUT_TYPE>> expectedWindows,
 			List<ResultWindow<OUT_TYPE>> actualWindows) {
+
+		expectedWindows = expectedWindows.stream()
+				.sorted(Comparator.comparing(ResultWindow::getStart))
+				.collect(Collectors.toList());
+		actualWindows = actualWindows.stream()
+				.sorted(Comparator.comparing(ResultWindow::getStart))
+				.collect(Collectors.toList());
+
 		for (int i = 0; i < expectedWindows.size(); i++) {
 			ResultWindow<OUT_TYPE> expectedWindow = expectedWindows.get(i);
 			ResultWindow<OUT_TYPE> actualWindow = actualWindows.get(i);
+
+			assertEquals(expectedWindow.getStart(), actualWindow.getStart(), "Comparing different Windows: Start");
+			assertEquals(expectedWindow.getEnd(), actualWindow.getEnd(), "Comparing different Windows: End");
 
 			List<OUT_TYPE> expectedResults = expectedWindow.getResults();
 			List<OUT_TYPE> expectedResultsImmutable = ImmutableList.copyOf(expectedResults);
@@ -210,7 +228,8 @@ public abstract class AbstractAnalyticsTaskIT<OUT_TYPE> extends AbstractTestBase
 	}
 
 	/**
-	 * Checks that the actual windows match the expected windows but does not check the results within the windows
+	 * Checks that the actual windows match the expected windows but does not check the results within
+	 * the windows
 	 * 
 	 * @param expectedWindows
 	 * @param actualWindows
@@ -220,12 +239,14 @@ public abstract class AbstractAnalyticsTaskIT<OUT_TYPE> extends AbstractTestBase
 
 		List<TimeWindow> expectedTimeWindows = expectedWindows.stream()
 				.map(window -> new TimeWindow(window.getStart(), window.getEnd()))
+				.sorted(Comparator.comparing(TimeWindow::getStart))
 				.collect(Collectors.toList());
 
 		List<TimeWindow> expectedTimeWindowsImmutable = ImmutableList.copyOf(expectedTimeWindows);
 
 		List<TimeWindow> actualTimeWindows = actualWindows.stream()
 				.map(window -> new TimeWindow(window.getStart(), window.getEnd()))
+				.sorted(Comparator.comparing(TimeWindow::getStart))
 				.collect(Collectors.toList());
 
 		List<TimeWindow> actualTimeWindowsImmutable = ImmutableList.copyOf(actualTimeWindows);

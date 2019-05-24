@@ -1,7 +1,5 @@
 package ch.ethz.infk.dspa.statistics.dto;
 
-import com.google.common.base.Objects;
-
 public class StatisticsOutput {
 
 	public enum OutputType {
@@ -10,7 +8,6 @@ public class StatisticsOutput {
 		UNIQUE_PERSON_COUNT
 	}
 
-	private Long timestamp;
 	private Long postId;
 	private Long value = 0L;
 	private OutputType outputType;
@@ -18,19 +15,10 @@ public class StatisticsOutput {
 	public StatisticsOutput() {
 	}
 
-	public StatisticsOutput(Long timestamp, Long postId, Long value, OutputType outputType) {
-		this.timestamp = timestamp;
+	public StatisticsOutput(Long postId, Long value, OutputType outputType) {
 		this.postId = postId;
 		this.value = value;
 		this.outputType = outputType;
-	}
-
-	public Long getTimestamp() {
-		return timestamp;
-	}
-
-	public void setTimestamp(Long timestamp) {
-		this.timestamp = timestamp;
 	}
 
 	public Long getPostId() {
@@ -62,28 +50,34 @@ public class StatisticsOutput {
 	}
 
 	@Override
-	public String toString() {
-		return "StatisticsOutput{" +
-				"timestamp=" + timestamp +
-				", postId=" + postId +
-				", value=" + value +
-				", outputType=" + outputType +
-				'}';
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		StatisticsOutput that = (StatisticsOutput) o;
-		return Objects.equal(timestamp, that.timestamp) &&
-				Objects.equal(postId, that.postId) &&
-				Objects.equal(value, that.value) &&
-				outputType == that.outputType;
-	}
-
-	@Override
 	public int hashCode() {
-		return Objects.hashCode(timestamp, postId, value, outputType);
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((outputType == null) ? 0 : outputType.hashCode());
+		result = prime * result + ((postId == null) ? 0 : postId.hashCode());
+		result = prime * result + ((value == null) ? 0 : value.hashCode());
+		return result;
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		StatisticsOutput other = (StatisticsOutput) obj;
+		if (outputType != other.outputType) return false;
+		if (postId == null) {
+			if (other.postId != null) return false;
+		} else if (!postId.equals(other.postId)) return false;
+		if (value == null) {
+			if (other.value != null) return false;
+		} else if (!value.equals(other.value)) return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "StatisticsOutput [postId=" + postId + ", value=" + value + ", outputType=" + outputType + "]";
+	}
+
 }

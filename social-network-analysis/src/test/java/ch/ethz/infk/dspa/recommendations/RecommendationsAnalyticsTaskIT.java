@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -117,8 +118,15 @@ public class RecommendationsAnalyticsTaskIT extends AbstractAnalyticsTaskIT<Frie
 
 		analyticsTask.start();
 
+		Predicate<FriendsRecommendation> predicate = new Predicate<FriendsRecommendation>() {
+			@Override
+			public boolean test(FriendsRecommendation t) {
+				return true;
+			}
+		};
+
 		return TestSink.getResultsInResultWindow(FriendsRecommendation.class,
-				SlidingEventTimeWindows.of(Time.hours(4), Time.hours(1)));
+				SlidingEventTimeWindows.of(Time.hours(4), Time.hours(1)), predicate);
 
 	}
 
@@ -260,7 +268,7 @@ public class RecommendationsAnalyticsTaskIT extends AbstractAnalyticsTaskIT<Frie
 
 	@Override
 	public Time getMaxOutOfOrderness() {
-		return Time.hours(1);
+		return Time.seconds(600);
 	}
 
 }
