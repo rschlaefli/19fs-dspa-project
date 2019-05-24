@@ -22,6 +22,7 @@ import ch.ethz.infk.dspa.recommendations.ops.CategoryEnrichmentProcessFunction;
 import ch.ethz.infk.dspa.recommendations.ops.FriendsFilterFunction;
 import ch.ethz.infk.dspa.recommendations.ops.PersonActivityAggregateFunction;
 import ch.ethz.infk.dspa.recommendations.ops.PersonActivityBroadcastJoinProcessFunction;
+import ch.ethz.infk.dspa.recommendations.ops.PersonNameMapFunction;
 import ch.ethz.infk.dspa.recommendations.ops.StaticPersonActivityOutputProcessFunction;
 import ch.ethz.infk.dspa.recommendations.ops.TopKAggregateFunction;
 import ch.ethz.infk.dspa.recommendations.ops.WindowActivateProcessFunction;
@@ -124,7 +125,8 @@ public class RecommendationsAnalyticsTask
 				.filter(new FriendsFilterFunction(staticPersonKnowsPerson))
 				.keyBy(PersonSimilarity::person1Id)
 				.window(TumblingEventTimeWindows.of(windowSlide))
-				.aggregate(new TopKAggregateFunction(topKCount));
+				.aggregate(new TopKAggregateFunction(topKCount))
+				.map(new PersonNameMapFunction(staticPerson));
 
 		return this;
 	}

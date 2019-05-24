@@ -32,6 +32,7 @@ import ch.ethz.infk.dspa.recommendations.dto.PersonSimilarity;
 import ch.ethz.infk.dspa.recommendations.dto.PersonSimilarityComparator;
 import ch.ethz.infk.dspa.recommendations.dto.StaticCategoryMap;
 import ch.ethz.infk.dspa.recommendations.ops.CategoryEnrichmentProcessFunction;
+import ch.ethz.infk.dspa.recommendations.ops.PersonNameMapFunction;
 import ch.ethz.infk.dspa.stream.helper.TestSink;
 
 public class RecommendationsAnalyticsTaskIT extends AbstractAnalyticsTaskIT<FriendsRecommendation> {
@@ -46,6 +47,7 @@ public class RecommendationsAnalyticsTaskIT extends AbstractAnalyticsTaskIT<Frie
 	private String tagclassIsSubclassOfTagClassRelationFile = getStaticFilePath()
 			+ "tagclass_isSubclassOf_tagclass.csv";
 
+	private Map<Long, String> personNameRelation;
 	private Set<String> knowsRelation;
 	private String knowsRelationFile = getStaticFilePath() + "person_knows_person.csv";
 
@@ -56,6 +58,7 @@ public class RecommendationsAnalyticsTaskIT extends AbstractAnalyticsTaskIT<Frie
 	private String personSpeaksRelationFile = getStaticFilePath() + "person_speaks_language.csv";
 	private String personStudyRelationFile = getStaticFilePath() + "person_studyAt_organisation.csv";
 	private String personWorkplaceRelationFile = getStaticFilePath() + "person_workAt_organisation.csv";
+	private String staticPersonFile = getStaticFilePath() + "person.csv";
 
 	@Override
 	public void beforeEachTaskSpecific(List<Post> allPosts, List<Comment> allComments, List<Like> allLikes)
@@ -95,6 +98,8 @@ public class RecommendationsAnalyticsTaskIT extends AbstractAnalyticsTaskIT<Frie
 					enrichment.enrichPersonActivity(PersonActivity.of(post), new HashMap<>()));
 			this.inheritedCategoryMap.put(post.getId(), inheritableCategories);
 		}
+
+		this.personNameRelation = PersonNameMapFunction.buildUserNameRelation(this.staticPersonFile);
 
 	}
 
@@ -175,12 +180,15 @@ public class RecommendationsAnalyticsTaskIT extends AbstractAnalyticsTaskIT<Frie
 			// select 5 largest similarities
 			List<SimilarityTuple> top5Similarities = personSimilarities.stream()
 					.sorted(new PersonSimilarityComparator().reversed())
-					.limit(5).map(x -> new SimilarityTuple(x.person2Id(), x.similarity(), x.getCategoryMap2()))
+					.limit(5)
+					.map(x -> new SimilarityTuple(x.person2Id(), x.similarity(), x.getCategoryMap2(),
+							personNameRelation.get(x.person2Id())))
 					.collect(Collectors.toList());
 
 			// create friends recommendation
 			FriendsRecommendation recommendation = new FriendsRecommendation();
 			recommendation.setPersonId(p1.getPersonId());
+			recommendation.setPersonName(personNameRelation.get(p1.getPersonId()));
 			recommendation.setSimilarities(top5Similarities);
 			recommendation.setInactive(p1.onlyStatic());
 			if (outputCategoryMap) {

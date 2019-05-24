@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 public class FriendsRecommendation implements Comparable<FriendsRecommendation> {
 
 	private Long personId;
+	private String personName;
 
 	// for this recommendation the person did not have any events
 	private boolean inactive;
@@ -22,6 +23,14 @@ public class FriendsRecommendation implements Comparable<FriendsRecommendation> 
 
 	public void setPersonId(long personId) {
 		this.personId = personId;
+	}
+
+	public String getPersonName() {
+		return personName;
+	}
+
+	public void setPersonName(String personName) {
+		this.personName = personName;
 	}
 
 	public List<SimilarityTuple> getSimilarities() {
@@ -97,6 +106,7 @@ public class FriendsRecommendation implements Comparable<FriendsRecommendation> 
 
 	public static class SimilarityTuple implements Comparable<SimilarityTuple> {
 		private Long personId;
+		private String personName;
 		private Double similarity;
 
 		private Map<String, Integer> categoryMap;
@@ -110,12 +120,25 @@ public class FriendsRecommendation implements Comparable<FriendsRecommendation> 
 			this.categoryMap = categoryMap;
 		}
 
+		public SimilarityTuple(Long personId, Double similarity, Map<String, Integer> categoryMap, String personName) {
+			this(personId, similarity, categoryMap);
+			this.personName = personName;
+		}
+
 		public Long getPersonId() {
 			return personId;
 		}
 
 		public void setPersonId(Long personId) {
 			this.personId = personId;
+		}
+
+		public String getPersonName() {
+			return personName;
+		}
+
+		public void setPersonName(String personName) {
+			this.personName = personName;
 		}
 
 		public Double getSimilarity() {
