@@ -23,7 +23,6 @@ public class ProducerTask implements Runnable {
 		producer.send(record, new Callback() {
 			@Override
 			public void onCompletion(RecordMetadata metadata, Exception exception) {
-				// TODO [nku] on completion handling of task
 				LOG.info("Task {} Completed", id);
 			}
 		});

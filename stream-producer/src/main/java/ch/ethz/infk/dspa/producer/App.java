@@ -25,16 +25,16 @@ public class App {
 					.withWorker(Integer.parseInt(cmd.getOptionValue("worker", "2")))
 					.withFile(cmd.getOptionValue("file")).withTopic(cmd.getOptionValue("topic"))
 					.withSchema(cmd.getOptionValue("schema"))
-					.withSpeedup(Duration.ofSeconds(Long.parseLong(cmd.getOptionValue("speedup", "1"))).toMillis())
-					.withMaxSchedulingDelay(Duration.ofSeconds(Long.parseLong(cmd.getOptionValue("sdelay", "3600"))))
-					.withMaxRandomDelay(Duration.ofSeconds(Long.parseLong(cmd.getOptionValue("rdelay", "3600"))))
+					.withStartBase(cmd.getOptionValue("start"))
+					.withSpeedup(Long.parseLong(cmd.getOptionValue("speedup")))
+					.withMaxSchedulingDelay(Duration.ofSeconds(Long.parseLong(cmd.getOptionValue("sdelay"))))
+					.withMaxRandomDelay(Duration.ofSeconds(Long.parseLong(cmd.getOptionValue("rdelay"))))
 					.withKafkaServer(cmd.getOptionValue("kafkaserver"))
 					.withSeed(seed).build();
 
 			producer.start();
 
 		} catch (ParseException e) {
-			// TODO [nku] parse
 			e.printStackTrace();
 		}
 	}
@@ -55,18 +55,22 @@ public class App {
 				.desc("kafka server").build());
 
 		options.addOption(
-				Option.builder("speedup").hasArg().type(Integer.class).desc("stream speedup").build());
+				Option.builder("speedup").hasArg().required().type(Integer.class).desc("stream speedup").build());
 
 		options.addOption(
-				Option.builder("rdelay").hasArg().type(Integer.class).desc("max random delay (sec)").build());
+				Option.builder("rdelay").hasArg().required().type(Integer.class).desc("max random delay (sec)")
+						.build());
 
-		options.addOption(Option.builder("sdelay").hasArg().type(Integer.class)
+		options.addOption(Option.builder("sdelay").hasArg().required().type(Integer.class)
 				.desc("max scheduling delay (sec)").build());
 
 		options.addOption(Option.builder("seed").hasArg().type(Long.class).desc("random seed").build());
 
 		options.addOption(Option.builder("worker").hasArg().type(Integer.class)
 				.desc("number of threads executing scheduled tasks").build());
+
+		options.addOption(Option.builder("start").hasArg().type(String.class)
+				.desc("start timestamp (base reference for event times)").build());
 
 		return options;
 	}
