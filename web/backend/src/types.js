@@ -1,4 +1,4 @@
-const { gql } = require('apollo-server')
+const { gql } = require('apollo-server-express')
 
 module.exports = gql`
   enum OutputType {
@@ -16,11 +16,15 @@ module.exports = gql`
 
   type PersonSimilarity {
     personId: Int!
+    personName: String
     similarity: Float!
   }
 
   type RecommendationsOutput {
+    timestamp: Float!
     personId: Int!
+    personName: String
+    inactive: Boolean!
     similarities: [PersonSimilarity!]!
   }
 
@@ -29,9 +33,12 @@ module.exports = gql`
     CONTENTS_SHORT: Int
     CONTENTS_MEDIUM: Int
     CONTENTS_LONG: Int
+    INTERACTIONS_RATIO: Int
+    NEW_USER_LIKES: Int
   }
 
   type AnomaliesOutput {
+    timestamp: Float!
     personId: Int!
     anomalousEvents: [String!]!
     voteCounts: VoteCounts!
@@ -41,11 +48,5 @@ module.exports = gql`
     statisticsOutputs: [StatisticsOutput!]
     recommendationsOutputs: [RecommendationsOutput!]
     anomaliesOutputs: [AnomaliesOutput!]
-  }
-
-  type Subscription {
-    newStatisticsOutput: StatisticsOutput!
-    newRecommendations: RecommendationsOutput!
-    newAnomalies: AnomaliesOutput!
   }
 `

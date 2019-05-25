@@ -3,15 +3,17 @@
   "version": "1.0.0",
   "main": "src/index.js",
   "scripts": {
-    "dev": "nodemon -w 'src/**.js' src/index.js",
+    "dev": "nodemon --signal SIGINT --ext js src/index.js",
     "start": "node src/index.js"
   },
   "dependencies": {
-    "apollo-server": "2.5.0",
+    "apollo-server-express": "^2.5.0",
+    "bull": "3.9.1",
+    "express": "^4.17.0",
     "graphql": "14.3.0",
-    "graphql-redis-subscriptions": "2.1.0",
-    "graphql-subscriptions": "1.1.0",
-    "kafkajs": "1.8.0"
+    "ioredis": "4.9.3",
+    "kafkajs": "1.8.0",
+    "lodash": "4.17.11"
   },
   "devDependencies": {
     "prettier": "1.17.1",

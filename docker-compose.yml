@@ -1,4 +1,4 @@
-version: "3"
+version: "2.4"
 services:
   zookeeper:
     image: bitnami/zookeeper
@@ -6,6 +6,11 @@ services:
       - 2181:2181
     environment:
       ALLOW_ANONYMOUS_LOGIN: "yes"
+      ZOO_HEAP_SIZE: 96
+    cpu_shares: 128
+    cpu_quota: 50000
+    mem_reservation: 96m
+    mem_limit: 128m
 
   kafka:
     image: bitnami/kafka
@@ -18,20 +23,15 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://:9092, PLAINTEXT_HOST://:29092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_NUM_NETWORK_THREADS: 3
-      KAFKA_NUM_IO_THREADS: 3
-      KAFKA_HEAP_OPTS: -Xmx2048m -Xms2048m
+      # KAFKA_NUM_NETWORK_THREADS: 3
+      # KAFKA_NUM_IO_THREADS: 3
+      KAFKA_HEAP_OPTS: -Xmx512m -Xms512m
     depends_on:
       - zookeeper
-
-  kafka-web:
-    build: web
-    ports:
-      - 8080:8080
-    volumes:
-      - web-data:/app/data
-    depends_on:
-      - kafka
+    cpu_shares: 1024
+    cpu_quota: 50000
+    mem_reservation: 512m
+    mem_limit: 640m
 
   cluster-statistics:
     build:
@@ -45,7 +45,7 @@ services:
         "-j",
         "ch.ethz.infk.dspa.App",
         "-Djobmanager.rpc.address=cluster-statistics",
-        "-Dparallelism.default=2",
+        "-Dparallelism.default=$TASK_PARALLELISM",
         "-kafkaserver",
         "kafka:9092",
         "-analyticstype",
@@ -55,11 +55,15 @@ services:
         "-staticpath",
         "/opt/tables/",
         "-maxdelaysec",
-        "600",
+        "$MAXDELAYSEC",
       ]
     volumes:
-      - ./social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
-      - ./data/1k-users-sorted/tables/:/opt/tables:ro
+      - $SOURCE_DIRECTORY/social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
+      - $SOURCE_DIRECTORY/data/$DATA_DIRECTORY/tables/:/opt/tables:ro
+    cpu_shares: 1024
+    cpu_quota: 70000
+    mem_reservation: 512m
+    mem_limit: 768m
 
   task-statistics:
     build:
@@ -67,10 +71,14 @@ services:
       dockerfile: social-network-analysis/Dockerfile
     command: ["task-manager", "-Djobmanager.rpc.address=cluster-statistics"]
     volumes:
-      - ./social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
-      - ./data/1k-users-sorted/tables/:/opt/tables:ro
+      - $SOURCE_DIRECTORY/social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
+      - $SOURCE_DIRECTORY/data/$DATA_DIRECTORY/tables/:/opt/tables:ro
     depends_on:
       - cluster-statistics
+    cpu_shares: 1024
+    cpu_quota: 70000
+    mem_reservation: 1024m
+    mem_limit: 1280m
 
   cluster-recommendations:
     build:
@@ -84,7 +92,7 @@ services:
         "-j",
         "ch.ethz.infk.dspa.App",
         "-Djobmanager.rpc.address=cluster-recommendations",
-        "-Dparallelism.default=2",
+        "-Dparallelism.default=$TASK_PARALLELISM",
         "-kafkaserver",
         "kafka:9092",
         "-analyticstype",
@@ -94,11 +102,15 @@ services:
         "-staticpath",
         "/opt/tables/",
         "-maxdelaysec",
-        "600",
+        "$MAXDELAYSEC",
       ]
     volumes:
-      - ./social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
-      - ./data/1k-users-sorted/tables/:/opt/tables:ro
+      - $SOURCE_DIRECTORY/social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
+      - $SOURCE_DIRECTORY/data/$DATA_DIRECTORY/tables/:/opt/tables:ro
+    cpu_shares: 1024
+    cpu_quota: 70000
+    mem_reservation: 512m
+    mem_limit: 768m
 
   task-recommendations:
     build:
@@ -107,10 +119,14 @@ services:
     command:
       ["task-manager", "-Djobmanager.rpc.address=cluster-recommendations"]
     volumes:
-      - ./social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
-      - ./data/1k-users-sorted/tables/:/opt/tables:ro
+      - $SOURCE_DIRECTORY/social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
+      - $SOURCE_DIRECTORY/data/$DATA_DIRECTORY/tables/:/opt/tables:ro
     depends_on:
       - cluster-recommendations
+    cpu_shares: 1024
+    cpu_quota: 70000
+    mem_reservation: 1024m
+    mem_limit: 1280m
 
   cluster-anomalies:
     build:
@@ -124,7 +140,7 @@ services:
         "-j",
         "ch.ethz.infk.dspa.App",
         "-Djobmanager.rpc.address=cluster-anomalies",
-        "-Dparallelism.default=2",
+        "-Dparallelism.default=$TASK_PARALLELISM",
         "-kafkaserver",
         "kafka:9092",
         "-analyticstype",
@@ -134,11 +150,15 @@ services:
         "-staticpath",
         "/opt/tables/",
         "-maxdelaysec",
-        "600",
+        "$MAXDELAYSEC",
       ]
     volumes:
-      - ./social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
-      - ./data/1k-users-sorted/tables/:/opt/tables:ro
+      - $SOURCE_DIRECTORY/social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
+      - $SOURCE_DIRECTORY/data/$DATA_DIRECTORY/tables/:/opt/tables:ro
+    cpu_shares: 1024
+    cpu_quota: 70000
+    mem_reservation: 512m
+    mem_limit: 768m
 
   task-anomalies:
     build:
@@ -146,22 +166,24 @@ services:
       dockerfile: social-network-analysis/Dockerfile
     command: ["task-manager", "-Djobmanager.rpc.address=cluster-anomalies"]
     volumes:
-      - ./social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
-      - ./data/1k-users-sorted/tables/:/opt/tables:ro
+      - $SOURCE_DIRECTORY/social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
+      - $SOURCE_DIRECTORY/data/$DATA_DIRECTORY/tables/:/opt/tables:ro
     depends_on:
       - cluster-anomalies
+    cpu_shares: 1024
+    cpu_quota: 70000
+    mem_reservation: 1024m
+    mem_limit: 1280m
 
   producer-post:
     build:
       context: .
       dockerfile: stream-producer/Dockerfile
+    entrypoint: ["/wait-for.sh", "$TASK", "java", "-jar", "/opt/producer.jar"]
     command:
       [
-        "java",
-        "-jar",
-        "/opt/producer.jar",
         "-file",
-        "/data/1k-users-sorted/streams/post_event_stream_cleaned.csv",
+        "/data/$DATA_DIRECTORY/streams/post_event_stream_cleaned.csv",
         "-schema",
         "/data/schema/avro/post.avsc",
         "-topic",
@@ -169,30 +191,36 @@ services:
         "-kafkaserver",
         "kafka:9092",
         "-speedup",
-        "20",
+        "$SPEEDUP",
         "-rdelay",
-        "5",
+        "$RANDOMDELAY",
         "-sdelay",
-        "600",
+        "$MAXDELAYSEC",
         "-seed",
         "1",
         "-worker",
         "1",
+        "-start",
+        "$PRODUCER_SYNC_TS",
       ]
     volumes:
-      - ./data:/data:ro
+      - $SOURCE_DIRECTORY/data:/data:ro
+    depends_on:
+      - kafka
+    cpu_shares: 256
+    cpu_quota: 25000
+    mem_reservation: 128m
+    mem_limit: 196m
 
   producer-like:
     build:
       context: .
       dockerfile: stream-producer/Dockerfile
+    entrypoint: ["/wait-for.sh", "$TASK", "java", "-jar", "/opt/producer.jar"]
     command:
       [
-        "java",
-        "-jar",
-        "/opt/producer.jar",
         "-file",
-        "/data/1k-users-sorted/streams/likes_event_stream_cleaned.csv",
+        "/data/$DATA_DIRECTORY/streams/likes_event_stream_cleaned.csv",
         "-schema",
         "/data/schema/avro/like.avsc",
         "-topic",
@@ -200,30 +228,36 @@ services:
         "-kafkaserver",
         "kafka:9092",
         "-speedup",
-        "20",
+        "$SPEEDUP",
         "-rdelay",
-        "5",
+        "$RANDOMDELAY",
         "-sdelay",
-        "600",
+        "$MAXDELAYSEC",
         "-seed",
         "2",
         "-worker",
         "1",
+        "-start",
+        "$PRODUCER_SYNC_TS",
       ]
     volumes:
-      - ./data:/data:ro
+      - $SOURCE_DIRECTORY/data:/data:ro
+    depends_on:
+      - kafka
+    cpu_shares: 256
+    cpu_quota: 25000
+    mem_reservation: 128m
+    mem_limit: 196m
 
   producer-comment:
     build:
       context: .
       dockerfile: stream-producer/Dockerfile
+    entrypoint: ["/wait-for.sh", "$TASK", "java", "-jar", "/opt/producer.jar"]
     command:
       [
-        "java",
-        "-jar",
-        "/opt/producer.jar",
         "-file",
-        "/data/1k-users-sorted/streams/comment_event_stream_cleaned.csv",
+        "/data/$DATA_DIRECTORY/streams/comment_event_stream_cleaned.csv",
         "-schema",
         "/data/schema/avro/comment.avsc",
         "-topic",
@@ -231,18 +265,62 @@ services:
         "-kafkaserver",
         "kafka:9092",
         "-speedup",
-        "20",
+        "$SPEEDUP",
         "-rdelay",
-        "5",
+        "$RANDOMDELAY",
         "-sdelay",
-        "600",
+        "$MAXDELAYSEC",
         "-seed",
         "3",
         "-worker",
         "1",
+        "-start",
+        "$PRODUCER_SYNC_TS",
       ]
     volumes:
-      - ./data:/data:ro
+      - $SOURCE_DIRECTORY/data:/data:ro
+    depends_on:
+      - kafka
+    cpu_shares: 256
+    cpu_quota: 25000
+    mem_reservation: 128m
+    mem_limit: 196m
+
+  kafka-web:
+    build: web/kafkaui
+    ports:
+      - 8080:8080
+    volumes:
+      - web-data:/app/data
+    depends_on:
+      - kafka
+    cpu_shares: 256
+    cpu_quota: 10000
+    mem_limit: 128m
+
+  redis:
+    image: bitnami/redis
+    ports:
+      - 6379:6379
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - ./web/redis.conf:/opt/bitnami/redis/etc/redis.conf:ro
+    cpu_shares: 768
+    cpu_quota: 30000
+    mem_reservation: 256m
+    mem_limit: 512m
+
+  web:
+    build: web
+    ports:
+      - 4000:4000
+    environment:
+      KAFKA_URL: "kafka:9092"
+      REDIS_HOST: "redis"
+    depends_on:
+      - kafka
+      - redis
 
 volumes:
   web-data:

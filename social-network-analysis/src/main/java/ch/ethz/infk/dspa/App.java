@@ -80,8 +80,7 @@ public class App {
 			// TODO: add any necessary exec. config for producers
 			ExecutionConfig executionConfig = new ExecutionConfig();
 
-			SinkFunction<String> kafkaSink = new KafkaProducerBuilder<String>()
-					.withClass(String.class)
+			SinkFunction<String> kafkaSink = new KafkaProducerBuilder()
 					.withKafkaConnection(kafkaServer)
 					.withTopic(outputTopic)
 					.withExecutionConfig(executionConfig)

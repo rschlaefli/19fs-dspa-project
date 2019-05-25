@@ -1,44 +1,51 @@
 const { Kafka } = require('kafkajs')
 
-async function setupKafka(groupId = 'nodejs') {
-  try {
-    const kafka = new Kafka({
-      clientId: 'visualization',
-      brokers: ['localhost:29092'],
-    })
-
-    const consumer = kafka.consumer({
-      groupId,
-    })
-
-    await consumer.connect()
-
-    return consumer
-  } catch (err) {
-    console.error(err)
-  }
-}
-
-async function subscribeTo(consumer, topic, fromBeginning = false) {
-  try {
-    await consumer.subscribe({ topic, fromBeginning })
-  } catch (err) {
-    console.error(err)
-  }
-}
-
 function messageToJson(message) {
+  const messageAsString = message.value.toString('utf-8').trim()
   try {
-    const messageAsString = message.value.toString('utf-8', 1).trim()
-    console.log(messageAsString)
     return JSON.parse(messageAsString)
   } catch (err) {
+    console.log(messageAsString)
     console.error(err)
   }
+}
+
+async function setupKafka({
+  brokers = ['localhost:29092'],
+  clientId = 'visualization',
+  fromBeginning = false,
+  groupId = 'nodejs',
+  topics = ['active-posts-out', 'recommendations-out', 'anomalies-out'],
+} = {}) {
+  const kafka = new Kafka({ clientId, brokers })
+
+  const consumer = kafka.consumer({ groupId })
+  await consumer.connect()
+
+  await Promise.all(
+    topics.map(async topic => {
+      return consumer.subscribe({ topic, fromBeginning })
+    })
+  )
+
+  return consumer
+}
+
+async function runKafkaConsumer({ kafkaConsumer, outputsQueue }) {
+  return kafkaConsumer.run({
+    autoCommitInterval: 5000,
+    autoCommitThreshold: 50000,
+    eachMessage: async ({ topic, message }) => {
+      const messageAsJson = messageToJson(message)
+      outputsQueue.add(topic, messageAsJson, {
+        removeOnComplete: true,
+        removeOnFail: true,
+      })
+    },
+  })
 }
 
 module.exports = {
   setupKafka,
-  subscribeTo,
-  messageToJson,
+  runKafkaConsumer,
 }
