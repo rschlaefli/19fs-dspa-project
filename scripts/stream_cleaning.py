@@ -25,9 +25,9 @@ def clean_streams(post_stream_path, comment_stream_path, like_stream_path, post_
     post_stream = open(post_stream_path, encoding='mac-roman')
     like_stream = open(like_stream_path, encoding='mac-roman')
 
-    post_stream_cleaned = open(post_stream_cleaned_path, 'w', encoding='utf-8')
-    comment_stream_cleaned = open(comment_stream_cleaned_path, 'w', encoding='utf-8')
-    like_stream_cleaned = open(like_stream_cleaned_path, 'w', encoding='utf-8')
+    post_stream_cleaned = open(post_stream_cleaned_path, 'w', encoding='utf-8', newline="\n")
+    comment_stream_cleaned = open(comment_stream_cleaned_path, 'w', encoding='utf-8', newline="\n")
+    like_stream_cleaned = open(like_stream_cleaned_path, 'w', encoding='utf-8', newline="\n")
 
     comment_header_line = comment_stream.readline()
     comment_header = comment_header_line.strip().split("|")

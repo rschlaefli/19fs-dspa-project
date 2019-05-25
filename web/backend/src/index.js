@@ -1,76 +1,112 @@
-const { ApolloServer } = require('apollo-server')
-const { RedisPubSub } = require('graphql-redis-subscriptions')
+const express = require('express')
+const { ApolloServer } = require('apollo-server-express')
 
+const { PROCESSORS, ERROR_TYPES, SIGNAL_TRAPS } = require('./constants')
+const Kafka = require('./kafka')
+const QueueFactory = require('./queue')
 const typeDefs = require('./types')
-const { setupKafka, subscribeTo, messageToJson } = require('./kafka')
+const resolvers = require('./resolvers')
+const Redis = require('./redis')
 
-const pubsub = new RedisPubSub()
+// prepare a kafka consumer and outputs queue instance
+let kafkaConsumer
+const outputsQueue = QueueFactory.initializeQueue({ name: 'outputs' })
 
-const NEW_STATISTICS_OUTPUT = 'NEW_STATISTICS_OUTPUT'
-const NEW_RECOMMENDATIONS = 'NEW_RECOMMENDATIONS'
-const NEW_ANOMALIES = 'NEW_ANOMALIES'
-
-const resolvers = {
-  Subscription: {
-    newStatisticsOutput: {
-      subscribe: () => pubsub.asyncIterator([NEW_STATISTICS_OUTPUT]),
-    },
-    newRecommendations: {
-      subscribe: () => pubsub.asyncIterator([NEW_RECOMMENDATIONS]),
-    },
-    newAnomalies: {
-      subscribe: () => pubsub.asyncIterator([NEW_ANOMALIES]),
-    },
-  },
-}
-
+// setup apollo server with static file serving using express
 const server = new ApolloServer({ typeDefs, resolvers })
+const app = express()
+app.use(express.static('public'))
+server.applyMiddleware({ app })
 
 async function main() {
-  const START_FROM_BEGINNING = true
-  const kafkaConsumer = await setupKafka()
+  console.log(
+    `Kafka: ${process.env.KAFKA_URL}, Redis: ${process.env.REDIS_HOST}`
+  )
 
-  subscribeTo(kafkaConsumer, 'active-posts-out', START_FROM_BEGINNING)
-  subscribeTo(kafkaConsumer, 'recommendations-out', START_FROM_BEGINNING)
-  subscribeTo(kafkaConsumer, 'anomalies-out', START_FROM_BEGINNING)
+  try {
+    kafkaConsumer = await Kafka.setupKafka({
+      brokers: [process.env.KAFKA_URL || 'localhost:29092'],
+    })
+  } catch (err) {
+    console.error(err)
+    return cleanup({ exitCode: 1 })
+  }
 
-  await kafkaConsumer.run({
-    autoCommitInterval: 5000,
-    autoCommitThreshold: 500,
-    eachMessage: async ({ topic, message }) => {
-      const messageAsJson = messageToJson(message)
-      if (topic === 'active-posts-out') {
-        pubsub.publish(NEW_STATISTICS_OUTPUT, {
-          newStatisticsOutput: messageAsJson,
-        })
-      } else if (topic === 'recommendations-out') {
-        pubsub.publish(NEW_RECOMMENDATIONS, {
-          newRecommendations: messageAsJson,
-        })
-      } else if (topic === 'anomalies-out') {
-        pubsub.publish(NEW_ANOMALIES, {
-          newAnomalies: messageAsJson,
-        })
-      }
-    },
-  })
+  outputsQueue.process('active-posts-out', 8, PROCESSORS.Statistics)
+  outputsQueue.process('recommendations-out', PROCESSORS.Recommendations)
+  outputsQueue.process('anomalies-out', PROCESSORS.Anomalies)
 
-  return kafkaConsumer
+  try {
+    await Kafka.runKafkaConsumer({
+      kafkaConsumer,
+      outputsQueue,
+    })
+  } catch (err) {
+    console.error(err)
+    return cleanup({ exitCode: 1 })
+  }
+
+  return Promise.resolve()
 }
 
-server.listen().then(({ url }) => {
-  console.log(`Server ready at ${url}`)
+app.listen(4000, err => {
+  if (err) throw err
+
+  console.log(`> Server booting up...`)
 
   main()
     .then(() => {
-      console.log('success')
+      console.log(
+        `> Server ready at http://localhost:4000${server.graphqlPath}`
+      )
     })
     .catch(err => {
       console.error(err)
+      cleanup()
     })
 })
 
-process.on('SIGINT', () => {
-  pubsub.close()
-  process.exit(0)
+async function cleanup({ exitCode }) {
+  try {
+    await outputsQueue.empty()
+    await outputsQueue.close()
+  } catch (err) {
+    console.error(err)
+    process.exit(1)
+  }
+
+  if (redis) {
+    try {
+      await Redis.closeInstances()
+    } catch (err) {
+      console.error(err)
+      process.exit(1)
+    }
+  }
+
+  if (kafkaConsumer) {
+    try {
+      await kafkaConsumer.disconnect()
+    } catch (err) {
+      console.error(err)
+      process.exit(1)
+    }
+  }
+
+  if (exitCode) {
+    process.exit(exitCode)
+  }
+}
+
+ERROR_TYPES.map(type => {
+  process.on(type, async e => {
+    await cleanup({ exitCode: 0 })
+  })
+})
+
+SIGNAL_TRAPS.map(type => {
+  process.once(type, async () => {
+    await cleanup()
+    process.kill(process.pid, type)
+  })
 })
