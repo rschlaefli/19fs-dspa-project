@@ -15,7 +15,7 @@ public class TagCountFeatureMapFunction implements MapFunction<Feature, Feature>
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public Feature map(Feature feature) throws Exception {
+	public Feature map(Feature feature) {
 		Post post = feature.getPost();
 
 		if (post == null) {

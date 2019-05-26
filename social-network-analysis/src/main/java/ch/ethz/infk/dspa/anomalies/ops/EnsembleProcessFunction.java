@@ -2,9 +2,13 @@ package ch.ethz.infk.dspa.anomalies.ops;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import ch.ethz.infk.dspa.anomalies.dto.Feature;
+import com.google.common.collect.Streams;
 import org.apache.flink.api.common.state.MapState;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.api.common.state.ValueState;
@@ -27,14 +31,15 @@ public class EnsembleProcessFunction extends KeyedProcessFunction<String, Featur
 	private static final long serialVersionUID = 1L;
 
 	// TODO Verify that all events are properly set here!
-	private final Set<FeatureId> contentFeatures = new HashSet<>(
-			Arrays.asList(FeatureId.CONTENTS_SHORT, FeatureId.CONTENTS_MEDIUM, FeatureId.CONTENTS_LONG));
+	private static final Set<FeatureId> contentFeatures = new HashSet<>(
+			Arrays.asList(FeatureId.CONTENTS_SHORT, FeatureId.CONTENTS_MEDIUM, FeatureId.CONTENTS_LONG,
+					FeatureId.CONTENTS_EMPTY));
 
-	private final Set<FeatureId> mandatoryPostFeatures = new HashSet<>(
+	private static final Set<FeatureId> mandatoryPostFeatures = new HashSet<>(
 			Arrays.asList(FeatureId.TIMESPAN, FeatureId.TAG_COUNT));
-	private final Set<FeatureId> mandatoryCommentFeatures = new HashSet<>(
+	private static final Set<FeatureId> mandatoryCommentFeatures = new HashSet<>(
 			Arrays.asList(FeatureId.TIMESPAN));
-	private final Set<FeatureId> mandatoryLikeFeatures = new HashSet<>(
+	private static final Set<FeatureId> mandatoryLikeFeatures = new HashSet<>(
 			Arrays.asList(FeatureId.TIMESPAN, FeatureId.NEW_USER_LIKES, FeatureId.INTERACTIONS_RATIO));
 
 	private final ImmutableMap<FeatureId, Double> thresholds;
@@ -64,7 +69,8 @@ public class EnsembleProcessFunction extends KeyedProcessFunction<String, Featur
 		this.featureStatsMap.put(featureStats.getFeatureId(), featureStats);
 
 		// check if all feature statistics of event type arrived
-		if (hasAllFeatures(eventType)) {
+		Set<FeatureId> featureStatsKeySet = Streams.stream(this.featureStatsMap.keys()).collect(Collectors.toSet());
+		if (hasAllFeatures(featureStatsKeySet, eventType)) {
 
 			// build Event Statistics
 			EventStatistics eventStats = new EventStatistics(this.thresholds);
@@ -97,40 +103,31 @@ public class EnsembleProcessFunction extends KeyedProcessFunction<String, Featur
 		this.eventType = getRuntimeContext().getState(eventTypeDescriptor);
 	}
 
-	private boolean hasAllFeatures(EventType eventType) {
+	public static boolean hasAllFeatures(Set<FeatureId> featureStatsSet, EventType eventType) {
 		switch (eventType) {
 		case COMMENT:
-			return containsOne(contentFeatures) && containsAll(mandatoryCommentFeatures);
+			return containsOne(featureStatsSet, contentFeatures)
+					&& containsAll(featureStatsSet, mandatoryCommentFeatures);
 		case LIKE:
-			return containsAll(mandatoryLikeFeatures);
+			return containsAll(featureStatsSet, mandatoryLikeFeatures);
 		case POST:
-			return containsOne(contentFeatures) && containsAll(mandatoryPostFeatures);
+			return containsOne(featureStatsSet, contentFeatures) && containsAll(featureStatsSet, mandatoryPostFeatures);
 		default:
 			throw new IllegalArgumentException("Unhandled EventType");
 		}
 
 	}
 
-	private boolean containsOne(Set<FeatureId> expectedFeatures) {
+	private static boolean containsOne(Set<FeatureId> featureStatsSet,
+			Set<FeatureId> expectedFeatures) {
 		// checks if featureStatsMap contains at least one of the expectedFeatures
-		return expectedFeatures.stream().anyMatch(featureId -> {
-			try {
-				return featureStatsMap.contains(featureId);
-			} catch (Exception e) {
-			}
-			return false;
-		});
+		return expectedFeatures.stream().anyMatch(featureStatsSet::contains);
 	}
 
-	private boolean containsAll(Set<FeatureId> expectedFeatures) {
+	private static boolean containsAll(Set<FeatureId> featureStatsSet,
+			Set<FeatureId> expectedFeatures) {
 		// checks if featureStatsMap contains all of the expectedFeatures
-		return expectedFeatures.stream().noneMatch(featureId -> {
-			try {
-				return !featureStatsMap.contains(featureId);
-			} catch (Exception e) {
-			}
-			return true;
-		});
+		return featureStatsSet.containsAll(expectedFeatures);
 	}
 
 }

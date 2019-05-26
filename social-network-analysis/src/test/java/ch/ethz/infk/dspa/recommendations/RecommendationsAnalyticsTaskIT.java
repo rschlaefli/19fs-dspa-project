@@ -123,15 +123,8 @@ public class RecommendationsAnalyticsTaskIT extends AbstractAnalyticsTaskIT<Frie
 
 		analyticsTask.start();
 
-		Predicate<FriendsRecommendation> predicate = new Predicate<FriendsRecommendation>() {
-			@Override
-			public boolean test(FriendsRecommendation t) {
-				return true;
-			}
-		};
-
 		return TestSink.getResultsInResultWindow(FriendsRecommendation.class,
-				SlidingEventTimeWindows.of(Time.hours(4), Time.hours(1)), predicate);
+				SlidingEventTimeWindows.of(Time.hours(4), Time.hours(1)), x -> true);
 
 	}
 
