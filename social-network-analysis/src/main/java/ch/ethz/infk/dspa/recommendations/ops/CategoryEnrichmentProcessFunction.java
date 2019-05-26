@@ -113,7 +113,6 @@ public class CategoryEnrichmentProcessFunction extends KeyedProcessFunction<Long
 		buildContinentMappingRelation();
 		buildTagClassRelation();
 
-		// TODO maybe add expiration?
 		this.inheritablePostCategoryMapState = getRuntimeContext()
 				.getMapState(new MapStateDescriptor<String, Integer>("PostCategoryState",
 						BasicTypeInfo.STRING_TYPE_INFO,

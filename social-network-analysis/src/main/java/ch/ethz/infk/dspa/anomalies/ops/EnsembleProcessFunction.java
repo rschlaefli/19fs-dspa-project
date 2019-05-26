@@ -2,13 +2,9 @@ package ch.ethz.infk.dspa.anomalies.ops;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import ch.ethz.infk.dspa.anomalies.dto.Feature;
-import com.google.common.collect.Streams;
 import org.apache.flink.api.common.state.MapState;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.api.common.state.ValueState;
@@ -20,6 +16,7 @@ import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Streams;
 
 import ch.ethz.infk.dspa.anomalies.dto.EventStatistics;
 import ch.ethz.infk.dspa.anomalies.dto.Feature.EventType;
@@ -30,7 +27,6 @@ public class EnsembleProcessFunction extends KeyedProcessFunction<String, Featur
 
 	private static final long serialVersionUID = 1L;
 
-	// TODO Verify that all events are properly set here!
 	private static final Set<FeatureId> contentFeatures = new HashSet<>(
 			Arrays.asList(FeatureId.CONTENTS_SHORT, FeatureId.CONTENTS_MEDIUM, FeatureId.CONTENTS_LONG));
 
