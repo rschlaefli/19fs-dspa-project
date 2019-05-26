@@ -160,7 +160,7 @@ public class AnomaliesAnalyticsTaskIT extends AbstractAnalyticsTaskIT<Fraudulent
 		return composedFeatureStream.stream()
 				.map(feature -> {
 					if (feature.getFeatureValue() == null) {
-						FeatureStatistics featureStatistics = new FeatureStatistics(feature);
+						FeatureStatistics featureStatistics = new FeatureStatistics(Feature.copy(feature));
 						featureStatistics.getFeature().withFeatureValue(0.0);
 						featureStatistics.setMean(0.0);
 						featureStatistics.setStdDev(1.0);
@@ -250,7 +250,7 @@ public class AnomaliesAnalyticsTaskIT extends AbstractAnalyticsTaskIT<Fraudulent
 				});
 
 		return personAnomalousEventCounts.entrySet().stream()
-				.filter(entry -> entry.getValue().f0.size()
+				.filter(entry -> ((double) entry.getValue().f0.size())
 						/ entry.getValue().f1.doubleValue() > fraudulentEventsThreshold)
 				.map(entry -> {
 					FraudulentUser fraudulentUser = new FraudulentUser(entry.getKey());
@@ -382,7 +382,8 @@ public class AnomaliesAnalyticsTaskIT extends AbstractAnalyticsTaskIT<Fraudulent
 
 	@Override
 	public List<WindowAssigner<Object, TimeWindow>> getWindowAssigners() {
-		return Collections.singletonList(TumblingEventTimeWindows.of(Time.hours(12)));
+		return Collections.singletonList(TumblingEventTimeWindows
+				.of(Time.hours(getConfig().getLong("tasks.anomalies.fraudulentUsers.updateIntervalInHours"))));
 	}
 
 	@Override
