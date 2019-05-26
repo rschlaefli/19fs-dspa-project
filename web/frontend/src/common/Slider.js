@@ -12,7 +12,9 @@ export function SingleSlider({ currentTs, setCurrentTs, minTs, maxTs }) {
   ].reduce(
     (acc, mark) => ({
       ...acc,
-      [mark]: dayjs(mark).format('HH:mm'),
+      [mark]: dayjs(mark)
+        .add(1, 'seconds')
+        .format('HH:mm'),
     }),
     {}
   )

@@ -61,24 +61,19 @@ function Statistics() {
 
   // split the statistics outputs into the three output types
   data.statisticsOutputs.forEach(output => {
-    const updatedOutput = {
-      ...output,
-      timestamp: formatTimestamp(output.timestamp + 1),
-    }
-
     if (output.timestamp === resultTs) {
       postIdSet.add(output.postId)
       if (output.outputType === 'REPLY_COUNT') {
-        replyCounts.push(updatedOutput)
+        replyCounts.push(output)
         return
       }
 
       if (output.outputType === 'COMMENT_COUNT') {
-        commentCounts.push(updatedOutput)
+        commentCounts.push(output)
         return
       }
 
-      uniquePersonCounts.push(updatedOutput)
+      uniquePersonCounts.push(output)
     }
   })
 
@@ -110,7 +105,9 @@ function Statistics() {
       <Row>
         <Col>
           <Typography.Title level={2}>
-            {dayjs(resultTs).format('YYYY-MM-DD HH:mm:ss')}
+            {dayjs(resultTs)
+              .add(1, 'seconds')
+              .format('YYYY-MM-DD HH:mm:ss')}
           </Typography.Title>
         </Col>
       </Row>

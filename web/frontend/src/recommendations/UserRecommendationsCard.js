@@ -9,10 +9,7 @@ function UserRecommendationsCard({
   recommendations,
 }) {
   return (
-    <Card
-      title={`Recommendations for ${personName} (#${personId})`}
-      size="small"
-    >
+    <Card title={`${personName} (#${personId})`} size="small">
       <Table dataSource={recommendations} pagination={false} size="small">
         <Table.Column
           title="ID"
