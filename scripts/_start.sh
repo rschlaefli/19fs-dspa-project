@@ -58,7 +58,7 @@ do
       echo $MAXDELAYSEC | grep -E -q '^[0-9]+$' || die "Invalid --maxdelaysec parameter $MAXDELAYSEC! Please specify an integer >0."
     ;;
 
-    "--D")
+    "--schedulingdelay")
       SDELAY=$2
       echo $SDELAY | grep -E -q '^[0-9]+$' || die "Invalid --schedulingdelay parameter $SDELAY! Please specify an integer >0."
     ;;
@@ -80,6 +80,14 @@ do
       DATA_DIRECTORY=$2
       if [ ${#DATA_DIRECTORY} = 0 ]; then
         echo "Invalid --data-dir parameter! Please specify a valid directory path."
+        exit 1
+      fi
+    ;;
+
+    "--person-ids")
+      export PERSON_IDS=$2
+      if [ ${#PERSON_IDS} = 0 ]; then
+        echo "Invalid --person-ids parameter! Please specify a valid directory path."
         exit 1
       fi
     ;;
@@ -131,6 +139,7 @@ echo "--schedulingdelay=$SDELAY"
 echo "--parallelism=$TASK_PARALLELISM"
 echo "--source-dir=$SOURCE_DIRECTORY"
 echo "--data-dir=$DATA_DIRECTORY"
+echo "--person-ids=$PERSON_IDS"
 echo "Reading streams from $STREAM_DIRECTORY"
 echo "Minimum synchronization timestamp $PRODUCER_SYNC_TS"
 
