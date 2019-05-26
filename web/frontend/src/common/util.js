@@ -21,7 +21,9 @@ export function sortItems(rows, sortBy, sortDirection) {
 }
 
 export function formatTimestamp(timestamp) {
-  return dayjs(timestamp).format('YYYY-MM-DD HH:mm:ss')
+  return dayjs(timestamp)
+    .add(1, 'seconds')
+    .format('YYYY-MM-DD HH:mm:ss')
 }
 
 export function formatObjectAsString(object) {

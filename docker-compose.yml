@@ -103,6 +103,8 @@ services:
         "/opt/tables/",
         "-maxdelaysec",
         "$MAXDELAYSEC",
+        "-personIds",
+        "$PERSONIDS",
       ]
     volumes:
       - $SOURCE_DIRECTORY/social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro
@@ -306,8 +308,8 @@ services:
       ALLOW_EMPTY_PASSWORD: "yes"
     volumes:
       - ./web/redis.conf:/opt/bitnami/redis/etc/redis.conf:ro
-    cpu_shares: 768
-    cpu_quota: 30000
+    cpu_shares: 1024
+    cpu_quota: 40000
     mem_reservation: 256m
     mem_limit: 512m
 

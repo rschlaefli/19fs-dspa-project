@@ -19,10 +19,10 @@ function App() {
         <Tabs.TabPane tab="T1: Active Post Statistics" key={1}>
           <Statistics />
         </Tabs.TabPane>
-        <Tabs.TabPane tab="T2: Friend Recommendations" key={2}>
+        <Tabs.TabPane tab="T2: Recommendations" key={2}>
           <Recommendations />
         </Tabs.TabPane>
-        <Tabs.TabPane tab="T3: Unusual Activities" key={3}>
+        <Tabs.TabPane tab="T3: Unusual Activity Detection" key={3}>
           <Anomalies />
         </Tabs.TabPane>
       </Tabs>

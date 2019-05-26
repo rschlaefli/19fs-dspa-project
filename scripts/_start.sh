@@ -58,7 +58,7 @@ do
       echo $MAXDELAYSEC | grep -E -q '^[0-9]+$' || die "Invalid --maxdelaysec parameter $MAXDELAYSEC! Please specify an integer >0."
     ;;
 
-    "--D")
+    "--schedulingdelay")
       SDELAY=$2
       echo $SDELAY | grep -E -q '^[0-9]+$' || die "Invalid --schedulingdelay parameter $SDELAY! Please specify an integer >0."
     ;;
@@ -84,6 +84,14 @@ do
       fi
     ;;
 
+    "--person-ids")
+      export PERSON_IDS=$2
+      if [ ${#PERSON_IDS} = 0 ]; then
+        echo "Invalid --person-ids parameter! Please specify a valid directory path."
+        exit 1
+      fi
+    ;;
+
     "--task")
       case "$2" in
         statistics)
@@ -101,8 +109,17 @@ do
           FLINK_SERVICES="--scale task-anomalies=$TASK_PARALLELISM cluster-anomalies task-anomalies $SERVICES"
         ;;
 
+        recommendations+anomalies)
+          TASK="recommendations"
+          FLINK_SERVICES="--scale task-recommendations=$TASK_PARALLELISM \
+                          --scale task-anomalies=$TASK_PARALLELISM \
+                          cluster-recommendations task-recommendations \
+                          cluster-anomalies task-anomalies"
+        ;;
+
         *)
-          echo "Invalid --task parameter! Use one of [statistics, recommendations, anomalies]. Remove the parameter to run all tasks simultaneously."
+          echo "Invalid --task parameter! Use one of [statistics, recommendations, anomalies, recommendations+anomalies]. \
+                Remove the parameter to run all tasks simultaneously."
           exit 1
       esac
     ;;
@@ -122,6 +139,7 @@ echo "--schedulingdelay=$SDELAY"
 echo "--parallelism=$TASK_PARALLELISM"
 echo "--source-dir=$SOURCE_DIRECTORY"
 echo "--data-dir=$DATA_DIRECTORY"
+echo "--person-ids=$PERSON_IDS"
 echo "Reading streams from $STREAM_DIRECTORY"
 echo "Minimum synchronization timestamp $PRODUCER_SYNC_TS"
 

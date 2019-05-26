@@ -79,18 +79,20 @@ function Recommendations() {
   const resultTs = currentTs && currentTs >= minTs ? currentTs : minTs
 
   // group the recommendations by person id
+  const personIdToNameMap = {}
   const recommendations = _groupBy(
     data.recommendationsOutputs
       .filter(output => output.timestamp === resultTs)
-      .flatMap(output =>
-        output.similarities.map(similarity => ({
+      .flatMap(output => {
+        personIdToNameMap[output.personId] = output.personName
+        return output.similarities.map(similarity => ({
           personId: output.personId,
           personName: output.personName,
           friendPersonId: similarity.personId,
           friendPersonName: similarity.personName,
           similarity: similarity.similarity,
         }))
-      ),
+      }),
     output => output.personId
   )
 
@@ -123,7 +125,10 @@ function Recommendations() {
               .subtract(4, 'hours')
               .add(1, 'seconds')
               .format('HH:mm:ss')}
-            -{dayjs(resultTs).format('HH:mm:ss')}
+            -
+            {dayjs(resultTs)
+              .add(1, 'seconds')
+              .format('HH:mm:ss')}
           </Typography.Title>
         </Col>
       </Row>
@@ -140,6 +145,7 @@ function Recommendations() {
           <CardWrapper>
             <UserRecommendationsCard
               personId={personId}
+              personName={personIdToNameMap[personId]}
               recommendations={recommendations[personId]}
             />
           </CardWrapper>

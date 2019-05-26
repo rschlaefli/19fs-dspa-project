@@ -1,19 +1,14 @@
 import React, { useState } from 'react'
 import gql from 'graphql-tag'
 import _has from 'lodash/has'
-import styled from '@emotion/styled'
+import dayjs from 'dayjs'
 
 import { useQuery } from 'react-apollo-hooks'
-import {
-  AutoSizer,
-  Table,
-  Column,
-  SortDirection,
-  List,
-} from 'react-virtualized'
-import { Row, Col, Divider } from 'antd'
+import { SortDirection } from 'react-virtualized'
+import { Row, Col } from 'antd'
 import { Skeleton, Typography } from 'antd'
 
+import StatisticsTable from './StatisticsTable'
 import PollIntervalControl from '../common/PollIntervalControl'
 import { sortItems, formatTimestamp } from '../common/util'
 import { SingleSlider } from '../common/Slider'
@@ -28,47 +23,6 @@ const STATISTICS_QUERY = gql`
     }
   }
 `
-
-const StatisticsTableContainer = styled.div`
-  .ReactVirtualized__Table.empty {
-    background-color: lightgrey;
-    .ReactVirtualized__Grid {
-      background-color: lightgrey;
-    }
-  }
-`
-
-function StatisticsTable({ rows, sortBy, sortDirection, setSortSettings }) {
-  return (
-    <StatisticsTableContainer>
-      <AutoSizer disableHeight>
-        {({ width }) => (
-          <Table
-            className={rows.length === 0 ? 'empty' : ''}
-            headerHeight={20}
-            height={750}
-            rowHeight={20}
-            rowCount={rows.length}
-            width={width}
-            sortBy={sortBy}
-            sortDirection={sortDirection}
-            rowGetter={({ index }) => rows[index]}
-            noRowsRenderer={() => (
-              <div style={{ padding: '1rem' }}>
-                No results in current window.
-              </div>
-            )}
-            sort={sortSettings => setSortSettings(sortSettings)}
-          >
-            <Column dataKey="timestamp" width={150} label="Timestamp" />
-            <Column dataKey="postId" width={100} label="Post ID" />
-            <Column dataKey="value" width={100} label="Value" />
-          </Table>
-        )}
-      </AutoSizer>
-    </StatisticsTableContainer>
-  )
-}
 
 function Statistics() {
   const [pollInterval, setPollInterval] = useState(5000)
@@ -98,43 +52,28 @@ function Statistics() {
   let maxTs = null
   let minTs = null
   if (data.statisticsOutputs.length > 0) {
-    maxTs = data.statisticsOutputs[0].timestamp
+    maxTs = data.statisticsOutputs[1].timestamp
     const lastIndex = data.statisticsOutputs.length - 1
-    minTs = data.statisticsOutputs[lastIndex].timestamp
+    minTs = data.statisticsOutputs[lastIndex - 1].timestamp
   }
+
+  const resultTs = currentTs && currentTs >= minTs ? currentTs : minTs
 
   // split the statistics outputs into the three output types
   data.statisticsOutputs.forEach(output => {
-    const updatedOutput = {
-      ...output,
-      timestamp: formatTimestamp(output.timestamp),
-    }
-
-    if (
-      currentTs ? output.timestamp === currentTs : output.timestamp === minTs
-    ) {
+    if (output.timestamp === resultTs) {
       postIdSet.add(output.postId)
       if (output.outputType === 'REPLY_COUNT') {
-        replyCounts.push(updatedOutput)
+        replyCounts.push(output)
         return
       }
-      if (output.outputType === 'COMMENT_COUNT') {
-        commentCounts.push(updatedOutput)
-        return
-      }
-    }
 
-    if (
-      currentTs ? output.timestamp === currentTs : output.timestamp === minTs
-    ) {
-      postIdSet.add(output.postId)
-      uniquePersonCounts.push(updatedOutput)
-    } else if (
-      currentTs
-        ? output.timestamp === currentTs - 1800000
-        : output.Timestamp === minTs - 1800000
-    ) {
-      postIdSet.add(output.postId)
+      if (output.outputType === 'COMMENT_COUNT') {
+        commentCounts.push(output)
+        return
+      }
+
+      uniquePersonCounts.push(output)
     }
   })
 
@@ -142,8 +81,6 @@ function Statistics() {
   commentCounts = sortItems(commentCounts, sortBy, sortDirection)
   replyCounts = sortItems(replyCounts, sortBy, sortDirection)
   uniquePersonCounts = sortItems(uniquePersonCounts, sortBy, sortDirection)
-
-  const activePostIds = Array.from(postIdSet.values()).sort((a, b) => a > b)
 
   return (
     <>
@@ -165,11 +102,19 @@ function Statistics() {
         </Col>
       </Row>
 
-      <Divider />
+      <Row>
+        <Col>
+          <Typography.Title level={2}>
+            {dayjs(resultTs)
+              .add(1, 'seconds')
+              .format('YYYY-MM-DD HH:mm:ss')}
+          </Typography.Title>
+        </Col>
+      </Row>
 
-      <Row gutter={16}>
-        <Col span={6}>
-          <Typography.Title level={2}>Comment Count</Typography.Title>
+      <Row gutter={32}>
+        <Col span={4}>
+          <Typography.Title level={3}>Comment Count</Typography.Title>
           <StatisticsTable
             sortBy={sortBy}
             sortDirection={sortDirection}
@@ -178,8 +123,8 @@ function Statistics() {
           />
         </Col>
 
-        <Col span={6}>
-          <Typography.Title level={2}>Reply Count</Typography.Title>
+        <Col span={4}>
+          <Typography.Title level={3}>Reply Count</Typography.Title>
           <StatisticsTable
             sortBy={sortBy}
             sortDirection={sortDirection}
@@ -188,8 +133,8 @@ function Statistics() {
           />
         </Col>
 
-        <Col span={6}>
-          <Typography.Title level={2}>Unique Person Count</Typography.Title>
+        <Col span={4}>
+          <Typography.Title level={3}>Unique Person Count</Typography.Title>
           <StatisticsTable
             sortBy={sortBy}
             sortDirection={sortDirection}
@@ -198,24 +143,15 @@ function Statistics() {
           />
         </Col>
 
-        <Col span={6}>
-          <Typography.Title level={2}>Active Posts</Typography.Title>
-          <AutoSizer disableHeight>
-            {({ width }) => (
-              <List
-                headerHeight={20}
-                height={750}
-                rowHeight={20}
-                rowCount={activePostIds.length}
-                width={width}
-                rowRenderer={({ index, style, key }) => (
-                  <div key={key} style={style}>
-                    {activePostIds[index]}
-                  </div>
-                )}
-              />
-            )}
-          </AutoSizer>
+        <Col span={4}>
+          <Typography.Title level={3}>General Information</Typography.Title>
+          <p>
+            <strong>Active Posts:</strong> {commentCounts.length}
+          </p>
+          <p>
+            <strong>Selected Window:</strong>{' '}
+            {dayjs(resultTs).format('YYYY-MM-DD HH:mm:ss')}
+          </p>
         </Col>
       </Row>
     </>

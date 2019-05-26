@@ -5,7 +5,6 @@ import _has from 'lodash/has'
 import { useQuery } from 'react-apollo-hooks'
 import { Table, Column, AutoSizer, SortDirection } from 'react-virtualized'
 import { Skeleton, Row, Col, Divider } from 'antd'
-import { ResponsiveContainer, LineChart, CartesianGrid } from 'recharts'
 
 import PollIntervalControl from '../common/PollIntervalControl'
 import {
@@ -27,12 +26,34 @@ const ANOMALIES_QUERY = gql`
         CONTENTS_SHORT
         CONTENTS_MEDIUM
         CONTENTS_LONG
-        CONTENTS_EMPTY
         TAG_COUNT
       }
     }
   }
 `
+
+function splitEventTypes(anomalousEvents) {
+  const anomalousComments = []
+  const anomalousLikes = []
+  const anomalousPosts = []
+
+  anomalousEvents.forEach(event => {
+    const [eventType, ...rest] = event.split('_')
+    if (eventType === 'POST') {
+      anomalousPosts.push(rest[0])
+    } else if (eventType === 'COMMENT') {
+      anomalousComments.push(rest[0])
+    } else if (eventType === 'LIKE') {
+      anomalousLikes.push(rest[1])
+    }
+  })
+
+  return {
+    anomalousComments,
+    anomalousLikes,
+    anomalousPosts,
+  }
+}
 
 function Anomalies() {
   const [pollInterval, setPollInterval] = useState(5000)
@@ -57,8 +78,9 @@ function Anomalies() {
   const rows = sortItems(
     data.anomaliesOutputs.map(output => ({
       ...output,
+      ...splitEventTypes(output.anomalousEvents),
       timestamp: formatTimestamp(output.timestamp),
-      voteCounts: formatObjectAsString(output.voteCounts),
+      ...output.voteCounts,
     })),
     sortBy,
     sortDirection
@@ -77,8 +99,8 @@ function Anomalies() {
 
       <Divider />
 
-      <Row gutter={16}>
-        <Col span={16}>
+      <Row>
+        <Col>
           <AutoSizer disableHeight>
             {({ width }) => (
               <Table
@@ -95,34 +117,50 @@ function Anomalies() {
                 <Column dataKey="personId" width={100} label="Person ID" />
                 <Column dataKey="timestamp" width={150} label="Timestamp" />
                 <Column
-                  dataKey="anomalousEvents"
-                  width={300}
-                  label="Anomalous Events"
+                  dataKey="anomalousComments"
+                  width={200}
+                  label="Anomalous Comments"
                 />
-                <Column dataKey="voteCounts" width={500} label="Vote Counts" />
+                <Column
+                  dataKey="anomalousLikes"
+                  width={200}
+                  label="Anomalous Likes"
+                />
+                <Column
+                  dataKey="anomalousPosts"
+                  width={200}
+                  label="Anomalous Posts"
+                />
+                <Column dataKey="TIMESPAN" width={100} label="TIMESPAN" />
+                <Column dataKey="TAG_COUNT" width={100} label="TAG_COUNT" />
+                <Column
+                  dataKey="INTERACTIONS_RATIO"
+                  width={150}
+                  label="INTERACTIONS_RATIO"
+                />
+                <Column
+                  dataKey="NEW_USER_LIKES"
+                  width={150}
+                  label="NEW_USER_LIKES"
+                />
+                <Column
+                  dataKey="CONTENTS_SHORT"
+                  width={150}
+                  label="CONTENTS_SHORT"
+                />
+                <Column
+                  dataKey="CONTENTS_MEDIUM"
+                  width={150}
+                  label="CONTENTS_MEDIUM"
+                />
+                <Column
+                  dataKey="CONTENTS_LONG"
+                  width={150}
+                  label="CONTENTS_LONG"
+                />
               </Table>
             )}
           </AutoSizer>
-        </Col>
-
-        <Col span={8}>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart>
-              <CartesianGrid strokeDasharray="3 3" />
-            </LineChart>
-          </ResponsiveContainer>
-
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart>
-              <CartesianGrid strokeDasharray="3 3" />
-            </LineChart>
-          </ResponsiveContainer>
-
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart>
-              <CartesianGrid strokeDasharray="3 3" />
-            </LineChart>
-          </ResponsiveContainer>
         </Col>
       </Row>
     </>
