@@ -1,6 +1,7 @@
 package ch.ethz.infk.dspa;
 
 import org.apache.commons.configuration2.Configuration;
+import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -121,6 +122,14 @@ public abstract class AbstractAnalyticsTask<OUT_STREAM extends DataStream<OUT_TY
 		}
 
 		this.env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+
+		if (this.config.getBoolean("checkpointing.enabled")) {
+			// Take a checkpoint every X seconds
+			this.env.enableCheckpointing(this.config.getLong("checkpointing.every"));
+			// Set a fixed delay restart strategy with a maximum of 5 restart attempts
+			// and a 1s interval between retries
+			this.env.setRestartStrategy(RestartStrategies.fixedDelayRestart(5, 1000));
+		}
 
 		if (this.postStream == null) {
 			withPostStream(new PostDataStreamBuilder(this.env)
