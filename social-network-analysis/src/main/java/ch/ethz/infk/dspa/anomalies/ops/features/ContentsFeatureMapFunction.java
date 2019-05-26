@@ -46,15 +46,15 @@ public class ContentsFeatureMapFunction implements MapFunction<Feature, Feature>
 			throw new IllegalArgumentException("CANNOT_ANALYZE_LIKES_FOR_CONTENT");
 		}
 
-		// setup a tokenizer and extract tokens from the string
-		Tokenizer tokenizer = SimpleTokenizer.INSTANCE;
-		Stream<String> tokens = Arrays.stream(tokenizer.tokenize(content));
+		// if the content is empty, return a specific feature id
+		if (content.isEmpty()) {
+			return feature
+					.withFeatureId(Feature.FeatureId.CONTENTS_EMPTY)
+					.withFeatureValue(0.0);
+		}
 
-		// setup a stemmer and apply it to the extracted tokens
-		Stemmer stemmer = new SnowballStemmer(SnowballStemmer.ALGORITHM.ENGLISH);
-		List<String> stemmedTokens = tokens
-				.map(token -> stemmer.stem(token).toString())
-				.collect(Collectors.toList());
+		// stem and tokenize
+		List<String> stemmedTokens = tokenizeAndStem(content);
 
 		// decide what kind of feature will be output depending on the content length
 		Feature.FeatureId featureId = Feature.FeatureId.CONTENTS_SHORT;
@@ -72,5 +72,17 @@ public class ContentsFeatureMapFunction implements MapFunction<Feature, Feature>
 
 		// return a new feature with the computed feature id and value
 		return feature.withFeatureId(featureId).withFeatureValue(uniqueStems);
+	}
+
+	public static List<String> tokenizeAndStem(String content) {
+		// setup a tokenizer and extract tokens from the string
+		Tokenizer tokenizer = SimpleTokenizer.INSTANCE;
+		Stream<String> tokens = Arrays.stream(tokenizer.tokenize(content));
+
+		// setup a stemmer and apply it to the extracted tokens
+		Stemmer stemmer = new SnowballStemmer(SnowballStemmer.ALGORITHM.ENGLISH);
+		return tokens
+				.map(token -> stemmer.stem(token).toString())
+				.collect(Collectors.toList());
 	}
 }

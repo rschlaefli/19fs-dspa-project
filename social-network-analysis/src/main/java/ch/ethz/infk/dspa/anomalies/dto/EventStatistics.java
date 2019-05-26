@@ -8,6 +8,7 @@ import java.util.Set;
 import com.google.common.collect.ImmutableMap;
 
 public class EventStatistics {
+
 	// store all votes of different features that correspond to an event
 	private Set<Feature.FeatureId> votedFeatureIds;
 	private Set<Feature> votesFraudulent;
@@ -60,6 +61,10 @@ public class EventStatistics {
 		return this.eventGUID;
 	}
 
+	public Set<Feature.FeatureId> getVotedFeatureIds() {
+		return votedFeatureIds;
+	}
+
 	public Set<Feature> getVotesNonFraudulent() {
 		return votesNonFraudulent;
 	}
@@ -79,4 +84,14 @@ public class EventStatistics {
 		return numFraudulent / numTotal >= isFraudulentThreshold;
 	}
 
+	@Override
+	public String toString() {
+		return "EventStatistics{" +
+				"personId=" + personId +
+				", eventGUID='" + eventGUID + '\'' +
+				", votedFeatureIds=" + votedFeatureIds +
+				", votesFraudulent=" + votesFraudulent +
+				", votesNonFraudulent=" + votesNonFraudulent +
+				'}';
+	}
 }

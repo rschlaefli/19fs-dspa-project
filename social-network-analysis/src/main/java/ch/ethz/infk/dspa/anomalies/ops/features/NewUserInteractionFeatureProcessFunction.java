@@ -76,9 +76,8 @@ public class NewUserInteractionFeatureProcessFunction extends KeyedProcessFuncti
 				userCreationTimestamp = 0L;
 			}
 
-			Long creationInteractionDifferance = likeCreationTimestamp - userCreationTimestamp;
-
-			if (creationInteractionDifferance < newUserThreshold) {
+			Long creationInteractionDifference = likeCreationTimestamp - userCreationTimestamp;
+			if (creationInteractionDifference < newUserThreshold) {
 				newUserLikeCount.add(1L);
 			}
 
@@ -87,8 +86,7 @@ public class NewUserInteractionFeatureProcessFunction extends KeyedProcessFuncti
 
 		// output all features with feature value
 		for (Feature feature : features) {
-			double newUserLikeCountDouble = ObjectUtils.defaultIfNull(newUserLikeCount.get(), new Double(0.0))
-					.doubleValue();
+			double newUserLikeCountDouble = ObjectUtils.defaultIfNull(newUserLikeCount.get(), 0.0).doubleValue();
 			double newUserLikePercentage = newUserLikeCountDouble / totalLikeCount.get();
 			feature = feature.withFeatureId(FeatureId.NEW_USER_LIKES).withFeatureValue(newUserLikePercentage);
 
@@ -100,7 +98,7 @@ public class NewUserInteractionFeatureProcessFunction extends KeyedProcessFuncti
 	public void open(Configuration parameters) throws Exception {
 		super.open(parameters);
 
-		userCreationMap = buildUserCreationRelation();
+		userCreationMap = buildUserCreationRelation(this.personRelationFile);
 
 		ReducingStateDescriptor<Long> newUserLikeCountDescriptor = new ReducingStateDescriptor<>(
 				"anomalies-newuserlikecount", new LongSumReduceFunction(), Long.class);
@@ -126,9 +124,9 @@ public class NewUserInteractionFeatureProcessFunction extends KeyedProcessFuncti
 				.process(this);
 	}
 
-	private Map<Long, Long> buildUserCreationRelation() throws IOException {
+	public static Map<Long, Long> buildUserCreationRelation(String personRelationFile) throws IOException {
 		Map<Long, Long> userCreationRelation = StaticDataParser
-				.parseCsvFile(this.personRelationFile,
+				.parseCsvFile(personRelationFile,
 						Arrays.asList("id", "firstName", "lastName", "gender", "birthday", "creationDate", "locationIP",
 								"browserUsed"))
 				.map(tuple -> (NTuple8<String, String, String, String, String, String, String, String>) tuple)

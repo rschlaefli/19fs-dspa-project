@@ -110,6 +110,11 @@ public abstract class AbstractAnalyticsTaskIT<OUT_TYPE> extends AbstractTestBase
 						expectedWindow.getLikes());
 				expectedWindow.setResults(expectedResults);
 			}
+
+			// remove all expected windows where results are null
+			// TODO: remove an expected window if there are 0 results in the list?
+			expectedWindows.removeIf(window -> window.getResults() == null);
+
 			allExpectedWindows.addAll(expectedWindows);
 
 		}
@@ -261,7 +266,7 @@ public abstract class AbstractAnalyticsTaskIT<OUT_TYPE> extends AbstractTestBase
 			actualTimeWindows.remove(x);
 		}
 
-		assertEquals(Collections.emptyList(), expectedTimeWindows, "Expected more Windows than in the Result");
+		assertEquals(Collections.emptyList(), expectedTimeWindows, "Expected more Windows than in theResult");
 		assertEquals(Collections.emptyList(), actualTimeWindows, "More Windows in the Result than Expected");
 
 	}

@@ -1,5 +1,6 @@
 package ch.ethz.infk.dspa.anomalies;
 
+import org.apache.commons.configuration2.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
@@ -47,7 +48,7 @@ public class AnomaliesAnalyticsTask
 		return this;
 	}
 
-	DataStream<Feature> composeFeatureStream() {
+	public DataStream<Feature> composeFeatureStream() {
 		final int contentsShortUntilLength = this.config.getInt("tasks.anomalies.features.contents.short.maxLength");
 		final int contentsLongFromLength = this.config.getInt("tasks.anomalies.features.contents.long.minLength");
 		final Time newUserThreshold = Time.hours(this.config
@@ -96,22 +97,7 @@ public class AnomaliesAnalyticsTask
 
 	SingleOutputStreamOperator<EventStatistics> applyEnsembleAggregation(
 			SingleOutputStreamOperator<FeatureStatistics> featureStatisticsStream) {
-		// construct a map of thresholds for maximum expected deviations from mean
-		final ImmutableMap<Feature.FeatureId, Double> thresholds = new ImmutableMap.Builder<Feature.FeatureId, Double>()
-				.put(Feature.FeatureId.TIMESPAN, this.config.getDouble("tasks.anomalies.features.timespan.threshold"))
-				.put(Feature.FeatureId.CONTENTS_SHORT,
-						this.config.getDouble("tasks.anomalies.features.contents.short.threshold"))
-				.put(Feature.FeatureId.CONTENTS_MEDIUM,
-						this.config.getDouble("tasks.anomalies.features.contents.medium.threshold"))
-				.put(Feature.FeatureId.CONTENTS_LONG,
-						this.config.getDouble("tasks.anomalies.features.contents.long.threshold"))
-				.put(Feature.FeatureId.TAG_COUNT,
-						this.config.getDouble("tasks.anomalies.features.tagCount.threshold"))
-				.put(Feature.FeatureId.NEW_USER_LIKES,
-						this.config.getDouble("tasks.anomalies.features.newUserLikes.threshold"))
-				.put(Feature.FeatureId.INTERACTIONS_RATIO,
-						this.config.getDouble("tasks.anomalies.features.interactionsRatio.threshold"))
-				.build();
+		ImmutableMap<Feature.FeatureId, Double> thresholds = constructEnsembleThresholds(this.config);
 
 		// analyze events based on all their computed feature statistics
 		// apply an ensemble decision over all of these statistics
@@ -124,8 +110,10 @@ public class AnomaliesAnalyticsTask
 			SingleOutputStreamOperator<EventStatistics> eventStatisticsStream) {
 		Time fraudulentUserUpdateInterval = Time
 				.hours(this.config.getLong("tasks.anomalies.fraudulentUsers.updateIntervalInHours"));
-		double fraudulentUserEnsembleThreshold = this.config
-				.getDouble("tasks.anomalies.fraudulentUsers.ensembleThreshold");
+		double featureEnsembleThreshold = this.config
+				.getDouble("tasks.anomalies.fraudulentUsers.featureEnsembleThreshold");
+		double fraudulentEventsThreshold = this.config
+				.getDouble("tasks.anomalies.fraudulentUsers.fraudulentEventsThreshold");
 
 		// extract all events that are deemed anomalous based on the majority decision
 		// for each user, check whether there are more than allowed anomalous events within a given
@@ -134,7 +122,8 @@ public class AnomaliesAnalyticsTask
 		return eventStatisticsStream
 				.keyBy(EventStatistics::getPersonId)
 				.window(TumblingEventTimeWindows.of(fraudulentUserUpdateInterval))
-				.process(new EventStatisticsWindowProcessFunction(fraudulentUserEnsembleThreshold));
+				.process(new EventStatisticsWindowProcessFunction(featureEnsembleThreshold,
+						fraudulentEventsThreshold));
 	}
 
 	@Override
@@ -144,6 +133,32 @@ public class AnomaliesAnalyticsTask
 
 	@Override
 	protected Time getTumblingOutputWindow() {
-		return Time.hours(this.config.getLong("tasks.anomalies.fraudulentUsers.updateIntervalInHours"));
+		return getTumblingOutputWindow(this.config);
+	}
+
+	public static Time getTumblingOutputWindow(Configuration config) {
+		return Time.hours(config.getLong("tasks.anomalies.fraudulentUsers.updateIntervalInHours"));
+	}
+
+	public static ImmutableMap<Feature.FeatureId, Double> constructEnsembleThresholds(Configuration config) {
+		// construct a map of thresholds for maximum expected deviations from mean
+		final ImmutableMap<Feature.FeatureId, Double> thresholds = new ImmutableMap.Builder<Feature.FeatureId, Double>()
+				.put(Feature.FeatureId.TIMESPAN, config.getDouble("tasks.anomalies.features.timespan.threshold"))
+				.put(Feature.FeatureId.CONTENTS_SHORT,
+						config.getDouble("tasks.anomalies.features.contents.short.threshold"))
+				.put(Feature.FeatureId.CONTENTS_MEDIUM,
+						config.getDouble("tasks.anomalies.features.contents.medium.threshold"))
+				.put(Feature.FeatureId.CONTENTS_LONG,
+						config.getDouble("tasks.anomalies.features.contents.long.threshold"))
+				.put(Feature.FeatureId.TAG_COUNT,
+						config.getDouble("tasks.anomalies.features.tagCount.threshold"))
+				.put(Feature.FeatureId.NEW_USER_LIKES,
+						config.getDouble("tasks.anomalies.features.newUserLikes.threshold"))
+				.put(Feature.FeatureId.INTERACTIONS_RATIO,
+						config.getDouble("tasks.anomalies.features.interactionsRatio.threshold"))
+				.put(Feature.FeatureId.CONTENTS_EMPTY, 0.0)
+				.build();
+
+		return thresholds;
 	}
 }

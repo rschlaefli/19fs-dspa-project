@@ -1,5 +1,7 @@
 package ch.ethz.infk.dspa.anomalies.dto;
 
+import org.joda.time.DateTime;
+
 import com.google.common.base.Objects;
 
 import ch.ethz.infk.dspa.avro.Comment;
@@ -10,6 +12,7 @@ public class Feature {
 
 	public enum FeatureId {
 		TIMESPAN(0),
+		CONTENTS_EMPTY(7),
 		CONTENTS_SHORT(1),
 		CONTENTS_MEDIUM(2),
 		CONTENTS_LONG(3),
@@ -56,8 +59,17 @@ public class Feature {
 				.withEvent(like);
 	}
 
+	public static Feature copy(Feature feature) {
+
+		return new Feature().withEvent(feature.getPost())
+				.withEvent(feature.getComment())
+				.withEvent(feature.getLike())
+				.withFeatureId(feature.getFeatureId())
+				.withFeatureValue(feature.getFeatureValue());
+	}
+
 	public Feature withEvent(Post post) {
-		if (comment != null || like != null) {
+		if (post != null && (comment != null || like != null)) {
 			throw new IllegalArgumentException("Event already set");
 		}
 		this.post = post;
@@ -65,7 +77,7 @@ public class Feature {
 	}
 
 	public Feature withEvent(Comment comment) {
-		if (post != null || like != null) {
+		if (comment != null && (post != null || like != null)) {
 			throw new IllegalArgumentException("Event already set");
 		}
 		this.comment = comment;
@@ -73,7 +85,7 @@ public class Feature {
 	}
 
 	public Feature withEvent(Like like) {
-		if (post != null || comment != null) {
+		if (like != null && (post != null || comment != null)) {
 			throw new IllegalArgumentException("Event already set");
 		}
 		this.like = like;
@@ -161,6 +173,22 @@ public class Feature {
 
 		throw new IllegalArgumentException("No event set in feature");
 
+	}
+
+	public DateTime getCreationDate() {
+		if (post != null) {
+			return post.getCreationDate();
+		}
+
+		if (comment != null) {
+			return comment.getCreationDate();
+		}
+
+		if (like != null) {
+			return like.getCreationDate();
+		}
+
+		throw new IllegalArgumentException("No event set in feature");
 	}
 
 	public Post getPost() {

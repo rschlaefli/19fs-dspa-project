@@ -17,21 +17,23 @@ public class EventStatisticsWindowProcessFunction
 
 	private static final long serialVersionUID = 1L;
 
-	private double isFraudulentThreshold;
+	private final double featureEnsembleThreshold;
+	private final double fraudulentEventsThreshold;
 
-	public EventStatisticsWindowProcessFunction(double isFraudulentThreshold) {
-		this.isFraudulentThreshold = isFraudulentThreshold;
+	public EventStatisticsWindowProcessFunction(double featureEnsembleThreshold, double fraudulentEventsThreshold) {
+		this.featureEnsembleThreshold = featureEnsembleThreshold;
+		this.fraudulentEventsThreshold = fraudulentEventsThreshold;
 	}
 
 	@Override
 	public void process(Long personId, Context context, Iterable<EventStatistics> elements,
 			Collector<FraudulentUser> out) throws Exception {
 		List<EventStatistics> anomalousEvents = Streams.stream(elements)
-				.filter(eventStatistics -> eventStatistics.getIsAnomalousWithMajority(this.isFraudulentThreshold))
+				.filter(eventStatistics -> eventStatistics.getIsAnomalousWithMajority(this.featureEnsembleThreshold))
 				.collect(Collectors.toList());
 
 		// TODO [rsc]: change to incremental implementation?
-		if (anomalousEvents.size() / Streams.stream(elements).count() > this.isFraudulentThreshold) {
+		if ((double) anomalousEvents.size() / Streams.stream(elements).count() > this.fraudulentEventsThreshold) {
 			FraudulentUser fraudulentUser = new FraudulentUser(personId);
 			anomalousEvents.forEach(fraudulentUser::withVotesFrom);
 			out.collect(fraudulentUser);

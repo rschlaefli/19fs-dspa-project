@@ -48,4 +48,13 @@ public class FeatureStatistics {
 		Double featureValue = this.feature.getFeatureValue();
 		return featureValue < this.mean - maximumDeviation || featureValue > this.mean + maximumDeviation;
 	}
+
+	@Override
+	public String toString() {
+		return "FeatureStatistics{" +
+				"feature=" + feature +
+				", stdDev=" + stdDev +
+				", mean=" + mean +
+				'}';
+	}
 }
