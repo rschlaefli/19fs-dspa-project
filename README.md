@@ -40,6 +40,8 @@ We suggest to use the default configuration because these parameters were tuned 
 
 ### Overview
 
+A short checklist on how to run the application. More details can be found below.
+
 1. [ ] Download / Install Dependencies
     1. [ ] Docker
     2. [ ] Python 3 with `tqdm`
