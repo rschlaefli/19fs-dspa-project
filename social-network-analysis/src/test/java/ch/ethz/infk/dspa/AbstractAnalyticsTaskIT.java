@@ -112,8 +112,7 @@ public abstract class AbstractAnalyticsTaskIT<OUT_TYPE> extends AbstractTestBase
 			}
 
 			// remove all expected windows where results are null
-			// TODO: remove an expected window if there are 0 results in the list?
-			expectedWindows.removeIf(window -> window.getResults() == null);
+			expectedWindows.removeIf(window -> window.getResults() == null || window.getResults().size() == 0);
 
 			allExpectedWindows.addAll(expectedWindows);
 

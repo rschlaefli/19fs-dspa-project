@@ -77,7 +77,6 @@ public class App {
 				throw new IllegalArgumentException("INVALID_ANALYTICS_TYPE");
 			}
 
-			// TODO: add any necessary exec. config for producers
 			ExecutionConfig executionConfig = new ExecutionConfig();
 
 			SinkFunction<String> kafkaSink = new KafkaProducerBuilder()

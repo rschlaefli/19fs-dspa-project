@@ -1,9 +1,9 @@
 package ch.ethz.infk.dspa.helper.tuple;
 
-import org.apache.flink.api.java.tuple.Tuple;
-
 import java.util.List;
 import java.util.Map;
+
+import org.apache.flink.api.java.tuple.Tuple;
 
 /**
  * Helper class providing the initialization functionality that Tuple provides for unnamed Tuples
@@ -26,8 +26,6 @@ public abstract class NTuple {
 	}
 
 	public static Tuple newInstance(List<String> names, List<String> values) {
-		// TODO: lots of redundant code, can we reduce this?
-		// TODO: length is fixed by the tuple class type instead of values.size()
 		switch (names.size()) {
 		case 1:
 			NTuple1 tuple1 = new NTuple1<>();

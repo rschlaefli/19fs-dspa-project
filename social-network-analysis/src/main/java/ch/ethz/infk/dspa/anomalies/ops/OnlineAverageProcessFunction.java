@@ -21,8 +21,7 @@ import ch.ethz.infk.dspa.helper.function.DoubleSumReduceFunction;
 import ch.ethz.infk.dspa.helper.function.LongSumReduceFunction;
 
 /**
- * ProcessFunction implementing Welford's online algorithm to keep an online mean and
- * variance/stdDev
+ * ProcessFunction implementing Welford's online algorithm to keep an online mean and variance/stdDev
  */
 public class OnlineAverageProcessFunction
 		extends KeyedProcessFunction<Integer, Feature, FeatureStatistics> {
@@ -124,7 +123,6 @@ public class OnlineAverageProcessFunction
 	}
 
 	private double getStdDev() throws Exception {
-		// TODO: what to do if NaN?
 		double variance = m2.get() / count.get();
 		Double stdDev = Math.sqrt(variance);
 		return !stdDev.isNaN() ? stdDev : 0.0;

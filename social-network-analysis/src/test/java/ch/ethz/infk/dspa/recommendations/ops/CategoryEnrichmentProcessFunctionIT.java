@@ -24,8 +24,6 @@ import ch.ethz.infk.dspa.stream.testdata.PersonActivityTestDataGenerator;
 
 public class CategoryEnrichmentProcessFunctionIT {
 
-	// TODO adjust test (include tagclass enrichment, maybe actually compare category map)
-
 	private StreamExecutionEnvironment env;
 	private DataStream<PersonActivity> personActivityStream;
 

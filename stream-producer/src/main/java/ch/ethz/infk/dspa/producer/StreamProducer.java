@@ -348,7 +348,6 @@ public class StreamProducer {
 				baseDate = getCreationDate(line);
 
 			} catch (IOException e) {
-				// TODO [nku] implement error handling
 			}
 			return baseDate;
 		}
