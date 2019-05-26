@@ -44,9 +44,10 @@ public class FeatureStatistics {
 
 	// compute and store whether the event is to be regarded as anomalous based on current statistics
 	public boolean isAnomalous(Map<Feature.FeatureId, Double> thresholds) {
-		Double maximumDeviation = this.stdDev * thresholds.get(feature.getFeatureId());
+		Double currentFeatureThreshold = thresholds.get(feature.getFeatureId());
+		Double maximumDeviation = this.stdDev != 0 ? this.stdDev * currentFeatureThreshold : currentFeatureThreshold;
 		Double featureValue = this.feature.getFeatureValue();
-		return featureValue < this.mean - maximumDeviation || featureValue > this.mean + maximumDeviation;
+		return (featureValue < (this.mean - maximumDeviation)) || (featureValue > (this.mean + maximumDeviation));
 	}
 
 	@Override

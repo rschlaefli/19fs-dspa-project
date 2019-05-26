@@ -32,8 +32,8 @@ public class EventStatisticsWindowProcessFunction
 				.filter(eventStatistics -> eventStatistics.getIsAnomalousWithMajority(this.featureEnsembleThreshold))
 				.collect(Collectors.toList());
 
-		// TODO [rsc]: change to incremental implementation?
-		if ((double) anomalousEvents.size() / Streams.stream(elements).count() > this.fraudulentEventsThreshold) {
+		double fraudulentEventsRatio = ((double) anomalousEvents.size()) / Streams.stream(elements).count();
+		if (fraudulentEventsRatio > this.fraudulentEventsThreshold) {
 			FraudulentUser fraudulentUser = new FraudulentUser(personId);
 			anomalousEvents.forEach(fraudulentUser::withVotesFrom);
 			out.collect(fraudulentUser);

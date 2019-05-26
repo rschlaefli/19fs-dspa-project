@@ -35,6 +35,8 @@ module.exports = gql`
     CONTENTS_LONG: Int
     INTERACTIONS_RATIO: Int
     NEW_USER_LIKES: Int
+    CONTENTS_EMPTY: Int
+    TAG_COUNT: Int
   }
 
   type AnomaliesOutput {

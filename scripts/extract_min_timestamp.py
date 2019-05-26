@@ -1,5 +1,9 @@
 import argparse
 import os
+import sys
+
+if sys.version_info[0] < 3:
+    raise Exception("Python 3 or a more recent version is required.")
 
 parser = argparse.ArgumentParser(description='Extract Minimum Timestamp from cleaned Post, Comment and Like stream')
 parser.add_argument('--streamdir', help='directory of streams')

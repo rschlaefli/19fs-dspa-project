@@ -1,4 +1,9 @@
+import sys
+
 from tqdm import tqdm
+
+if sys.version_info[0] < 3:
+    raise Exception("Python 3 or a more recent version is required.")
 
 def main():
     print("Cleaning 1k User Streams:")
