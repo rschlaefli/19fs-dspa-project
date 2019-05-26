@@ -247,15 +247,17 @@ public class AnomaliesAnalyticsTaskIT extends AbstractAnalyticsTaskIT<Fraudulent
 							});
 				});
 
-		return personAnomalousEventCounts.entrySet().stream()
-				.filter(entry -> ((double) entry.getValue().f0.size())
-						/ entry.getValue().f1.doubleValue() > fraudulentEventsThreshold)
+		List<FraudulentUser> resultList = personAnomalousEventCounts.entrySet().stream()
+				.filter(entry -> (((double) entry.getValue().f0.size())
+						/ entry.getValue().f1.doubleValue()) > fraudulentEventsThreshold)
 				.map(entry -> {
 					FraudulentUser fraudulentUser = new FraudulentUser(entry.getKey());
 					entry.getValue().f0.forEach(fraudulentUser::withVotesFrom);
 					return fraudulentUser;
 				})
 				.collect(Collectors.toList());
+
+		return resultList;
 	}
 
 	private List<Feature> computeTimespanFeatures(List<Feature> featuresInOrder) {
