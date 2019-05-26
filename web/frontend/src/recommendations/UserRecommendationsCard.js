@@ -28,6 +28,7 @@ function UserRecommendationsCard({
           title="Similarity"
           dataIndex="similarity"
           key="similarity"
+          align="right"
         />
       </Table>
     </Card>

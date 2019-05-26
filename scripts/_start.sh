@@ -101,8 +101,17 @@ do
           FLINK_SERVICES="--scale task-anomalies=$TASK_PARALLELISM cluster-anomalies task-anomalies $SERVICES"
         ;;
 
+        recommendations+anomalies)
+          TASK="recommendations"
+          FLINK_SERVICES="--scale task-recommendations=$TASK_PARALLELISM \
+                          --scale task-anomalies=$TASK_PARALLELISM \
+                          cluster-recommendations task-recommendations \
+                          cluster-anomalies task-anomalies"
+        ;;
+
         *)
-          echo "Invalid --task parameter! Use one of [statistics, recommendations, anomalies]. Remove the parameter to run all tasks simultaneously."
+          echo "Invalid --task parameter! Use one of [statistics, recommendations, anomalies, recommendations+anomalies]. \
+                Remove the parameter to run all tasks simultaneously."
           exit 1
       esac
     ;;

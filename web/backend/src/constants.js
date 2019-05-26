@@ -6,7 +6,7 @@ module.exports = {
     DAYS_TO_KEEP: 1,
   },
   STATISTICS: {
-    DAYS_TO_KEEP: 0.25,
+    DAYS_TO_KEEP: 0.35,
   },
   ERROR_TYPES: ['unhandledRejection', 'uncaughtException'],
   SIGNAL_TRAPS: ['SIGTERM', 'SIGINT', 'SIGUSR2'],
