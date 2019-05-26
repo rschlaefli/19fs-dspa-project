@@ -130,7 +130,7 @@ echo "--source-dir=$SOURCE_DIRECTORY"
 echo "--data-dir=$DATA_DIRECTORY"
 echo "Reading streams from $STREAM_DIRECTORY"
 
-if [ BUILD = 1 ]; then
+if [ $BUILD = 1 ]; then
   echo "Rebuilding images..."
   docker-compose build --parallel cluster-statistics task-statistics producer-post web
   docker-compose build --parallel cluster-recommendations cluster-anomalies task-recommendations task-anomalies producer-comment producer-like
@@ -145,11 +145,11 @@ if [ ${#FLINK_SERVICES} = 0 ]; then
                 cluster-anomalies task-anomalies"
 fi
 
-if [ KAFKA_UI = 1 ]; then
+if [ $KAFKA_UI = 1 ]; then
   BASE_SERVICES=$BASE_SERVICES kafka-web
 fi
 
-if [ VISUALIZATION_UI = 1 ]; then
+if [ $VISUALIZATION_UI = 1 ]; then
   BASE_SERVICES=$BASE_SERVICES web
 fi
 
