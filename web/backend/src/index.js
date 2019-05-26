@@ -32,7 +32,7 @@ async function main() {
     return cleanup({ exitCode: 1 })
   }
 
-  outputsQueue.process('active-posts-out', 8, PROCESSORS.Statistics)
+  outputsQueue.process('active-posts-out', 10, PROCESSORS.Statistics)
   outputsQueue.process('recommendations-out', PROCESSORS.Recommendations)
   outputsQueue.process('anomalies-out', PROCESSORS.Anomalies)
 

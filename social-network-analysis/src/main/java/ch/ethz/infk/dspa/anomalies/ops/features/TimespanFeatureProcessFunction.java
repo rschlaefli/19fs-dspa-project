@@ -73,7 +73,7 @@ public class TimespanFeatureProcessFunction extends KeyedProcessFunction<Long, F
 
 		// get the next smaller maximum timestamp that is in the buffer
 		Long maxBufferedTs = this.lastEventBeforeWatermarkState.value();
-		Double tsDifference = maxBufferedTs != null ? timestamp - maxBufferedTs.doubleValue() : 0;
+		Double tsDifference = maxBufferedTs != null ? timestamp - maxBufferedTs.doubleValue() : null;
 
 		// update the maximum timestamp that has been seen
 		this.lastEventBeforeWatermarkState.update(timestamp);

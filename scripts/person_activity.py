@@ -1,8 +1,11 @@
-from datetime import datetime
-from datetime import timedelta
-
+import sys
 import csv
+
+from datetime import datetime, timedelta
 from tqdm import tqdm
+
+if sys.version_info[0] < 3:
+    raise Exception("Python 3 or a more recent version is required.")
 
 def main():
 
@@ -19,7 +22,7 @@ def main():
         like_stream_path="./data/1k-users-sorted/streams/likes_event_stream_cleaned.csv",
         output_file="./data/1kuser_activity_stats.csv",
         n_posts=173402, n_comments=543469, n_likes=651172)
-        
+
     print("\nCalculating 10k User Stats:")
     calc_person_activity_stats(post_stream_path="./data/10k-users-sorted/streams/post_event_stream_cleaned.csv",
         comment_stream_path="./data/10k-users-sorted/streams/comment_event_stream_cleaned.csv",
@@ -70,7 +73,7 @@ def calc_person_activity_stats(post_stream_path, comment_stream_path, like_strea
     like_stream.close()
 
     print("Sorting Interactions...")
-    person_interactions = sorted(person_interactions, key = lambda i: i['timestamp']) 
+    person_interactions = sorted(person_interactions, key = lambda i: i['timestamp'])
 
 
     persons = dict()
@@ -88,7 +91,7 @@ def calc_person_activity_stats(post_stream_path, comment_stream_path, like_strea
 
     # init all with first event
     first_event = person_interactions[0]
-        
+
     print("Building Person Activity Statistics...")
     for event in tqdm(person_interactions):
         if event['personId'] not in persons:
@@ -106,7 +109,7 @@ def calc_person_activity_stats(post_stream_path, comment_stream_path, like_strea
             persons[event['personId']]['max_delta'] = delta
             persons[event['personId']]['max_delta_period_start'] = last_person_event
             persons[event['personId']]['max_delta_period_end'] = event['timestamp']
-        
+
         # update last event
         persons[event['personId']]['last_person_event'] = event['timestamp']
 
@@ -120,12 +123,12 @@ def calc_person_activity_stats(post_stream_path, comment_stream_path, like_strea
             person['max_delta'] = delta
             person['max_delta_period_start'] = last_person_event
             person['max_delta_period_end'] = event['timestamp']
-        
+
         person['id'] = personId
         person_list.append(person)
 
     print("Sorting Person Activity Statistics...")
-    person_list = sorted(person_list, key = lambda i: i['max_delta']) 
+    person_list = sorted(person_list, key = lambda i: i['max_delta'])
 
     print("Writing Person Activity Statistics to CSV...")
     keys = person_list[0].keys()

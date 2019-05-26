@@ -3,16 +3,17 @@ import gql from 'graphql-tag'
 import _groupBy from 'lodash/groupBy'
 import _has from 'lodash/has'
 import dayjs from 'dayjs'
+import styled from '@emotion/styled'
 
 import { useQuery } from 'react-apollo-hooks'
-import { Row, Col, Skeleton, Typography } from 'antd'
+import { Row, Col, Skeleton, Typography, Alert } from 'antd'
 
-import WindowSlider from '../common/WindowSlider'
+import { WindowSlider } from '../common/Slider'
 import PollIntervalControl from '../common/PollIntervalControl'
 import UserRecommendationsCard from './UserRecommendationsCard'
 
 const RECOMMENDATIONS_QUERY = gql`
-  query RecommendationsOutputs {
+  query {
     recommendationsOutputs {
       timestamp
       personId
@@ -27,10 +28,29 @@ const RECOMMENDATIONS_QUERY = gql`
   }
 `
 
-function Recommendations() {
-  const [currentTs, setCurrentTs] = useState()
-  const [pollInterval, setPollInterval] = useState(2000)
+const CardsWrapper = styled.div`
+  display: flex;
+  flex-flow: row wrap;
+  margin-top: -1rem;
 
+  .ant-alert {
+    flex: 1;
+  }
+`
+
+const CardWrapper = styled.div`
+  flex: 0 0 20%;
+  margin-top: 1rem;
+  padding-right: 1rem;
+
+  .ant-table {
+    border: 0;
+  }
+`
+
+function Recommendations() {
+  const [pollInterval, setPollInterval] = useState(5000)
+  const [currentTs, setCurrentTs] = useState()
   const { data, error, loading } = useQuery(RECOMMENDATIONS_QUERY, {
     pollInterval,
   })
@@ -58,6 +78,7 @@ function Recommendations() {
   // simply display the window with the smallest available timestamp
   const resultTs = currentTs && currentTs >= minTs ? currentTs : minTs
 
+  // group the recommendations by person id
   const recommendations = _groupBy(
     data.recommendationsOutputs
       .filter(output => output.timestamp === resultTs)
@@ -82,6 +103,7 @@ function Recommendations() {
             setPollInterval={setPollInterval}
           />
         </Col>
+
         <Col span={19}>
           <WindowSlider
             maxTs={maxTs}
@@ -92,6 +114,7 @@ function Recommendations() {
           />
         </Col>
       </Row>
+
       <Row>
         <Col>
           <Typography.Title level={2}>
@@ -104,16 +127,24 @@ function Recommendations() {
           </Typography.Title>
         </Col>
       </Row>
-      <Row gutter={16}>
+
+      <CardsWrapper>
+        {Object.keys(recommendations).length === 0 && (
+          <Alert
+            showIcon
+            message="No recommendations for the current window."
+            type="info"
+          />
+        )}
         {Object.keys(recommendations).map(personId => (
-          <Col span={6}>
+          <CardWrapper>
             <UserRecommendationsCard
               personId={personId}
               recommendations={recommendations[personId]}
             />
-          </Col>
+          </CardWrapper>
         ))}
-      </Row>
+      </CardsWrapper>
     </>
   )
 }

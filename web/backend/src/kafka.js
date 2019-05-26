@@ -33,8 +33,8 @@ async function setupKafka({
 
 async function runKafkaConsumer({ kafkaConsumer, outputsQueue }) {
   return kafkaConsumer.run({
-    autoCommitInterval: 5000,
-    autoCommitThreshold: 50000,
+    autoCommitInterval: 10000,
+    autoCommitThreshold: 15000,
     eachMessage: async ({ topic, message }) => {
       const messageAsJson = messageToJson(message)
       outputsQueue.add(topic, messageAsJson, {

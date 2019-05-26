@@ -7,6 +7,7 @@ import { HttpLink } from 'apollo-link-http'
 import { onError } from 'apollo-link-error'
 import { ApolloLink } from 'apollo-link'
 import { ApolloProvider } from 'react-apollo-hooks'
+import { RetryLink } from 'apollo-link-retry'
 
 import 'react-virtualized/styles.css'
 import './index.css'
@@ -23,6 +24,11 @@ const client = new ApolloClient({
           )
         )
       if (networkError) console.log(`[Network error]: ${networkError}`)
+    }),
+    new RetryLink({
+      attempts: {
+        max: 100,
+      },
     }),
     new HttpLink({
       uri: 'http://localhost:4000/graphql',

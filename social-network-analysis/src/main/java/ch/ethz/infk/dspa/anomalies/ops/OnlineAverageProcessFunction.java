@@ -101,7 +101,11 @@ public class OnlineAverageProcessFunction
 
 	}
 
-	private void updateRollingStats(double newMeasurement) throws Exception {
+	private void updateRollingStats(Double newMeasurement) throws Exception {
+
+		if (newMeasurement == null) {
+			return;
+		}
 
 		count.add(1L);
 
