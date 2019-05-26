@@ -55,8 +55,9 @@ public class App {
 				outputTopic = "active-posts-out";
 				break;
 			case "recommendations":
-				String[] personIdArgs = cmd.getOptionValues("personIds");
-				if (personIdArgs != null) {
+				String personIds = cmd.getOptionValue("personIds");
+				if (personIds != null) {
+					String[] personIdArgs = personIds.split(" ");
 					// convert to longs
 					final Set<Long> recommendationPersonIds = Arrays.asList(personIdArgs).stream()
 							.map(pId -> Long.parseLong(pId)).collect(Collectors.toSet());
@@ -163,9 +164,10 @@ public class App {
 
 		options.addOption(
 				Option.builder("personIds")
-						.hasArgs()
-						.type(Long.class)
-						.desc("for recommendations: personIds for which to generate recommendations").build());
+						.hasArg()
+						.type(String.class)
+						.desc("for recommendations: personIds for which to generate recommendations")
+						.build());
 
 		return options;
 	}
