@@ -1,7 +1,10 @@
 # Data Stream Processing and Analytics: Semester Project
 
+Roland Schlaefli, 12-932-398 and Nicolas Kuechler, 14-712-129
+
 ## Description
-### Problem Statement:
+
+### Problem Statement
 The project uses the stream processing tools Kafka and Flink to build the backend of a hypothetical social network.
 A brief overview of the four parts of the project is given below and more details can be found in the `/reports` folder.
 
@@ -21,20 +24,7 @@ This task constantly analyses the behaviour of the users of the social network a
 
 ![](reports/architecture-overview-v3.png)
 
-TODO: reformulate
-
-The producer reads the provided social network streaming files and writes them to Kafka.
-These Kafka topics are separately consumed and processed in a Flink application.
-The outputs of the three tasks are written to Kafka.
-A small Web UI is provided which helps visualizing the results.
-For convenience we provide everything within a Dockerized environment but the different parts could also be run in a cluster.
-More details about the architecture can be found in the reports. (see `/reports`)
-
-### Configuration of Analytics Task
-The three analytics task can be configured using the properties file:
-`social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties`
-
-We suggest to use the default configuration because these parameters were tuned to produce reasonable results.
+Kafka serves as the backbone for all of the computation in our streaming analytics application. Flink reads all of its data from three topics persisted in Kafka and writes its output to three additional topics. These are then consumed by the application frontend to prepare them for display in the web application. The Kafka input topics are created by the instances of the Kafka producer, which read the data from files and preprocess it as needed. For convenience we provide everything within a dockerized environment. More details about the architecture can be found in the reports. (see `/reports`)
 
 ## Instructions
 
@@ -45,7 +35,7 @@ A short checklist on how to run the application. More details can be found below
 1. [ ] Download / Install Dependencies
     1. [ ] Docker
     2. [ ] Python 3 with `tqdm`
-    3. [ ] link Binary
+    3. [ ] Flink Binary
 2. [ ] Data Preparation
     1. [ ] Download Data
     2. [ ] Clean Event Streams `python scripts/stream_cleaning.py`
@@ -142,6 +132,11 @@ The streaming application can be parametrized by several means:
     - Defaults to a factor of 1200
     - 1 hour / 1200 = 3.0 seconds, meaning all events of a given hour are served in 3 seconds
 
+The three analytics task can additionally be configured using the properties file:
+`social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties`
+
+We suggest to use the default configuration because these parameters were tuned to produce reasonable results.
+
 ### Troubleshooting
 
 - To connect to Kafka from the host machine, use `localhost:29092`.
@@ -150,7 +145,3 @@ The streaming application can be parametrized by several means:
 - On Windows, there might be issues with files not being found inside most of the Docker containers
   - Most often, this occurs to the data and other files being stored with Windows file-endings, which breaks when reading them in Linux
   - To convert these files to use the appropriate Linux file-endings, run `scripts/file_endings_win.bat` from the repository root
-
-## Authors
-- Roland Schlaefli, 12-932-398
-- Nicolas Kuechler, 14-712-129
