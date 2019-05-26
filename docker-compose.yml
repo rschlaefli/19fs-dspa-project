@@ -104,7 +104,7 @@ services:
         "-maxdelaysec",
         "$MAXDELAYSEC",
         "-personIds",
-        "$PERSONIDS",
+        "$PERSON_IDS",
       ]
     volumes:
       - $SOURCE_DIRECTORY/social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties:/opt/config.properties:ro

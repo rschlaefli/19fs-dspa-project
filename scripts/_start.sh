@@ -16,13 +16,14 @@ VISUALIZATION_UI=1
 TASK="all"
 BASE_SERVICES="zookeeper kafka redis producer-post producer-comment producer-like"
 FLINK_SERVICES=""
-export SOURCE_DIRECTORY="./"
-export DATA_DIRECTORY="10k-users-sorted"
-export STREAM_DIRECTORY="${SOURCE_DIRECTORY}data/$DATA_DIRECTORY/streams"
-export MAXDELAYSEC="600"
-export SDELAY="600"
-export SPEEDUP="3600"
-export TASK_PARALLELISM="2"
+SOURCE_DIRECTORY="./"
+DATA_DIRECTORY="10k-users-sorted"
+STREAM_DIRECTORY="${SOURCE_DIRECTORY}data/$DATA_DIRECTORY/streams"
+MAXDELAYSEC="600"
+SDELAY="600"
+SPEEDUP="3600"
+TASK_PARALLELISM="2"
+PERSON_IDS="4640 1597 9660 8054 6322 1327 6527 9696 9549 9900"
 
 # extract the overall minimum timestamp from the datafiles
 # this will allow to synchronize the producers to a common starting point
@@ -85,7 +86,7 @@ do
     ;;
 
     "--person-ids")
-      export PERSON_IDS=$2
+      PERSON_IDS=`echo "$2" | tr -d '"'`
       if [ ${#PERSON_IDS} = 0 ]; then
         echo "Invalid --person-ids parameter! Please specify a valid directory path."
         exit 1
@@ -142,6 +143,15 @@ echo "--data-dir=$DATA_DIRECTORY"
 echo "--person-ids=$PERSON_IDS"
 echo "Reading streams from $STREAM_DIRECTORY"
 echo "Minimum synchronization timestamp $PRODUCER_SYNC_TS"
+
+export TASK
+export SPEEDUP
+export MAXDELAYSEC
+export SDELAY
+export TASK_PARALLELISM
+export SOURCE_DIRECTORY
+export DATA_DIRECTORY
+export PERSON_IDS
 
 if [ $BUILD -eq 1 ]; then
   echo "Rebuilding images..."

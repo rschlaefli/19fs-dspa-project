@@ -143,7 +143,6 @@ public class AnomaliesAnalyticsTaskIT extends AbstractAnalyticsTaskIT<Fraudulent
 		List<Feature> interactionsRatioFeatures = computeInteractionsRatioFeatures(featuresInOrder);
 
 		// compute new user interaction features
-		// TODO: move to before all
 		final Map<Long, Long> userCreationMap = NewUserInteractionFeatureProcessFunction
 				.buildUserCreationRelation(getStaticFilePath() + "person.csv");
 		List<Feature> newUserInteractionFeatures = computeNewUserInteractionFeatures(featuresInOrder,
@@ -189,7 +188,6 @@ public class AnomaliesAnalyticsTaskIT extends AbstractAnalyticsTaskIT<Fraudulent
 					FeatureStatistics featureStatistics = new FeatureStatistics(feature);
 					featureStatistics.setMean(existingStatistics.f1);
 
-					// TODO: what to do if NaN?
 					double variance = existingStatistics.f2 / existingStatistics.f0;
 					double stdDev = Math.sqrt(variance);
 					featureStatistics.setStdDev(!Double.isNaN(stdDev) ? stdDev : 0.0);

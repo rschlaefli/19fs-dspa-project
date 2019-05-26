@@ -81,7 +81,7 @@ The data files that are to be fed into the streaming application need to be prep
     (Comment arrives before Post, Like arrives before Post and Reply arrives before Comment)
 
 The data can be found here:
-- Small (1K people): https://polybox.ethz.ch/index.php/s/qRlRpFhoPtdO6bR   
+- Small (1K people): https://polybox.ethz.ch/index.php/s/qRlRpFhoPtdO6bR
 - Medium (10K people): https://polybox.ethz.ch/index.php/s/8JRHOc3fICXtqzN
 
 ### Running the Streaming Application
@@ -123,14 +123,17 @@ The streaming application can be parametrized by several means:
     - Defaults to running all tasks simultaneously
   - To increase the parallelism of the analytics tasks:
     - `scripts/_start.sh --parallelism X` where X > 0
-    TODO [rsc] is this still default
-    - Defaults to parallelism=1 for performance reasons
+    - Defaults to parallelism=2
   - To change the directory where data is to be read from:
     - `scripts/_start.sh --source-dir=X --data-dir=Y`
       - X must point to the root of the code repository
       - Y must specify the folder name containing streams and tables
       - X defaults to `./`, Y defaults to `10k-users-sorted`
     - The data needs to have been cleaned with the Python scripts!
+  - To change the users for which recommendations are computed:
+    - `scripts/_start.sh --person-ids "1 2 3 4 5 6 7 8 9 10"`
+    - Quotes are important!
+    - Defaults to `"4640 1597 9660 8054 6322 1327 6527 9696 9549 9900"`
   - To change the bounded random amount of time which causes the events to be served slightly out-of-order of their timestamps:
     - `scripts/_start.sh --maxdelaysec X` where X >= 0
     - Defaults to 600 seconds
