@@ -81,7 +81,7 @@ public class EventStatistics {
 	public boolean getIsAnomalousWithMajority(Double isFraudulentThreshold) {
 		int numFraudulent = this.votesFraudulent.size();
 		int numTotal = this.votesNonFraudulent.size() + numFraudulent;
-		return numFraudulent / numTotal >= isFraudulentThreshold;
+		return (((double) numFraudulent) / numTotal) >= isFraudulentThreshold;
 	}
 
 	@Override

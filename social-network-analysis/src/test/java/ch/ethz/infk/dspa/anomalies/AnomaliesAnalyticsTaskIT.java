@@ -159,6 +159,14 @@ public class AnomaliesAnalyticsTaskIT extends AbstractAnalyticsTaskIT<Fraudulent
 	private List<FeatureStatistics> applyOnlineAveraging(List<Feature> composedFeatureStream) {
 		return composedFeatureStream.stream()
 				.map(feature -> {
+					if (feature.getFeatureValue() == null) {
+						FeatureStatistics featureStatistics = new FeatureStatistics(feature);
+						featureStatistics.getFeature().withFeatureValue(0.0);
+						featureStatistics.setMean(0.0);
+						featureStatistics.setStdDev(1.0);
+						return featureStatistics;
+					}
+
 					// get the existing statistics tuple with <count, mean, m2>
 					Tuple3<Long, Double, Double> existingStatistics = rollingStatisticsPerFeature
 							.getOrDefault(feature.getFeatureId(), Tuple3.of(0L, 0.0, 0.0));

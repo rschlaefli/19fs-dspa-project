@@ -49,8 +49,8 @@ public class ContentsFeatureMapFunction implements MapFunction<Feature, Feature>
 		// if the content is empty, return a specific feature id
 		if (content.isEmpty()) {
 			return feature
-					.withFeatureId(Feature.FeatureId.CONTENTS_EMPTY)
-					.withFeatureValue(0.0);
+					.withFeatureId(Feature.FeatureId.CONTENTS_SHORT)
+					.withFeatureValue(null);
 		}
 
 		// stem and tokenize

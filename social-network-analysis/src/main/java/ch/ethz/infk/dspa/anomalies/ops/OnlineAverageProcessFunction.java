@@ -56,16 +56,24 @@ public class OnlineAverageProcessFunction
 
 		// update the rolling average with all features from this timestamp
 		for (Feature feature : bufferedFeatures) {
-			updateRollingStats(feature.getFeatureValue());
+			if (feature.getFeatureValue() != null) {
+				updateRollingStats(feature.getFeatureValue());
+			}
 		}
 
 		// output each feature along with the updated rolling statistics
 		for (Feature feature : bufferedFeatures) {
-
 			FeatureStatistics featureStat = new FeatureStatistics(feature);
-
-			featureStat.setMean(getMean());
-			featureStat.setStdDev(getStdDev());
+			// if we do not want to trigger this feature (e.g., feature without previous timestamp in timespan)
+			// set the mean and stddev to values that do not break the rest of the dataflow
+			if (feature.getFeatureValue() == null) {
+				featureStat.getFeature().withFeatureValue(0.0);
+				featureStat.setMean(0.0);
+				featureStat.setStdDev(1.0);
+			} else {
+				featureStat.setMean(getMean());
+				featureStat.setStdDev(getStdDev());
+			}
 			out.collect(featureStat);
 		}
 
@@ -102,11 +110,6 @@ public class OnlineAverageProcessFunction
 	}
 
 	private void updateRollingStats(Double newMeasurement) throws Exception {
-
-		if (newMeasurement == null) {
-			return;
-		}
-
 		count.add(1L);
 
 		double delta1 = newMeasurement - ObjectUtils.defaultIfNull(mean.get(), 0.0);

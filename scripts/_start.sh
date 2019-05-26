@@ -20,9 +20,9 @@ export SOURCE_DIRECTORY="./"
 export DATA_DIRECTORY="10k-users-sorted"
 export STREAM_DIRECTORY="${SOURCE_DIRECTORY}data/$DATA_DIRECTORY/streams"
 export MAXDELAYSEC="600"
-export RANDOMDELAY="5"
-export SPEEDUP="1500"
-export TASK_PARALLELISM="1"
+export SDELAY="600"
+export SPEEDUP="3600"
+export TASK_PARALLELISM="2"
 
 # extract the overall minimum timestamp from the datafiles
 # this will allow to synchronize the producers to a common starting point
@@ -51,25 +51,21 @@ do
     "--speedup")
       SPEEDUP=$2
       echo $SPEEDUP | grep -E -q '^[0-9]+$' || die "Invalid --speedup parameter $SPEEDUP! Please specify an integer >0."
-      shift 1
     ;;
 
     "--maxdelaysec")
       MAXDELAYSEC=$2
-      echo $MAXDELAYSEC | grep -E -q '^[0-9]+$' || die "Invalid --maxdelaysec parameter $SPEEDUP! Please specify an integer >0."
-      shift 1
+      echo $MAXDELAYSEC | grep -E -q '^[0-9]+$' || die "Invalid --maxdelaysec parameter $MAXDELAYSEC! Please specify an integer >0."
     ;;
 
-    "--randomdelay")
-      RANDOMDELAY=$2
-      echo $RANDOMDELAY | grep -E -q '^[0-9]+$' || die "Invalid --randomdelay parameter $RANDOMDELAY! Please specify an integer >0."
-      shift 1
+    "--D")
+      SDELAY=$2
+      echo $SDELAY | grep -E -q '^[0-9]+$' || die "Invalid --schedulingdelay parameter $SDELAY! Please specify an integer >0."
     ;;
 
     "--parallelism")
       TASK_PARALLELISM=$2
       echo $TASK_PARALLELISM | grep -E -q '^[0-9]+$' || die "Invalid --parallelism parameter $TASK_PARALLELISM! Please specify an integer >0."
-      shift 1
     ;;
 
     "--source-dir")
@@ -78,7 +74,6 @@ do
         echo "Invalid --source-dir parameter! Please specify a valid directory path."
         exit 1
       fi
-      shift 1
     ;;
 
     "--data-dir")
@@ -87,7 +82,6 @@ do
         echo "Invalid --data-dir parameter! Please specify a valid directory path."
         exit 1
       fi
-      shift 1
     ;;
 
     "--task")
@@ -121,22 +115,23 @@ done
 export TASK
 
 echo "Running application with the following parameters"
-echo "task=$TASK"
-echo "speedup=$SPEEDUP"
-echo "maxdelaysec=$MAXDELAYSEC"
-echo "randomdelay=$RANDOMDELAY"
-echo "parallelism=$TASK_PARALLELISM"
+echo "--task=$TASK"
+echo "--speedup=$SPEEDUP"
+echo "--maxdelaysec=$MAXDELAYSEC"
+echo "--schedulingdelay=$SDELAY"
+echo "--parallelism=$TASK_PARALLELISM"
 echo "--source-dir=$SOURCE_DIRECTORY"
 echo "--data-dir=$DATA_DIRECTORY"
 echo "Reading streams from $STREAM_DIRECTORY"
+echo "Minimum synchronization timestamp $PRODUCER_SYNC_TS"
 
-if [ $BUILD = 1 ]; then
+if [ $BUILD -eq 1 ]; then
   echo "Rebuilding images..."
   docker-compose build --parallel cluster-statistics task-statistics producer-post web
   docker-compose build --parallel cluster-recommendations cluster-anomalies task-recommendations task-anomalies producer-comment producer-like
 fi
 
-if [ ${#FLINK_SERVICES} = 0 ]; then
+if [ ${#FLINK_SERVICES} -eq 0 ]; then
   FLINK_SERVICES="--scale task-statistics=$TASK_PARALLELISM \
                 --scale task-recommendations=$TASK_PARALLELISM \
                 --scale task-anomalies=$TASK_PARALLELISM \
@@ -145,12 +140,12 @@ if [ ${#FLINK_SERVICES} = 0 ]; then
                 cluster-anomalies task-anomalies"
 fi
 
-if [ $KAFKA_UI = 1 ]; then
-  BASE_SERVICES=$BASE_SERVICES kafka-web
+if [ $KAFKA_UI -eq 1 ]; then
+  BASE_SERVICES="$BASE_SERVICES kafka-web"
 fi
 
-if [ $VISUALIZATION_UI = 1 ]; then
-  BASE_SERVICES=$BASE_SERVICES web
+if [ $VISUALIZATION_UI -eq 1 ]; then
+  BASE_SERVICES="$BASE_SERVICES web"
 fi
 
 # start all services including base infrastructure

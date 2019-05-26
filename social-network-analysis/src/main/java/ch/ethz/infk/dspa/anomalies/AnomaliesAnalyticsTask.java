@@ -156,7 +156,6 @@ public class AnomaliesAnalyticsTask
 						config.getDouble("tasks.anomalies.features.newUserLikes.threshold"))
 				.put(Feature.FeatureId.INTERACTIONS_RATIO,
 						config.getDouble("tasks.anomalies.features.interactionsRatio.threshold"))
-				.put(Feature.FeatureId.CONTENTS_EMPTY, 0.0)
 				.build();
 
 		return thresholds;

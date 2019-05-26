@@ -32,8 +32,7 @@ public class EnsembleProcessFunction extends KeyedProcessFunction<String, Featur
 
 	// TODO Verify that all events are properly set here!
 	private static final Set<FeatureId> contentFeatures = new HashSet<>(
-			Arrays.asList(FeatureId.CONTENTS_SHORT, FeatureId.CONTENTS_MEDIUM, FeatureId.CONTENTS_LONG,
-					FeatureId.CONTENTS_EMPTY));
+			Arrays.asList(FeatureId.CONTENTS_SHORT, FeatureId.CONTENTS_MEDIUM, FeatureId.CONTENTS_LONG));
 
 	private static final Set<FeatureId> mandatoryPostFeatures = new HashSet<>(
 			Arrays.asList(FeatureId.TIMESPAN, FeatureId.TAG_COUNT));

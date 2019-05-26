@@ -12,7 +12,6 @@ public class Feature {
 
 	public enum FeatureId {
 		TIMESPAN(0),
-		CONTENTS_EMPTY(7),
 		CONTENTS_SHORT(1),
 		CONTENTS_MEDIUM(2),
 		CONTENTS_LONG(3),

@@ -1,5 +1,7 @@
 # Data Stream Processing and Analytics
 
+TODO: AUTHORS
+TODO: describe config with config.properties?
 TODO: add architecture image
 TODO: general description
 TODO: dockerization (packaging)
@@ -77,15 +79,13 @@ The streaming application can be parametrized by several means:
       - Y must specify the folder name containing streams and tables
       - X defaults to `./`, Y defaults to `10k-users-sorted`
     - The data needs to have been cleaned up with the Python scripts!
-  - TODO: describe maxdelaysec:
+  - To change the bounded random amount of time which causes the events to be served slightly out-of-order of their timestamps:
     - `scripts/_start.sh --maxdelaysec X` where X >= 0
     - Defaults to 600 seconds
-  - TODO: describe rdelay
-    - `scripts/_start.sh --randomdelay X` where X >= 0
-    - Defaults to 5 UNIT
-  - TODO: describe speedup
+  - To change the speedup factor parameter that adjusts serving speed:
     - `scripts/_start.sh --speedup X` where X > 0
-    - Defaults to a factor of 1500
+    - Defaults to a factor of 1200
+    - 1 hour / 1200 = 3.0 seconds, meaning all events of a given hour are served in 2.4 seconds
 
 ## Troubleshooting
 
