@@ -1,23 +1,30 @@
 # Data Stream Processing and Analytics: Semester Project
 
-Roland Schlaefli, 12-932-398 and Nicolas Kuechler, 14-712-129
+> Roland Schlaefli, 12-932-398 and Nicolas Kuechler, 14-712-129
+
+See `DEMO.md` for a suggested course of action with commands and notes related to running the application.
 
 ## Description
 
 ### Problem Statement
+
 The project uses the stream processing tools Kafka and Flink to build the backend of a hypothetical social network.
 A brief overview of the four parts of the project is given below and more details can be found in the `/reports` folder.
 
 #### Data Preparation
+
 This part of the project is about building a realistic simulation source of the social network streams with typical characteristics such as out-of-order events or a speedup factor.
 
 #### Active Posts Statistics
+
 This task continuously aggregates the overall level of activity per active post using fundamental streaming operators for grouping, counting and windowing.
 
 #### Recommendations
+
 This task analyses the behaviour of the users of the social network and provides friends recommendations based on similarities between the users.
 
-####  Unusual Activity Detection
+#### Unusual Activity Detection
+
 This task constantly analyses the behaviour of the users of the social network and detects unusual activities of users which could indicate that an account is a bot.
 
 ### Architecture
@@ -26,6 +33,12 @@ This task constantly analyses the behaviour of the users of the social network a
 
 Kafka serves as the backbone for all of the computation in our streaming analytics application. Flink reads all of its data from three topics persisted in Kafka and writes its output to three additional topics. These are then consumed by the application frontend to prepare them for display in the web application. The Kafka input topics are created by the instances of the Kafka producer, which read the data from files and preprocess it as needed. For convenience we provide everything within a dockerized environment. More details about the architecture can be found in the reports. (see `/reports`)
 
+### Project Structure
+
+- `stream-producer/` contains the code for the Kafka producers that handle the majority of Task 0 (speedup, random delay, etc.)
+- `social-network-analysis/` contains the code for all Flink jobs structured as a single Java application that runs the Task specified by the command line argument `-analyticstype`
+- `web/` contains both the NodeJS backend and React frontend code of the application visualization frontend
+
 ## Instructions
 
 ### Overview
@@ -33,15 +46,14 @@ Kafka serves as the backbone for all of the computation in our streaming analyti
 A short checklist on how to run the application. More details can be found below.
 
 1. [ ] Download / Install Dependencies
-    1. [ ] Docker
-    2. [ ] Python 3 with `tqdm`
-    3. [ ] Flink Binary
+   1. [ ] Docker
+   2. [ ] Python 3 with `tqdm`
+   3. [ ] Flink Binary
 2. [ ] Data Preparation
-    1. [ ] Download Data
-    2. [ ] Clean Event Streams `python scripts/stream_cleaning.py`
-    3. [ ] On Windows adjust file endings from files: `scripts/file_endings_win.bat`
+   1. [ ] Download Data
+   2. [ ] Clean Event Streams `python scripts/stream_cleaning.py`
+   3. [ ] On Windows adjust file endings from files: `scripts/file_endings_win.bat`
 3. [ ] Run Application `scripts/_start.sh`
-
 
 ### Limitations and Performance
 
@@ -71,6 +83,7 @@ The data files that are to be fed into the streaming application need to be prep
     (Comment arrives before Post, Like arrives before Post and Reply arrives before Comment)
 
 The data can be found here:
+
 - Small (1K people): https://polybox.ethz.ch/index.php/s/qRlRpFhoPtdO6bR
 - Medium (10K people): https://polybox.ethz.ch/index.php/s/8JRHOc3fICXtqzN
 
@@ -123,14 +136,14 @@ The streaming application can be parametrized by several means:
   - To change the users for which recommendations are computed:
     - `scripts/_start.sh --person-ids "1 2 3 4 5 6 7 8 9 10"`
     - Quotes are important!
-    - Defaults to `"4640 1597 9660 8054 6322 1327 6527 9696 9549 9900"`
+    - Defaults to `"4640 1597 9660 8054 6322 1327 6527 9696 9549 9900"` for 10k. Make sure to use `"294 166 344 740 724 722 273 345 658 225"` when running with the 1k-users dataset.
   - To change the bounded random amount of time which causes the events to be served slightly out-of-order of their timestamps:
     - `scripts/_start.sh --maxdelaysec X` where X >= 0
     - Defaults to 600 seconds
   - To change the speedup factor parameter that adjusts serving speed:
     - `scripts/_start.sh --speedup X` where X > 0
-    - Defaults to a factor of 1200
-    - 1 hour / 1200 = 3.0 seconds, meaning all events of a given hour are served in 3 seconds
+    - Defaults to a factor of 1800
+    - 1 hour / 1800 = 2 seconds, meaning all events of a given hour are served in 2 seconds
 
 The three analytics task can additionally be configured using the properties file:
 `social-network-analysis/src/main/java/ch/ethz/infk/dspa/config.properties`
@@ -145,3 +158,4 @@ We suggest to use the default configuration because these parameters were tuned 
 - On Windows, there might be issues with files not being found inside most of the Docker containers
   - Most often, this occurs to the data and other files being stored with Windows file-endings, which breaks when reading them in Linux
   - To convert these files to use the appropriate Linux file-endings, run `scripts/file_endings_win.bat` from the repository root
+- If recommendations with `1k-users-sorted` do not produce output as expected, make sure that the person ids are `"294 166 344 740 724 722 273 345 658 225"` or other existing person ids. The default selected users are defined under the assumption that the 10k-users dataset will be used.
