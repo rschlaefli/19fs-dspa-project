@@ -1,6 +1,6 @@
 # Data Stream Processing and Analytics: Semester Project
 
-> Roland Schlaefli, 12-932-398 and Nicolas Kuechler, 14-712-129
+> Roland Schlaefli and Nicolas Kuechler
 
 See `DEMO.md` for a suggested course of action with commands and notes related to running the application.
 
